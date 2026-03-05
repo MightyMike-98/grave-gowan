@@ -44,7 +44,7 @@ export function HeroSection({ memorial, flowers = [], visitorEmail }: HeroSectio
             {memorial.coverUrl ? (
                 <Image
                     src={memorial.coverUrl}
-                    alt={`Cover photo for ${memorial.name}`}
+                    alt=""
                     fill
                     priority
                     className="object-cover"
