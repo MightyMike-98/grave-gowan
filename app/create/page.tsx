@@ -225,8 +225,29 @@ function CreateMemorialForm() {
                     });
                     if (rpcErr || !success) throw new Error(rpcErr?.message ?? 'Could not save. Check your permissions.');
                     router.push(`/memorial/${existingSlug}?visitor_email=${encodeURIComponent(visitorEmail)}`);
+                } else if (isEditorRole) {
+                    // Eingeloggter Editor: RPC-Funktion nutzen (wie Guest-Editor, nur erlaubte Felder)
+                    const supabase = createSupabaseBrowserClient();
+                    const { data: { user: authUser } } = await supabase.auth.getUser();
+                    const editorEmail = authUser?.email;
+                    if (!editorEmail) throw new Error('Could not determine your email. Please try again.');
+
+                    const { data: success, error: rpcErr } = await supabase.rpc('editor_update_memorial', {
+                        p_email: editorEmail.toLowerCase(),
+                        p_memorial_id: editId,
+                        p_bio: null,
+                        p_date_of_birth: null,
+                        p_date_of_death: dateOfDeath || null,
+                        p_quote: null,
+                        p_timeline: timelineEvents.length > 0 ? timelineEvents : null,
+                        p_support_title: supportTitle || null,
+                        p_support_url: supportUrl || null,
+                        p_support_desc: supportDesc || null,
+                    });
+                    if (rpcErr || !success) throw new Error(rpcErr?.message ?? 'Could not save. Check your permissions.');
+                    router.push(`/memorial/${existingSlug}`);
                 } else {
-                    // Eingeloggter User: Standard-Update via Repo
+                    // Eingeloggter Owner: Standard-Update via Repo (alle Felder erlaubt)
                     await repo.update(editId, {
                         name: name.trim(),
                         bio: bio.trim(),

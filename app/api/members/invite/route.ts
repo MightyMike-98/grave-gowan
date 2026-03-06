@@ -47,6 +47,11 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
         }
 
+        // Sicherheitscheck: invitedBy muss der eingeloggte User sein
+        if (user.id !== invitedBy) {
+            return NextResponse.json({ error: 'Forbidden: invitedBy does not match authenticated user.' }, { status: 403 });
+        }
+
         const cleanEmail = email.trim().toLowerCase();
 
         // Optional: Supabase-Account per E-Mail suchen
