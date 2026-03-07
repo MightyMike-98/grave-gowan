@@ -650,74 +650,94 @@ function CreateMemorialForm() {
                                 <span className="ml-auto text-stone-400">→</span>
                             </a>
                         ) : (
-                            <>
-                                {/* Email — volle Breite */}
-                                <input
-                                    id="invite-email"
-                                    type="email"
-                                    value={tempEmail}
-                                    onChange={(e) => setTempEmail(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault();
-                                            if (!tempEmail.includes('@')) return;
-                                            if (invites.find(i => i.email === tempEmail)) return;
-                                            setInvites(prev => [...prev, { email: tempEmail, role: tempRole }]);
-                                            setTempEmail('');
-                                        }
-                                    }}
-                                    placeholder="email@example.com"
-                                    className="field-input"
-                                />
+                            <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6 space-y-5">
+                                <h3 className="text-sm font-bold text-stone-700 tracking-wide uppercase">
+                                    INVITE SOMEONE
+                                </h3>
 
-                                {/* Rolle + Button in einer Zeile */}
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <select
-                                        value={tempRole}
-                                        onChange={(e) => setTempRole(e.target.value as 'editor' | 'viewer')}
-                                        style={{ flex: '1' }}
-                                        className="field-input"
-                                    >
-                                        <option value="viewer">👁 Viewer — can read</option>
-                                        <option value="editor">✏️ Editor — can edit</option>
-                                    </select>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (!tempEmail.includes('@')) return;
-                                            if (invites.find(i => i.email === tempEmail)) return;
-                                            setInvites(prev => [...prev, { email: tempEmail, role: tempRole }]);
-                                            setTempEmail('');
+                                {/* Email Field */}
+                                <div className="space-y-2">
+                                    <label htmlFor="invite-email" className="block text-stone-600 font-medium text-sm">
+                                        Email address
+                                    </label>
+                                    <input
+                                        id="invite-email"
+                                        type="email"
+                                        value={tempEmail}
+                                        onChange={(e) => setTempEmail(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                if (!tempEmail.includes('@')) return;
+                                                if (invites.find(i => i.email === tempEmail)) return;
+                                                setInvites(prev => [...prev, { email: tempEmail, role: tempRole }]);
+                                                setTempEmail('');
+                                            }
                                         }}
-                                        style={{ flexShrink: 0 }}
-                                        className="bg-stone-800 text-white font-semibold text-sm px-5 py-3 rounded-lg hover:bg-stone-900 transition-colors"
-                                    >
-                                        + Add
-                                    </button>
+                                        placeholder="user@example.com"
+                                        className="w-full bg-white border border-stone-200 rounded-lg p-3 text-base text-stone-800 outline-none transition-shadow focus:ring-2 focus:ring-stone-400"
+                                    />
                                 </div>
 
+                                {/* Role Field */}
+                                <div className="space-y-2">
+                                    <label htmlFor="invite-role" className="block text-stone-600 font-medium text-sm">
+                                        Role
+                                    </label>
+                                    <select
+                                        id="invite-role"
+                                        value={tempRole}
+                                        onChange={(e) => setTempRole(e.target.value as 'editor' | 'viewer')}
+                                        className="w-full bg-white border border-stone-200 rounded-lg p-3 text-base text-stone-800 outline-none transition-shadow focus:ring-2 focus:ring-stone-400"
+                                    >
+                                        <option value="viewer">👁 Viewer — can read the memorial</option>
+                                        <option value="editor">✏️ Editor — can edit the memorial</option>
+                                    </select>
+                                </div>
+
+                                {/* Submit Button */}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (!tempEmail.includes('@')) return;
+                                        if (invites.find(i => i.email === tempEmail)) return;
+                                        setInvites(prev => [...prev, { email: tempEmail, role: tempRole }]);
+                                        setTempEmail('');
+                                    }}
+                                    className="w-full bg-[#292524] text-white font-medium py-3 rounded-lg hover:bg-stone-900 transition-colors text-sm"
+                                >
+                                    Send Invite
+                                </button>
+
+                                {/* Pending Invites List */}
                                 {invites.length > 0 && (
-                                    <ul className="space-y-2">
-                                        {invites.map((inv, i) => (
-                                            <li key={i} className="flex items-center justify-between bg-white border border-stone-100 rounded-lg px-4 py-3 shadow-sm">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <span className="text-stone-800 text-sm truncate">{inv.email}</span>
-                                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize shrink-0 ${inv.role === 'editor' ? 'bg-blue-50 text-blue-700' : 'bg-stone-100 text-stone-500'}`}>
-                                                        {inv.role}
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setInvites(prev => prev.filter((_, j) => j !== i))}
-                                                    className="text-red-400 hover:text-red-600 text-lg leading-none ml-3 shrink-0"
-                                                >
-                                                    ×
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <div className="pt-4 mt-2 border-t border-stone-100">
+                                        <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">
+                                            Pending Invites ({invites.length})
+                                        </h4>
+                                        <ul className="space-y-2">
+                                            {invites.map((inv, i) => (
+                                                <li key={i} className="flex items-center justify-between bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 shadow-sm">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <span className="text-stone-800 text-sm truncate">{inv.email}</span>
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium capitalize shrink-0 ${inv.role === 'editor' ? 'bg-blue-100 text-blue-700' : 'bg-stone-200 text-stone-600'}`}>
+                                                            {inv.role}
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setInvites(prev => prev.filter((_, j) => j !== i))}
+                                                        className="text-stone-400 hover:text-red-500 text-lg leading-none shrink-0 px-2"
+                                                        title="Remove invite"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
                                 )}
-                            </>
+                            </div>
                         )}
                     </section>
                 )}
