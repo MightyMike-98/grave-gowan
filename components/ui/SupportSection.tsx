@@ -1,15 +1,14 @@
 /**
  * @file components/ui/SupportSection.tsx
- * @description Spenden- und Unterstützungs-Bereich der Gedenkseite.
+ * @description Spenden- und Blumen-Bereich der Gedenkseite.
  *
- * Zeigt eine Spendenkarte mit Beschreibungstext und roten Spenden-Buttons.
- * Bei Buttonklick öffnet sich ein modaler Bottom-Sheet-Dialog, in dem der Nutzer
- * einen Spendenbetrag auswählen und eine simulierte Zahlung bestätigen kann.
- * Nach der Spende wird die `onDonate`-Callback-Funktion aufgerufen,
- * die eine virtuelle Blume im Hero-Bereich erscheinen lässt.
+ * Matches gentle-code-mover's SupportTab:
+ * - Interactive flower-laying button (click once to place flower)
+ * - Pulse animation when flower is laid
+ * - Simple single donate CTA button
+ * - Clean, centered layout
  *
- * Benötigt 'use client', da useState (Modal-Zustand, Betrag, Ladezustand) und
- * onClick-Handler im Browser ausgeführt werden müssen.
+ * Benötigt 'use client' da useState und onClick-Handler im Browser laufen.
  */
 
 'use client';
@@ -17,161 +16,91 @@
 import type { SupportSection as SupportSectionType } from '@/types';
 import { useState } from 'react';
 
-/** Verfügbare Spendenbeträge in Dollar. */
-const DONATION_AMOUNTS = [10, 25, 50, 100];
-
-/** Props der SupportSection-Komponente. */
 interface SupportSectionProps {
-    /** Der Spenden-Abschnitt des Memorials mit Beschreibung und Links. Wenn undefined, wird nichts gerendert. */
     support?: SupportSectionType;
-    /** Callback der aufgerufen wird, nachdem eine Spende erfolgreich abgeschlossen wurde. */
     onDonate?: () => void;
 }
 
-/**
- * Rendert die Spenden-Sektion mit Karte, Charity-Buttons und modalem Zahlungs-Dialog.
- * Gibt `null` zurück, wenn kein `support`-Objekt übergeben wird.
- *
- * @param support - Optionales Support-Objekt mit Beschreibung und Charity-Links.
- * @param onDonate - Callback, der nach erfolgreicher Spende aufgerufen wird.
- */
 export function SupportSection({ support, onDonate }: SupportSectionProps) {
-    /** Steuert, ob der modale Spenden-Dialog geöffnet ist. */
-    const [modalOpen, setModalOpen] = useState(false);
+    const [flowerLaid, setFlowerLaid] = useState(false);
+    const [flowerCount, setFlowerCount] = useState(17);
 
-    /** Die aktuell im Modal ausgewählte Charity. */
-    const [selectedCharity, setSelectedCharity] = useState<{ title: string; url: string } | null>(null);
-
-    /** Der aktuell ausgewählte Spendenbetrag in Dollar. */
-    const [selectedAmount, setSelectedAmount] = useState(25);
-
-    /** Zeigt an, ob die Zahlung gerade simuliert wird (Ladezustand). */
-    const [processing, setProcessing] = useState(false);
-
-    // Wenn kein Support-Objekt vorhanden, nichts rendern
-    if (!support) return null;
-
-    /**
-     * Öffnet den modalen Dialog und speichert die ausgewählte Charity.
-     * @param link - Die Charity, für die gespendet werden soll.
-     */
-    const handleOpenModal = (link: { title: string; url: string }) => {
-        setSelectedCharity(link);
-        setModalOpen(true);
-    };
-
-    /**
-     * Simuliert eine Zahlungsverarbeitung (1,5 Sekunden Verzögerung).
-     * Schließt danach das Modal, ruft `onDonate` auf und zeigt eine Bestätigung.
-     */
-    const handleDonate = () => {
-        setProcessing(true);
-        setTimeout(() => {
-            setProcessing(false);
-            setModalOpen(false);
+    const layFlower = () => {
+        if (!flowerLaid) {
+            setFlowerCount((c) => c + 1);
+            setFlowerLaid(true);
             onDonate?.();
-            alert(`Thank you for donating $${selectedAmount} to ${selectedCharity?.title}. A flower has been placed.`);
-        }, 1500);
+        }
     };
 
     return (
-        <section aria-label="Support & Legacy" className="px-6 py-8">
-            {/* Spendenkarte */}
-            <div className="bg-white rounded-xl shadow-sm p-8 flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center mb-6">
-                    <span className="text-3xl">💐</span>
-                </div>
-
-                <h2 className="text-2xl font-bold text-stone-800 mb-2">Lay a Virtual Flower</h2>
-                <p className="text-stone-600 italic leading-relaxed mb-8 max-w-sm">
-                    &ldquo;{support.description}&rdquo;
-                </p>
-
-                {/* Ein roter Button pro Charity aus der Support-Liste */}
-                <div className="w-full space-y-3">
-                    {support.links.map((link, i) => (
-                        <button
-                            key={i}
-                            onClick={() => handleOpenModal(link)}
-                            className="w-full bg-rose-700 text-white font-semibold text-sm uppercase tracking-widest py-4 rounded-full shadow-lg shadow-rose-700/20 hover:bg-rose-800 transition-colors"
-                        >
-                            Donate to {link.title}
-                        </button>
-                    ))}
-                </div>
-
-                <p className="mt-6 text-xs text-stone-400">Secure in-app donation</p>
-            </div>
-
-            {/* Modaler Bottom-Sheet-Dialog */}
-            {modalOpen && (
-                <div
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label={`Donate to ${selectedCharity?.title}`}
-                    className="fixed inset-0 z-50 flex items-end justify-center bg-black/50"
-                    // Klick auf den dunklen Overlay-Hintergrund schließt das Modal
-                    onClick={(e) => {
-                        if (e.target === e.currentTarget) setModalOpen(false);
+        <section aria-label="Support & Legacy" className="py-12">
+            <div className="mx-auto flex max-w-md flex-col items-center text-center">
+                {/* Flower button — matches gentle-code-mover's SupportTab */}
+                <button
+                    onClick={layFlower}
+                    disabled={flowerLaid}
+                    className="group relative flex h-20 w-20 items-center justify-center rounded-full transition-all duration-500"
+                    style={{
+                        backgroundColor: flowerLaid
+                            ? 'rgba(244,63,94,0.08)'
+                            : 'hsl(var(--foreground) / 0.05)',
+                        boxShadow: flowerLaid
+                            ? '0 0 30px 8px rgba(244,63,94,0.12)'
+                            : 'none',
                     }}
                 >
-                    <div className="w-full max-w-lg bg-white rounded-t-3xl p-8 pb-16 space-y-6">
-                        {/* Modal-Header */}
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-xl font-semibold text-stone-800">
-                                Donate to {selectedCharity?.title}
-                            </h3>
-                            <button
-                                onClick={() => setModalOpen(false)}
-                                aria-label="Close modal"
-                                className="text-stone-500 hover:text-stone-800 text-2xl leading-none"
+                    <span
+                        className="text-3xl transition-transform duration-500"
+                        style={{ transform: flowerLaid ? 'scale(1.1)' : 'scale(1)' }}
+                    >
+                        💐
+                    </span>
+                    {flowerLaid && (
+                        <span
+                            className="absolute inset-0 rounded-full animate-gentle-pulse"
+                            style={{ backgroundColor: 'rgba(244,63,94,0.08)' }}
+                        />
+                    )}
+                </button>
+
+                <h2 className="mt-5 text-2xl tracking-tight">
+                    {flowerLaid ? 'Danke für deine Blume' : 'Virtuelle Blume niederlegen'}
+                </h2>
+                <p
+                    className="mt-1.5 text-xs font-light"
+                    style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}
+                >
+                    {flowerCount} {flowerCount === 1 ? 'Blume' : 'Blumen'} niedergelegt
+                </p>
+
+                {/* Donate CTA */}
+                {support && support.links.length > 0 && (
+                    <div className="mt-10 w-full space-y-3">
+                        {support.links.map((link, i) => (
+                            <a
+                                key={i}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block w-full rounded-full py-5 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md text-center"
+                                style={{
+                                    backgroundColor: 'hsl(var(--primary))',
+                                    color: 'hsl(var(--primary-foreground))',
+                                }}
                             >
-                                ×
-                            </button>
-                        </div>
-
-                        {/* Betrag-Auswahl */}
-                        <div>
-                            <p className="text-stone-500 mb-3 text-sm">Select Amount</p>
-                            <div className="grid grid-cols-4 gap-3">
-                                {DONATION_AMOUNTS.map((amount) => {
-                                    const isSelected = selectedAmount === amount;
-                                    return (
-                                        <button
-                                            key={amount}
-                                            onClick={() => setSelectedAmount(amount)}
-                                            className={[
-                                                'py-3 rounded-lg border font-semibold text-sm transition-colors',
-                                                isSelected
-                                                    ? 'bg-rose-700 border-rose-700 text-white'
-                                                    : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100',
-                                            ].join(' ')}
-                                        >
-                                            ${amount}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Zahlungs-Button mit Ladezustand */}
-                        <button
-                            onClick={handleDonate}
-                            disabled={processing}
-                            className="w-full bg-stone-900 text-white py-5 rounded-xl font-semibold text-lg flex items-center justify-center gap-2 hover:bg-stone-800 disabled:opacity-50 transition-colors"
+                                Spenden – {link.title}
+                            </a>
+                        ))}
+                        <p
+                            className="mt-3 text-[11px] font-light"
+                            style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
                         >
-                            {processing ? (
-                                <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-                            ) : (
-                                <>
-                                    <span>💳</span>
-                                    <span>Pay ${selectedAmount}</span>
-                                </>
-                            )}
-                        </button>
+                            Sichere In-App Spende
+                        </p>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </section>
     );
 }

@@ -1,48 +1,26 @@
 /**
  * @file components/ui/TabsNavigation.tsx
- * @description Die horizontale, klebende (sticky) Tab-Leiste auf der Gedenkseite.
+ * @description Die horizontale Tab-Leiste mit animated indicator via layoutId.
  *
- * Zeigt alle verfügbaren Abschnitte (About, Timeline, Gallery, etc.) als anklickbare
- * Tabs an. Ist auf kleinen Bildschirmen horizontal scrollbar.
- *
- * Diese Komponente ist bewusst "dumm" (presentational): Sie verwaltet keinen eigenen
- * State, sondern meldet nur Klicks nach oben an die übergeordnete `MemorialTabs`-Komponente.
- *
- * Benötigt 'use client', da onClick-Handler und useRef im Browser laufen müssen.
+ * Nutzt Framer Motion's layoutId="tab-indicator" für den animierten
+ * Unterstrich — gleitet sanft zum aktiven Tab (spring bounce 0.15, duration 0.5).
+ * Exakt wie gentle-code-mover.
  */
 
 'use client';
 
+import { motion } from 'framer-motion';
 import { useRef } from 'react';
 
-/** Props der TabsNavigation-Komponente. */
 interface TabsNavigationProps {
-    /** Vollständige Liste aller anzuzeigenden Tab-Namen. */
     tabs: string[];
-    /** Name des aktuell aktiven Tabs (wird von außen gesteuert). */
     activeTab: string;
-    /** Callback, der aufgerufen wird, wenn der Nutzer einen Tab anklickt. */
     onTabChange: (tab: string) => void;
 }
 
-/**
- * Rendert die sticky horizontale Tab-Leiste.
- * Scrollt beim Klick auf einen Tab automatisch zum Inhalt (`#tab-content`).
- *
- * @param tabs - Array aller Tab-Namen, die angezeigt werden sollen.
- * @param activeTab - Der Tab, der gerade als aktiv markiert ist.
- * @param onTabChange - Funktion, die beim Klick auf einen anderen Tab aufgerufen wird.
- */
 export function TabsNavigation({ tabs, activeTab, onTabChange }: TabsNavigationProps) {
-    /** Referenz auf das scrollbare Tab-Container-Element. */
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    /**
-     * Wird aufgerufen, wenn der Nutzer auf einen Tab klickt.
-     * Informiert den Parent über den neuen aktiven Tab und scrollt zum Inhalt.
-     *
-     * @param tab - Name des angeklickten Tabs.
-     */
     const handleTabClick = (tab: string) => {
         onTabChange(tab);
         window.scrollTo({ top: document.getElementById('tab-content')?.offsetTop ?? 0, behavior: 'smooth' });
@@ -51,11 +29,15 @@ export function TabsNavigation({ tabs, activeTab, onTabChange }: TabsNavigationP
     return (
         <nav
             aria-label="Memorial sections"
-            className="sticky top-0 z-10 bg-stone-100 border-b border-stone-300"
+            className="sticky top-0 z-10 backdrop-blur-md"
+            style={{
+                backgroundColor: 'hsl(var(--background) / 0.8)',
+                borderBottom: '1px solid hsl(var(--border) / 0.5)',
+            }}
         >
             <div
                 ref={scrollRef}
-                className="flex overflow-x-auto scrollbar-hide px-5 py-2 gap-8"
+                className="flex gap-0 overflow-x-auto px-6"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
                 {tabs.map((tab) => {
@@ -67,14 +49,23 @@ export function TabsNavigation({ tabs, activeTab, onTabChange }: TabsNavigationP
                             onClick={() => handleTabClick(tab)}
                             aria-selected={isActive}
                             role="tab"
-                            className={[
-                                'flex-shrink-0 pb-2 text-sm uppercase tracking-widest transition-colors duration-150 border-b-2',
-                                isActive
-                                    ? 'border-stone-800 text-stone-800 font-semibold'
-                                    : 'border-transparent text-stone-500 font-normal hover:text-stone-700',
-                            ].join(' ')}
+                            className="relative whitespace-nowrap px-4 py-3.5 text-[12px] font-medium tracking-[0.1em] transition-colors"
+                            style={{
+                                color: isActive
+                                    ? 'hsl(var(--foreground))'
+                                    : 'hsl(var(--muted-foreground) / 0.6)',
+                            }}
                         >
-                            {tab}
+                            {tab.toUpperCase()}
+                            {/* Animated indicator — layoutId makes it glide between tabs */}
+                            {isActive && (
+                                <motion.div
+                                    layoutId="tab-indicator"
+                                    className="absolute bottom-0 left-0 right-0 h-[1.5px]"
+                                    style={{ backgroundColor: 'hsl(var(--foreground))' }}
+                                    transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                                />
+                            )}
                         </button>
                     );
                 })}

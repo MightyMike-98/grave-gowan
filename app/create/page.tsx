@@ -340,9 +340,9 @@ function CreateMemorialForm() {
     };
 
     return (
-        <main className="min-h-screen bg-stone-100">
+        <main className="min-h-screen px-4 py-10">
             {/* Portrait-Bereich */}
-            <div className="max-w-lg mx-auto px-6 pt-8 flex justify-center">
+            <div className="max-w-xl mx-auto flex justify-center">
                 {isOwnerRole ? (
                     <ImageUploader
                         label="Portrait Photo"
@@ -356,19 +356,19 @@ function CreateMemorialForm() {
                     />
                 ) : portraitUrl ? (
                     <div className="relative">
-                        <p className="text-xs text-stone-400 uppercase tracking-wide text-center mb-2 flex items-center justify-center gap-1.5">
-                            <span className="text-stone-300">🔒</span> Portrait Photo
+                        <p className="text-xs font-light tracking-wider text-center mb-2 flex items-center justify-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                            <span style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>🔒</span> Portrait Photo
                         </p>
-                        <div className="w-28 h-28 rounded-full overflow-hidden border-2 border-stone-200 shadow-sm opacity-80">
+                        <div className="w-28 h-28 rounded-full overflow-hidden shadow-sm opacity-80" style={{ border: '2px solid hsl(var(--border))' }}>
                             <img src={portraitUrl} alt="Portrait" className="w-full h-full object-cover" />
                         </div>
                     </div>
                 ) : null}
             </div>
 
-            <div className="max-w-lg mx-auto px-6 pb-20 space-y-10">
+            <div className="mx-auto max-w-xl pb-20 space-y-10 mt-8">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold text-stone-800">
+                    <h1 className="text-3xl tracking-tight">
                         {isEditing ? 'Edit Memorial' : 'Create Memorial'}
                     </h1>
                     <Link
@@ -376,7 +376,8 @@ function CreateMemorialForm() {
                             ? `/memorial/${existingSlug}?visitor_email=${encodeURIComponent(visitorEmail)}`
                             : '/dashboard'
                         }
-                        className="text-stone-400 text-sm hover:text-stone-600"
+                        className="text-sm font-light transition-colors hover:opacity-100"
+                        style={{ color: 'hsl(var(--muted-foreground))' }}
                     >
                         ← Back
                     </Link>
@@ -384,16 +385,16 @@ function CreateMemorialForm() {
 
                 {/* Errors */}
                 {errors.length > 0 && (
-                    <div role="alert" className="bg-red-50 border border-red-100 rounded-lg p-4 space-y-1">
+                    <div role="alert" className="rounded-xl p-4 space-y-1" style={{ backgroundColor: 'hsl(var(--destructive) / 0.05)', border: '1px solid hsl(var(--destructive) / 0.2)' }}>
                         {errors.map((err, i) => (
-                            <p key={i} className="text-sm text-red-600">{err}</p>
+                            <p key={i} className="text-sm" style={{ color: 'hsl(var(--destructive))' }}>{err}</p>
                         ))}
                     </div>
                 )}
 
                 {/* Core Info */}
                 <section className="space-y-5">
-                    <h2 className="text-xl font-semibold text-stone-800">Core Information</h2>
+                    <h2 className="text-xl tracking-tight">Core Information</h2>
 
                     {/* Name: Owner kann editieren, Editor sieht es read-only */}
                     {isOwnerRole ? (
@@ -461,8 +462,9 @@ function CreateMemorialForm() {
                 </section>
 
                 {/* Support */}
-                <section className="border-t border-stone-200 pt-8 space-y-5">
-                    <h2 className="text-xl font-semibold text-stone-800">Donations & Support <span className="text-stone-400 font-normal text-base">(Optional)</span></h2>
+                <section className="pt-8 space-y-5">
+                    <div className="-mt-8 mb-5 h-px" style={{ backgroundColor: 'hsl(var(--border) / 0.4)' }} />
+                    <h2 className="text-xl tracking-tight">Donations & Support <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>(Optional)</span></h2>
 
                     {/* Cause Title + Dropdown in einer Zeile */}
                     <FormField label="Cause Title">
@@ -484,7 +486,7 @@ function CreateMemorialForm() {
                                 {showDropdown ? '▲' : '▼'}
                             </button>
                             {showDropdown && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-lg overflow-hidden z-20 shadow-lg">
+                                <div className="absolute top-full left-0 right-0 mt-1 rounded-lg overflow-hidden z-20 shadow-lg" style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}>
                                     {POPULAR_CHARITIES.map((charity, i) => (
                                         <button
                                             key={i}
@@ -494,7 +496,8 @@ function CreateMemorialForm() {
                                                 setSupportUrl(charity.url);
                                                 setShowDropdown(false);
                                             }}
-                                            className="w-full text-left px-4 py-3 text-stone-700 hover:bg-stone-50 border-b border-stone-100 last:border-0 transition-colors"
+                                            className="w-full text-left px-4 py-3 text-sm font-light transition-colors last:border-0"
+                                            style={{ color: 'hsl(var(--foreground))', borderBottom: '1px solid hsl(var(--border) / 0.4)' }}
                                         >
                                             {charity.title}
                                         </button>
@@ -528,12 +531,13 @@ function CreateMemorialForm() {
                 </section>
 
                 {/* Timeline */}
-                <section className="border-t border-stone-200 pt-8 space-y-5">
-                    <h2 className="text-xl font-semibold text-stone-800">Life Timeline</h2>
+                <section className="pt-8 space-y-5">
+                    <div className="-mt-8 mb-5 h-px" style={{ backgroundColor: 'hsl(var(--border) / 0.4)' }} />
+                    <h2 className="text-xl tracking-tight">Life Timeline</h2>
 
                     <div className="grid grid-cols-3 gap-3">
-                        <div>
-                            <label htmlFor="tl-year" className="block text-xs text-stone-500 mb-1 uppercase tracking-wide">Year</label>
+                        <div className="space-y-1">
+                            <label htmlFor="tl-year" className="block text-[11px] font-medium uppercase tracking-[0.15em]" style={{ color: 'hsl(var(--muted-foreground))' }}>Year</label>
                             <input
                                 id="tl-year"
                                 type="text"
@@ -543,8 +547,8 @@ function CreateMemorialForm() {
                                 className="field-input"
                             />
                         </div>
-                        <div className="col-span-2">
-                            <label htmlFor="tl-title" className="block text-xs text-stone-500 mb-1 uppercase tracking-wide">Title</label>
+                        <div className="col-span-2 space-y-1">
+                            <label htmlFor="tl-title" className="block text-[11px] font-medium uppercase tracking-[0.15em]" style={{ color: 'hsl(var(--muted-foreground))' }}>Title</label>
                             <input
                                 id="tl-title"
                                 type="text"
@@ -570,71 +574,76 @@ function CreateMemorialForm() {
                     <button
                         type="button"
                         onClick={addTimelineEvent}
-                        className="bg-stone-100 border border-stone-200 text-stone-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-stone-200 transition-colors"
+                        className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-light shadow-sm transition-colors"
+                        style={{ color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border) / 0.6)' }}
                     >
                         + Add Event
                     </button>
 
                     {timelineEvents.length > 0 && (
-                        <ol className="space-y-3">
+                        <div className="space-y-3">
                             {timelineEvents.map((event, i) => (
-                                <li
+                                <div
                                     key={i}
-                                    className="flex items-center justify-between bg-white border-l-4 border-stone-800 rounded-r-lg px-4 py-3 shadow-sm"
+                                    className="flex items-start gap-3 rounded-xl p-4 shadow-sm"
+                                    style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <span className="font-bold text-stone-800">{event.year}</span>
-                                        <span className="text-stone-600">{event.title}</span>
+                                    <span className="text-sm font-medium" style={{ color: 'hsl(var(--muted-foreground))' }}>{event.year}</span>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-inter)', color: 'hsl(var(--foreground))' }}>{event.title}</p>
                                         {event.description && (
-                                            <span className="text-xs text-stone-400 hidden sm:block">{event.description}</span>
+                                            <p className="mt-1 text-xs font-light leading-relaxed line-clamp-3" style={{ color: 'hsl(var(--muted-foreground))' }}>{event.description}</p>
                                         )}
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => removeTimelineEvent(i)}
                                         aria-label={`Remove ${event.title}`}
-                                        className="text-red-400 hover:text-red-600 text-lg leading-none"
+                                        className="transition-colors"
+                                        style={{ color: 'hsl(var(--destructive) / 0.7)' }}
                                     >
                                         ×
                                     </button>
-                                </li>
+                                </div>
                             ))}
-                        </ol>
+                        </div>
                     )}
                 </section>
 
                 {/* Team Access — nur für Owner */}
                 {isOwnerRole && (
-                    <section className="border-t border-stone-200 pt-8 space-y-5">
+                    <section className="pt-8 space-y-5">
+                        <div className="-mt-8 mb-5 h-px" style={{ backgroundColor: 'hsl(var(--border) / 0.4)' }} />
                         <div>
-                            <h2 className="text-xl font-semibold text-stone-800">
-                                Team Access <span className="text-stone-400 font-normal text-base">(Optional)</span>
+                            <h2 className="text-xl tracking-tight">
+                                Team Access <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>(Optional)</span>
                             </h2>
-                            <p className="text-sm text-stone-400 mt-1">
+                            <p className="text-sm font-light mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                                 Invite people by email to view or edit this memorial.
                             </p>
                         </div>
 
                         {/* Memorial ID — sichtbar im Edit-Modus, maskiert wie ein Passwort */}
                         {isEditing && editId && (
-                            <div className="bg-stone-50 border border-stone-200 rounded-lg px-4 py-3">
-                                <label className="block text-stone-500 text-xs font-medium uppercase tracking-wide mb-1.5">
+                            <div className="rounded-xl p-5 shadow-sm" style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}>
+                                <p className="text-[11px] font-medium uppercase tracking-[0.15em]" style={{ color: 'hsl(var(--muted-foreground))' }}>
                                     Memorial ID
-                                </label>
-                                <div className="flex items-center gap-2">
-                                    <code className="text-sm text-stone-700 font-mono flex-1 break-all select-all">
+                                </p>
+                                <div className="mt-2 flex items-center justify-between">
+                                    <span className="font-mono text-sm font-light">
                                         {showMemorialId ? editId : '••••••••-••••-••••-••••-••••••••••••'}
-                                    </code>
+                                    </span>
                                     <button
                                         type="button"
                                         onClick={() => setShowMemorialId(!showMemorialId)}
-                                        className="text-stone-400 hover:text-stone-700 text-sm px-2 py-1 rounded transition-colors shrink-0"
+                                        className="transition-colors"
+                                        style={{ color: 'hsl(var(--muted-foreground))' }}
                                         title={showMemorialId ? 'Hide ID' : 'Show ID'}
                                     >
-                                        {showMemorialId ? 'Hide' : 'Show'}
+                                        {showMemorialId ? '🔒' : '👁'}
                                     </button>
                                 </div>
-                                <p className="text-xs text-stone-400 mt-1.5">
+                                <p className="mt-2 text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
                                     Share this ID with invited members so they can visit the memorial.
                                 </p>
                             </div>
@@ -643,21 +652,24 @@ function CreateMemorialForm() {
                         {isEditing && existingSlug ? (
                             <a
                                 href={`/memorial/${existingSlug}/settings`}
-                                className="flex items-center gap-2 bg-stone-100 border border-stone-200 text-stone-700 text-sm font-medium px-4 py-3 rounded-lg hover:bg-stone-200 transition-colors"
+                                className="flex w-full items-center justify-between rounded-xl p-4 text-left shadow-sm transition-colors"
+                                style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
                             >
-                                <span>⚙️</span>
-                                <span>Manage Team &amp; Roles</span>
-                                <span className="ml-auto text-stone-400">→</span>
+                                <div className="flex items-center gap-2.5">
+                                    <span>⚙️</span>
+                                    <span className="text-sm font-light">Manage Team & Roles</span>
+                                </div>
+                                <span style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>→</span>
                             </a>
                         ) : (
-                            <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6 space-y-5">
-                                <h3 className="text-sm font-bold text-stone-700 tracking-wide uppercase">
+                            <div className="rounded-xl p-6 space-y-5 shadow-sm" style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}>
+                                <h3 className="text-[11px] font-medium uppercase tracking-[0.15em]" style={{ fontFamily: 'var(--font-inter)', color: 'hsl(var(--muted-foreground))' }}>
                                     INVITE SOMEONE
                                 </h3>
 
                                 {/* Email Field */}
                                 <div className="space-y-2">
-                                    <label htmlFor="invite-email" className="block text-stone-600 font-medium text-sm">
+                                    <label htmlFor="invite-email" className="block text-sm font-light">
                                         Email address
                                     </label>
                                     <input
@@ -675,20 +687,20 @@ function CreateMemorialForm() {
                                             }
                                         }}
                                         placeholder="user@example.com"
-                                        className="w-full bg-white border border-stone-200 rounded-lg p-3 text-base text-stone-800 outline-none transition-shadow focus:ring-2 focus:ring-stone-400"
+                                        className="field-input"
                                     />
                                 </div>
 
                                 {/* Role Field */}
                                 <div className="space-y-2">
-                                    <label htmlFor="invite-role" className="block text-stone-600 font-medium text-sm">
+                                    <label htmlFor="invite-role" className="block text-sm font-light">
                                         Role
                                     </label>
                                     <select
                                         id="invite-role"
                                         value={tempRole}
                                         onChange={(e) => setTempRole(e.target.value as 'editor' | 'viewer')}
-                                        className="w-full bg-white border border-stone-200 rounded-lg p-3 text-base text-stone-800 outline-none transition-shadow focus:ring-2 focus:ring-stone-400"
+                                        className="field-input"
                                     >
                                         <option value="viewer">👁 Viewer — can read the memorial</option>
                                         <option value="editor">✏️ Editor — can edit the memorial</option>
@@ -704,30 +716,32 @@ function CreateMemorialForm() {
                                         setInvites(prev => [...prev, { email: tempEmail, role: tempRole }]);
                                         setTempEmail('');
                                     }}
-                                    className="w-full bg-[#292524] text-white font-medium py-3 rounded-lg hover:bg-stone-900 transition-colors text-sm"
+                                    className="w-full rounded-full py-3 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md"
+                                    style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
                                 >
                                     Send Invite
                                 </button>
 
                                 {/* Pending Invites List */}
                                 {invites.length > 0 && (
-                                    <div className="pt-4 mt-2 border-t border-stone-100">
-                                        <h4 className="text-xs font-semibold text-stone-500 uppercase tracking-wide mb-3">
+                                    <div className="pt-4 mt-2" style={{ borderTop: '1px solid hsl(var(--border) / 0.4)' }}>
+                                        <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] mb-3" style={{ color: 'hsl(var(--muted-foreground))' }}>
                                             Pending Invites ({invites.length})
                                         </h4>
                                         <ul className="space-y-2">
                                             {invites.map((inv, i) => (
-                                                <li key={i} className="flex items-center justify-between bg-stone-50 border border-stone-200 rounded-lg px-3 py-2 shadow-sm">
+                                                <li key={i} className="flex items-center justify-between rounded-lg px-3 py-2 shadow-sm" style={{ backgroundColor: 'hsl(var(--muted) / 0.3)', border: '1px solid hsl(var(--border) / 0.4)' }}>
                                                     <div className="flex items-center gap-2 min-w-0">
-                                                        <span className="text-stone-800 text-sm truncate">{inv.email}</span>
-                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium capitalize shrink-0 ${inv.role === 'editor' ? 'bg-blue-100 text-blue-700' : 'bg-stone-200 text-stone-600'}`}>
+                                                        <span className="text-sm font-light truncate">{inv.email}</span>
+                                                        <span className="text-[10px] px-2 py-0.5 rounded-full font-normal capitalize shrink-0" style={{ backgroundColor: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))' }}>
                                                             {inv.role}
                                                         </span>
                                                     </div>
                                                     <button
                                                         type="button"
                                                         onClick={() => setInvites(prev => prev.filter((_, j) => j !== i))}
-                                                        className="text-stone-400 hover:text-red-500 text-lg leading-none shrink-0 px-2"
+                                                        className="text-lg leading-none shrink-0 px-2 transition-colors"
+                                                        style={{ color: 'hsl(var(--destructive) / 0.7)' }}
                                                         title="Remove invite"
                                                     >
                                                         ×
@@ -747,7 +761,8 @@ function CreateMemorialForm() {
                     type="button"
                     onClick={handleSubmit}
                     disabled={loading}
-                    className="w-full bg-stone-800 text-stone-100 font-semibold text-sm uppercase tracking-widest py-5 rounded-full shadow-lg hover:bg-stone-900 disabled:opacity-50 transition-colors flex items-center justify-center"
+                    className="w-full rounded-full py-5 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md disabled:opacity-50 flex items-center justify-center"
+                    style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
                 >
                     {loading ? (
                         <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
@@ -760,10 +775,10 @@ function CreateMemorialForm() {
 
                 {/* Danger Zone — nur im Edit-Modus und nur für Owner */}
                 {isEditing && editId && isOwnerRole && (
-                    <section className="border-t border-red-200 pt-8 mt-4">
-                        <div className="bg-red-50 border border-red-200 rounded-xl p-6 space-y-4">
-                            <h3 className="text-red-700 font-semibold text-base">Danger Zone</h3>
-                            <p className="text-red-600 text-sm">
+                    <section className="pt-8 mt-4">
+                        <div className="rounded-xl p-6 space-y-4" style={{ backgroundColor: 'hsl(var(--destructive) / 0.05)', border: '1px solid hsl(var(--destructive) / 0.2)' }}>
+                            <h3 className="text-lg" style={{ fontFamily: 'var(--font-inter)', fontWeight: 600, color: 'hsl(var(--destructive))' }}>Danger Zone</h3>
+                            <p className="text-sm font-light" style={{ color: 'hsl(var(--destructive) / 0.7)' }}>
                                 This action is permanent and cannot be undone. All memories, photos, and team members will be deleted.
                             </p>
 
@@ -771,7 +786,8 @@ function CreateMemorialForm() {
                                 <button
                                     type="button"
                                     onClick={() => setShowDeleteConfirm(true)}
-                                    className="bg-white border border-red-300 text-red-600 font-semibold text-sm px-5 py-2.5 rounded-lg hover:bg-red-50 transition-colors"
+                                    className="rounded-lg px-5 py-2.5 text-sm transition-colors"
+                                    style={{ color: 'hsl(var(--destructive))', border: '1px solid hsl(var(--destructive) / 0.3)' }}
                                 >
                                     Delete this Memorial
                                 </button>
@@ -802,7 +818,8 @@ function CreateMemorialForm() {
                                                     setDeleting(false);
                                                 }
                                             }}
-                                            className="bg-red-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg hover:bg-red-700 disabled:opacity-40 transition-colors flex items-center gap-2"
+                                            className="rounded-lg px-5 py-2.5 text-sm font-normal disabled:opacity-40 transition-colors flex items-center gap-2"
+                                            style={{ backgroundColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))' }}
                                         >
                                             {deleting ? (
                                                 <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
@@ -813,7 +830,8 @@ function CreateMemorialForm() {
                                         <button
                                             type="button"
                                             onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmName(''); }}
-                                            className="bg-white border border-stone-200 text-stone-600 text-sm px-4 py-2.5 rounded-lg hover:bg-stone-50 transition-colors"
+                                            className="rounded-lg text-sm px-4 py-2.5 transition-colors"
+                                            style={{ color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' }}
                                         >
                                             Cancel
                                         </button>
@@ -825,32 +843,7 @@ function CreateMemorialForm() {
                 )}
             </div>
 
-            <style jsx>{`
-        .field-input {
-          width: 100%;
-          background: white;
-          border: 1px solid #e7e5e4;
-          border-radius: 0.5rem;
-          padding: 1rem;
-          font-size: 1rem;
-          color: #292524;
-          outline: none;
-          transition: box-shadow 0.15s;
-        }
-        .field-input:focus {
-          box-shadow: 0 0 0 2px #a8a29e;
-        }
-        .field-locked {
-          width: 100%;
-          background: #fafaf9;
-          border: 1px solid #e7e5e4;
-          border-radius: 0.5rem;
-          padding: 1rem;
-          font-size: 1rem;
-          color: #78716c;
-          cursor: not-allowed;
-        }
-      `}</style>
+            {/* field-input and field-locked styles are now in globals.css */}
         </main>
     );
 }
@@ -866,13 +859,13 @@ function CreateMemorialForm() {
 function FormField({ label, icon, children }: { label: string; icon?: 'lock' | 'edit'; children: React.ReactNode }) {
     return (
         <div className="space-y-2">
-            <label className="flex items-center gap-1.5 text-stone-600 font-medium text-sm">
+            <label className="flex items-center gap-1.5 text-sm font-light">
                 {label}
                 {icon === 'lock' && (
-                    <span className="text-stone-300 text-xs" title="Only the owner can edit this field">🔒</span>
+                    <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }} title="Only the owner can edit this field">🔒</span>
                 )}
                 {icon === 'edit' && (
-                    <span className="text-stone-400 text-xs" title="You can edit this field">✏️</span>
+                    <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }} title="You can edit this field">✏️</span>
                 )}
             </label>
             {children}
@@ -886,7 +879,7 @@ function FormField({ label, icon, children }: { label: string; icon?: 'lock' | '
  */
 export default function CreatePage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-stone-100 flex items-center justify-center"><span className="text-stone-400">Loading...</span></div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><span style={{ color: 'hsl(var(--muted-foreground))' }}>Loading...</span></div>}>
             <CreateMemorialForm />
         </Suspense>
     );

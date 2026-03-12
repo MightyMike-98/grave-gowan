@@ -43,7 +43,6 @@ export default function VisitPage() {
         setLoading(true);
 
         try {
-            // Email + Memorial ID zusammen senden → sucht direkt in memorial_members
             const res = await fetch(
                 `/api/memorials/find?email=${encodeURIComponent(e)}&memorialId=${encodeURIComponent(id)}`
             );
@@ -63,28 +62,30 @@ export default function VisitPage() {
     };
 
     return (
-        <main className="min-h-screen bg-stone-100 flex flex-col items-center justify-center px-6">
-            <div className="w-full max-w-sm">
+        <main className="flex min-h-screen flex-col items-center justify-center px-4">
+            <div className="w-full max-w-md space-y-6 text-center animate-fade-up">
                 <Link
                     href="/"
-                    className="block text-center text-stone-400 text-sm mb-8 hover:text-stone-600 transition-colors"
+                    className="text-sm font-light transition-colors hover:opacity-100"
+                    style={{ color: 'hsl(var(--muted-foreground))' }}
                 >
                     ← Back
                 </Link>
 
-                <h1 className="text-3xl font-light text-stone-900 text-center mb-3">
+                <h1 className="text-4xl tracking-tight">
                     Visit a Memorial
                 </h1>
-                <p className="text-center text-stone-400 text-sm mb-10">
+                <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     Enter your email and the Memorial ID you received.
                 </p>
 
-                <div className="space-y-5">
+                <div className="space-y-5 text-left">
                     {/* E-Mail */}
-                    <div>
+                    <div className="space-y-2">
                         <label
                             htmlFor="visitor-email"
-                            className="block text-stone-700 font-medium mb-2 text-sm uppercase tracking-wide"
+                            className="block text-[11px] font-medium uppercase tracking-[0.15em]"
+                            style={{ color: 'hsl(var(--muted-foreground))' }}
                         >
                             Your Email
                         </label>
@@ -95,15 +96,16 @@ export default function VisitPage() {
                             onChange={(e) => setEmail(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
                             placeholder="name@example.com"
-                            className="w-full bg-white border border-stone-200 rounded-lg px-4 py-4 text-lg text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-400 transition"
+                            className="field-input"
                         />
                     </div>
 
                     {/* Memorial-ID */}
-                    <div>
+                    <div className="space-y-2">
                         <label
                             htmlFor="memorial-id"
-                            className="block text-stone-700 font-medium mb-2 text-sm uppercase tracking-wide"
+                            className="block text-[11px] font-medium uppercase tracking-[0.15em]"
+                            style={{ color: 'hsl(var(--muted-foreground))' }}
                         >
                             Memorial ID
                         </label>
@@ -116,16 +118,22 @@ export default function VisitPage() {
                             placeholder="e.g., 7c302e48-4a5b-4a1a-..."
                             autoCapitalize="none"
                             autoCorrect="off"
-                            className="w-full bg-white border border-stone-200 rounded-lg px-4 py-4 text-lg text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-400 transition font-mono text-base"
+                            className="field-input font-mono"
                         />
-                        <p className="mt-2 text-xs text-stone-400">
+                        <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
                             Ask the memorial owner for the ID — it&apos;s shown under Team Access in the edit page.
                         </p>
                     </div>
 
                     {/* Fehleranzeige */}
                     {error && (
-                        <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+                        <p role="alert" className="text-sm rounded-lg px-4 py-3"
+                            style={{
+                                color: 'hsl(var(--destructive))',
+                                backgroundColor: 'hsl(var(--destructive) / 0.05)',
+                                border: '1px solid hsl(var(--destructive) / 0.2)',
+                            }}
+                        >
                             {error}
                         </p>
                     )}
@@ -134,7 +142,11 @@ export default function VisitPage() {
                     <button
                         onClick={handleEnter}
                         disabled={loading}
-                        className="w-full bg-stone-800 text-stone-100 font-semibold text-sm uppercase tracking-widest py-4 rounded-full shadow-lg hover:bg-stone-900 disabled:opacity-50 transition-colors flex items-center justify-center"
+                        className="w-full rounded-full py-4 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md disabled:opacity-50 flex items-center justify-center"
+                        style={{
+                            backgroundColor: 'hsl(var(--primary))',
+                            color: 'hsl(var(--primary-foreground))',
+                        }}
                     >
                         {loading ? (
                             <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
@@ -144,12 +156,13 @@ export default function VisitPage() {
                     </button>
 
                     {/* Demo-Link */}
-                    <p className="text-center text-stone-400 text-xs">
+                    <p className="text-center text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
                         No ID?{' '}
                         <button
                             type="button"
                             onClick={() => router.push('/memorial/demo')}
-                            className="underline hover:text-stone-600 transition-colors"
+                            className="underline underline-offset-4 transition-colors hover:opacity-100"
+                            style={{ color: 'hsl(var(--foreground) / 0.7)' }}
                         >
                             View demo memorial
                         </button>

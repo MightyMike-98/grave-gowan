@@ -3,25 +3,34 @@
  * @description Das globale Root-Layout der gesamten Cloudyard-Web-App.
  *
  * Diese Datei wird von Next.js automatisch um jede einzelne Seite herum gerendert.
- * Sie definiert die grundlegende HTML-Struktur, den globalen Schriftsatz (Inter via Google Fonts),
- * die Hintergrundfarbe und die Standard-Metadaten (Titel, Beschreibung) für SEO.
- *
- * Alles was hier steht, ist auf ALLEN Seiten der App sichtbar.
+ * Sie definiert die grundlegende HTML-Struktur, den globalen Schriftsatz
+ * (Inter + Cormorant Garamond via Google Fonts) und die Standard-Metadaten.
  */
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Cormorant_Garamond } from 'next/font/google';
 import './globals.css';
 
 /**
- * Konfiguration der Inter-Schriftart.
- * Wird als CSS-Variable (`--font-inter`) eingebunden, damit sie in der ganzen App
- * über Tailwind (`font-sans`) genutzt werden kann.
+ * Inter – Body font. Weight 300 (light) als Default, 400/500/600 für Emphasis.
  */
 const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
+    subsets: ['latin'],
+    variable: '--font-inter',
+    display: 'swap',
+    weight: ['300', '400', '500', '600'],
+});
+
+/**
+ * Cormorant Garamond – Heading font. Elegant serif für h1–h4.
+ * Weight 300/400/500/600 + Italic-Varianten.
+ */
+const cormorant = Cormorant_Garamond({
+    subsets: ['latin'],
+    variable: '--font-serif',
+    display: 'swap',
+    weight: ['300', '400', '500', '600'],
+    style: ['normal', 'italic'],
 });
 
 /**
@@ -29,30 +38,28 @@ const inter = Inter({
  * Können auf einzelnen Seiten (z. B. der Memorial-Seite) überschrieben werden.
  */
 export const metadata: Metadata = {
-  title: 'Cloudyard',
-  description: 'A quiet, respectful space to honor loved ones.',
-  openGraph: {
     title: 'Cloudyard',
     description: 'A quiet, respectful space to honor loved ones.',
-    type: 'website',
-  },
+    openGraph: {
+        title: 'Cloudyard',
+        description: 'A quiet, respectful space to honor loved ones.',
+        type: 'website',
+    },
 };
 
 /**
  * Root-Layout-Komponente. Wird von Next.js automatisch als äußerste Hülle jeder Seite verwendet.
- *
- * @param children - Die eigentliche Seite, die innerhalb dieses Layouts gerendert wird.
  */
 export default function RootLayout({
-  children,
+    children,
 }: {
-  children: React.ReactNode;
+    children: React.ReactNode;
 }) {
-  return (
-    <html lang="en" className={inter.variable}>
-      <body className="bg-stone-100 text-stone-800 antialiased">
-        {children}
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
+            <body className="antialiased">
+                {children}
+            </body>
+        </html>
+    );
 }

@@ -1,11 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
+/*
+ * Design tokens – HSL color system from the new design.
+ * Used via hsl(var(--token)) in Tailwind & components.
+ */
 :root {
+  --background: 225 25% 95%;
+  --foreground: 225 15% 15%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 225 15% 15%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 225 15% 15%;
+
+  --primary: 225 15% 15%;
+  --primary-foreground: 225 25% 97%;
+
+  --secondary: 225 20% 93%;
+  --secondary-foreground: 225 15% 15%;
+
+  --muted: 225 15% 91%;
+  --muted-foreground: 225 8% 52%;
+
+  --accent: 225 15% 91%;
+  --accent-foreground: 225 15% 15%;
+
+  --destructive: 0 65% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 225 15% 88%;
+  --input: 225 15% 88%;
+  --ring: 225 15% 15%;
+
+  --radius: 0.75rem;
+
+  /* Memorial hero gradient stops */
+  --memorial-top: 230 35% 88%;
+  --memorial-mid: 225 20% 90%;
+  --memorial-bottom: 35 15% 89%;
+
   --font-inter: 'Inter', system-ui, sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+}
+
+/*
+ * Typography: quiet, refined foundation.
+ * Body = Inter 300 (light) with subtle letter-spacing.
+ * Headings = Cormorant Garamond 400 with tight tracking.
+ */
+* {
+  border-color: hsl(var(--border));
 }
 
 body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
   font-family: var(--font-inter);
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }
 
 /* Hide scrollbar for tab navigation */
@@ -15,4 +77,136 @@ body {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/*
+ * Shared form-field classes for the create/edit form.
+ * Replaces the old <style jsx> block with proper CSS.
+ */
+.field-input {
+  width: 100%;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.6);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  height: 3rem;
+  font-size: 0.875rem;
+  font-weight: 300;
+  color: hsl(var(--foreground));
+  outline: none;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: box-shadow 0.15s;
+}
+.field-input:focus {
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.3);
+}
+.field-input::placeholder {
+  color: hsl(var(--muted-foreground) / 0.5);
+}
+
+.field-locked {
+  width: 100%;
+  background: hsl(var(--muted) / 0.3);
+  border: 1px solid hsl(var(--border) / 0.6);
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  height: 3rem;
+  font-size: 0.875rem;
+  font-weight: 300;
+  color: hsl(var(--muted-foreground));
+  cursor: not-allowed;
+}
+
+/*
+ * Gentle fade-in animation for page content.
+ * Replaces Framer Motion with pure CSS for zero-dependency approach.
+ */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.6s ease-out both;
+}
+
+/*
+ * Tab content transition — mimics AnimatePresence mode="wait"
+ * Each tab fades in from slightly below when switching.
+ */
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-tab-in {
+  animation: tabFadeIn 0.45s ease-out both;
+}
+
+/*
+ * Lightbox — soft scale + fade for images
+ * Mimics motion.img initial={{ opacity: 0, scale: 0.95 }}
+ */
+@keyframes lightboxOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes lightboxImageIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-lightbox-overlay {
+  animation: lightboxOverlayIn 0.3s ease-out both;
+}
+
+.animate-lightbox-image {
+  animation: lightboxImageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/*
+ * Stagger animation for list items — each child delays slightly.
+ */
+.stagger-children > * {
+  animation: fadeUp 0.45s ease-out both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.12s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.18s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.24s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.30s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.36s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.42s; }
+.stagger-children > *:nth-child(n+9) { animation-delay: 0.48s; }
+
+/*
+ * Flower / candle pulse animation
+ */
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50%      { transform: scale(1.2); opacity: 0.6; }
+}
+
+.animate-gentle-pulse {
+  animation: gentlePulse 2.5s ease-in-out infinite;
 }

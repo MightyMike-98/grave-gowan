@@ -9,9 +9,6 @@
  * URL-Parameter:
  * - `?next=/create` → nach Login auf diese URL weiterleiten
  * - `?error=...`    → Fehlermeldung aus dem OAuth-Callback anzeigen
- *
- * Benötigt 'use client' für useState (Email-Input, Loading, Feedback-Nachrichten).
- * Auth-Logik kommt aus data/src/auth.ts — keine direkten Supabase-Imports hier.
  */
 
 'use client';
@@ -25,28 +22,17 @@ import { Suspense, useState } from 'react';
 function LoginForm() {
     const searchParams = useSearchParams();
 
-    /** Ziel-URL nach erfolgreichem Login (aus dem Middleware-Redirect). */
+    /** Ziel-URL nach erfolgreichem Login. */
     const next = searchParams.get('next') ?? '/dashboard';
 
-    /** Fehler aus dem OAuth-Callback (z. B. "Authentication failed"). */
+    /** Fehler aus dem OAuth-Callback. */
     const callbackError = searchParams.get('error');
 
-    /** E-Mail-Eingabe für den Magic Link. */
     const [email, setEmail] = useState('');
-
-    /** Gibt an ob gerade ein Request läuft (Google oder Magic Link). */
     const [loading, setLoading] = useState<'google' | 'email' | null>(null);
-
-    /** Fehlermeldung aus Auth-Funktionen. */
     const [error, setError] = useState<string | null>(callbackError);
-
-    /** Bestätigungsmeldung nach erfolgreichem Magic-Link-Versand. */
     const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-    /**
-     * Startet den Google OAuth-Flow.
-     * Browser wird zu Google weitergeleitet, kommt zurück via /auth/callback.
-     */
     const handleGoogle = async () => {
         setLoading('google');
         setError(null);
@@ -55,13 +41,8 @@ function LoginForm() {
             setError(error);
             setLoading(null);
         }
-        // Bei Erfolg: Browser navigiert automatisch zu Google (kein setLoading(null) nötig)
     };
 
-    /**
-     * Sendet einen Magic Link an die eingegebene E-Mail-Adresse.
-     * Zeigt eine Bestätigungsnachricht nach erfolgreichem Versand.
-     */
     const handleMagicLink = async () => {
         if (!email.trim()) {
             setError('Please enter your email address.');
@@ -81,17 +62,18 @@ function LoginForm() {
     // Bestätigungsansicht nach Magic Link Versand
     if (magicLinkSent) {
         return (
-            <main className="min-h-screen bg-stone-100 flex flex-col items-center justify-center px-6">
-                <div className="w-full max-w-sm text-center space-y-6">
+            <main className="min-h-screen flex flex-col items-center justify-center px-4">
+                <div className="w-full max-w-md text-center space-y-6 animate-fade-up">
                     <div className="text-5xl">📬</div>
-                    <h1 className="text-2xl font-semibold text-stone-800">Check your email</h1>
-                    <p className="text-stone-500 leading-relaxed">
-                        We&apos;ve sent a login link to <strong className="text-stone-700">{email}</strong>.
+                    <h1 className="text-2xl tracking-tight">Check your email</h1>
+                    <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                        We&apos;ve sent a login link to <strong style={{ color: 'hsl(var(--foreground))' }}>{email}</strong>.
                         Click the link in the email to sign in.
                     </p>
                     <button
                         onClick={() => { setMagicLinkSent(false); setEmail(''); }}
-                        className="text-stone-400 text-sm hover:text-stone-600 transition-colors"
+                        className="text-sm font-light transition-colors hover:opacity-100"
+                        style={{ color: 'hsl(var(--muted-foreground))' }}
                     >
                         Use a different email
                     </button>
@@ -101,13 +83,12 @@ function LoginForm() {
     }
 
     return (
-        <main className="min-h-screen bg-stone-100 flex flex-col items-center justify-center px-6">
-            <div className="w-full max-w-sm space-y-8">
-                {/* Header */}
-                <div className="text-center">
-                    <h1 className="text-4xl font-light text-stone-900 mb-2">Cloudyard</h1>
-                    <p className="text-stone-500 text-sm">Sign in to manage your memorials</p>
-                </div>
+        <main className="flex min-h-screen flex-col items-center justify-center px-4">
+            <div className="w-full max-w-md space-y-6 text-center animate-fade-up">
+                <h1 className="text-4xl tracking-tight">
+                    Cloudyard
+                </h1>
+                <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>Sign in to manage your memorials</p>
 
                 <div className="space-y-4">
                     {/* Google OAuth Button */}
@@ -115,31 +96,35 @@ function LoginForm() {
                         onClick={handleGoogle}
                         disabled={!!loading}
                         id="btn-google-login"
-                        className="w-full bg-white border border-stone-200 text-stone-700 font-medium py-4 rounded-xl flex items-center justify-center gap-3 hover:bg-stone-50 disabled:opacity-50 transition-colors shadow-sm text-base"
+                        className="w-full rounded-lg py-4 flex items-center justify-center gap-3 text-sm font-normal shadow-sm transition-shadow duration-200 hover:shadow-md disabled:opacity-50"
+                        style={{
+                            backgroundColor: 'hsl(var(--card))',
+                            color: 'hsl(var(--foreground))',
+                            border: '1px solid hsl(var(--border) / 0.6)',
+                        }}
                     >
                         {loading === 'google' ? (
-                            <span className="animate-spin w-5 h-5 border-2 border-stone-400 border-t-transparent rounded-full" />
+                            <span className="animate-spin w-5 h-5 border-2 border-current border-t-transparent rounded-full" style={{ borderColor: 'hsl(var(--muted-foreground))', borderTopColor: 'transparent' }} />
                         ) : (
-                            /* Google Logo SVG */
-                            <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
-                                <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.1 29.3 35 24 35c-6.1 0-11-4.9-11-11s4.9-11 11-11c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5 12.9 5 4 13.9 4 25s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.9z" />
-                                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.1 18.9 12 24 12c2.8 0 5.3 1 7.2 2.7l5.7-5.7C33.5 7.1 29 5 24 5c-7.7 0-14.3 4.4-17.7 9.7z" />
-                                <path fill="#4CAF50" d="M24 45c4.9 0 9.4-1.9 12.8-4.9l-5.9-5c-1.8 1.3-4 2.1-6.9 2.1-5.2 0-9.6-3-11.3-7.2l-6.6 5.1C9.7 40.6 16.4 45 24 45z" />
-                                <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.3 4.1-4.2 5.4l5.9 5c-.4.4 6.6-4.8 6.6-13.4 0-1.3-.1-2.6-.4-3.9z" />
+                            <svg className="h-5 w-5" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                             </svg>
                         )}
                         Continue with Google
                     </button>
 
                     {/* Divider */}
-                    <div className="flex items-center gap-3">
-                        <div className="flex-1 h-px bg-stone-200" />
-                        <span className="text-stone-400 text-sm">or</span>
-                        <div className="flex-1 h-px bg-stone-200" />
+                    <div className="flex items-center gap-4">
+                        <div className="h-px flex-1" style={{ backgroundColor: 'hsl(var(--border) / 0.6)' }} />
+                        <span className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>or</span>
+                        <div className="h-px flex-1" style={{ backgroundColor: 'hsl(var(--border) / 0.6)' }} />
                     </div>
 
                     {/* Magic Link Email */}
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         <input
                             id="input-email"
                             type="email"
@@ -147,13 +132,17 @@ function LoginForm() {
                             onChange={(e) => setEmail(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleMagicLink()}
                             placeholder="your@email.com"
-                            className="w-full bg-white border border-stone-200 rounded-xl px-4 py-4 text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-400 transition text-base"
+                            className="field-input"
                         />
                         <button
                             onClick={handleMagicLink}
                             disabled={!!loading}
                             id="btn-email-login"
-                            className="w-full bg-stone-800 text-white font-semibold py-4 rounded-xl hover:bg-stone-900 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 text-base"
+                            className="w-full rounded-full py-4 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+                            style={{
+                                backgroundColor: 'hsl(var(--primary))',
+                                color: 'hsl(var(--primary-foreground))',
+                            }}
                         >
                             {loading === 'email' ? (
                                 <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
@@ -168,7 +157,13 @@ function LoginForm() {
 
                     {/* Fehlermeldung */}
                     {error && (
-                        <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3 text-center">
+                        <p role="alert" className="text-sm rounded-lg px-4 py-3 text-center"
+                            style={{
+                                color: 'hsl(var(--destructive))',
+                                backgroundColor: 'hsl(var(--destructive) / 0.05)',
+                                border: '1px solid hsl(var(--destructive) / 0.2)',
+                            }}
+                        >
                             {error}
                         </p>
                     )}
@@ -177,7 +172,8 @@ function LoginForm() {
                 {/* Zurück-Link */}
                 <Link
                     href="/"
-                    className="block text-center text-stone-400 text-sm hover:text-stone-600 transition-colors"
+                    className="inline-block text-sm font-light transition-colors hover:opacity-100"
+                    style={{ color: 'hsl(var(--muted-foreground))' }}
                 >
                     ← Back to Home
                 </Link>
@@ -189,12 +185,12 @@ function LoginForm() {
     );
 }
 
-/** Seiten-Einstiegspunkt mit Suspense-Wrapper (erforderlich für useSearchParams). */
+/** Seiten-Einstiegspunkt mit Suspense-Wrapper. */
 export default function LoginPage() {
     return (
         <Suspense fallback={
-            <main className="min-h-screen bg-stone-100 flex items-center justify-center">
-                <span className="animate-spin w-8 h-8 border-2 border-stone-400 border-t-transparent rounded-full" />
+            <main className="min-h-screen flex items-center justify-center">
+                <span className="animate-spin w-8 h-8 border-2 border-t-transparent rounded-full" style={{ borderColor: 'hsl(var(--muted-foreground))', borderTopColor: 'transparent' }} />
             </main>
         }>
             <LoginForm />

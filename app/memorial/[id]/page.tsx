@@ -147,12 +147,12 @@ export default async function MemorialPage({ params, searchParams }: MemorialPag
     if (!memorial) notFound();
 
     return (
-        <div className="bg-stone-100 min-h-screen">
+        <div className="min-h-screen">
             <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} visitorEmail={visitorEmail} />
 
             <footer className="pb-10 flex flex-col items-center gap-2">
-                <p className="text-stone-300 text-xs uppercase tracking-widest">Created by Family</p>
-                <Link href="/" className="text-stone-400 text-xs hover:text-stone-600 transition-colors">
+                <p className="text-xs uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>Created by Family</p>
+                <Link href="/" className="text-xs transition-colors" style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>
                     Powered by Cloudyard
                 </Link>
             </footer>
