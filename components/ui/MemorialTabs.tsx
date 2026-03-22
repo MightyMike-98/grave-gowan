@@ -23,7 +23,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useState } from 'react';
 
-const TABS = ['About', 'Timeline', 'Gallery', 'Stories', 'Highlights', 'Support'] as const;
+const TABS = ['Highlights', 'About', 'Timeline', 'Gallery', 'Stories', 'Support'] as const;
 type Tab = (typeof TABS)[number];
 type UserRole = 'owner' | 'editor' | 'viewer' | 'anonymous';
 
@@ -42,7 +42,7 @@ interface MemorialTabsProps {
 }
 
 export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, visitorEmail }: MemorialTabsProps) {
-    const [activeTab, setActiveTab] = useState<Tab>('About');
+    const [activeTab, setActiveTab] = useState<Tab>('Highlights');
     const [flowers, setFlowers] = useState<string[]>([]);
 
     const isOwner = userRole === 'owner';
@@ -65,7 +65,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, v
             case 'Stories':
                 return <StoriesSection stories={memorial.stories} canEdit={canEdit} />;
             case 'Highlights':
-                return <HighlightsSection memorial={memorial} />;
+                return <HighlightsSection memorial={memorial} canEdit={canEdit} onTabChange={(tab) => setActiveTab(tab as Tab)} />;
             case 'Support':
                 return <SupportSection support={memorial.support} onDonate={addFlower} />;
         }

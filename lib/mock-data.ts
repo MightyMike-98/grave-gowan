@@ -32,6 +32,7 @@ export const DUMMY_MEMORIAL: Memorial = {
             author: 'Emily (daughter)',
             date: 'Jan 24, 2024',
             text: 'Mom always loved the rain. She used to say it was the earth taking a deep breath.',
+            isFavorite: true,
         },
         {
             id: '2',
@@ -45,11 +46,13 @@ export const DUMMY_MEMORIAL: Memorial = {
             id: '1',
             url: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&auto=format&fit=crop',
             caption: 'Walking in the Olympic National Park, 1985',
+            isFavorite: true,
         },
         {
             id: '2',
             url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop',
             caption: 'Her favorite view of the valley',
+            isFavorite: true,
         },
         {
             id: '3',
@@ -95,7 +98,6 @@ export const DUMMY_MEMORIAL: Memorial = {
             { title: 'World Wildlife Fund', url: 'https://www.worldwildlife.org' },
         ],
     },
-    highlights: ['1', '2'],
 };
 
 /**

@@ -15,6 +15,7 @@
  */
 
 import { MemorialTabs } from '@/components/ui/MemorialTabs';
+import { RequestWidget } from '@/components/ui/RequestWidget';
 import { DUMMY_MEMORIAL } from '@/lib/mock-data';
 import type { Memorial as UIMemorial } from '@/types';
 import type { Memorial as DomainMemorial } from '@core/types/index';
@@ -65,7 +66,6 @@ function toUIMemorial(d: DomainMemorial): UIMemorial {
             description: d.supportDesc ?? '',
             links: [{ title: d.supportTitle, url: d.supportUrl ?? '' }]
         } : undefined,
-        highlights: [],
     };
 }
 
@@ -146,16 +146,20 @@ export default async function MemorialPage({ params, searchParams }: MemorialPag
 
     if (!memorial) notFound();
 
+    const canEdit = role === 'owner' || role === 'editor';
+
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen relative pb-20">
             <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} visitorEmail={visitorEmail} />
 
-            <footer className="pb-10 flex flex-col items-center gap-2">
+            <footer className="pb-10 pt-10 flex flex-col items-center gap-2">
                 <p className="text-xs uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>Created by Family</p>
                 <Link href="/" className="text-xs transition-colors" style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>
                     Powered by Cloudyard
                 </Link>
             </footer>
+
+            {!canEdit && <RequestWidget />}
         </div>
     );
 }

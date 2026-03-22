@@ -1,97 +1,194 @@
 /**
  * @file components/ui/HighlightsSection.tsx
- * @description Zeigt handverlesene Highlights-Inhalte eines Memorials.
- *
- * Matches gentle-code-mover's HighlightsTab:
- * - 2-column grid of highlight cards with icon, category, title, description
- * - Stagger animation, hover shadow
- * - Also shows highlighted photos and stories as before
+ * @description Zeigt den Highlights-Feed (Favorisierte Bilder, Biografie-Vorschau, Lieblings-Stories).
+ * Matches gentle-code-mover's Highlights implementation exactly.
  */
 
+'use client';
+
 import type { Memorial } from '@/types';
-import Image from 'next/image';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useState } from 'react';
+
+const fadeIn = {
+    hidden: { opacity: 0, y: 12 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } },
+};
 
 interface HighlightsSectionProps {
     memorial: Memorial;
+    canEdit?: boolean;
+    onTabChange?: (tab: string) => void;
 }
 
-export function HighlightsSection({ memorial }: HighlightsSectionProps) {
-    const highlightedPhotos = memorial.photos.filter((p) => memorial.highlights.includes(p.id));
-    const highlightedStories = memorial.stories.filter((s) => memorial.highlights.includes(s.id));
+export function HighlightsSection({ memorial, canEdit = false, onTabChange }: HighlightsSectionProps) {
+    const favoriteGallery = memorial.photos.filter((p) => p.isFavorite);
+    const favoriteStories = memorial.stories.filter((s) => s.isFavorite);
+    const [lightbox, setLightbox] = useState<number | null>(null);
 
     return (
-        <section aria-label="Curated Highlights" className="py-10 space-y-10">
-            <div>
-                <h2 className="text-3xl tracking-tight">Curated Highlights</h2>
-                <p
-                    className="mt-2 text-sm font-light"
-                    style={{ color: 'hsl(var(--muted-foreground))' }}
-                >
-                    Die prägendsten Momente und Errungenschaften.
-                </p>
-            </div>
+        <section aria-label="Memorial Highlights" className="py-10 space-y-16">
+            
 
-            {/* Highlighted Photos */}
-            {highlightedPhotos.length > 0 && (
-                <div className="space-y-6 stagger-children">
-                    {highlightedPhotos.map((photo) => (
-                        <figure key={photo.id} className="space-y-3">
-                            <div
-                                className="relative w-full h-72 rounded-xl overflow-hidden"
-                                style={{ backgroundColor: 'hsl(var(--muted))' }}
+
+            {/* 1. Favorite Photos (Masonry/Grid) */}
+            {favoriteGallery.length > 0 && (
+                <motion.div variants={fadeIn} initial="hidden" animate="visible">
+                    <p
+                        className="text-[10px] font-medium uppercase tracking-[0.2em]"
+                        style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
+                    >
+                        Erinnerungen
+                    </p>
+                    <h2 className="mt-1 text-3xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
+                        Bilder
+                    </h2>
+                    <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3">
+                        {favoriteGallery.map((img, i) => (
+                            <motion.div
+                                key={img.id}
+                                className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl bg-muted"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setLightbox(i)}
                             >
-                                <Image
-                                    src={photo.url}
-                                    alt={photo.caption || 'Highlighted photo'}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(max-width: 768px) 100vw, 600px"
+                                <img
+                                    src={img.url}
+                                    alt={img.caption ?? ''}
+                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    loading="lazy"
                                 />
-                            </div>
-                            {photo.caption && (
-                                <figcaption
-                                    className="text-center text-sm font-light italic"
-                                    style={{ color: 'hsl(var(--muted-foreground))' }}
-                                >
-                                    {photo.caption}
-                                </figcaption>
-                            )}
-                        </figure>
-                    ))}
-                </div>
+                                {img.caption && (
+                                    <>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                                        <p className="absolute bottom-0 left-0 right-0 p-3 text-xs font-light text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                                            {img.caption}
+                                        </p>
+                                    </>
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+                </motion.div>
             )}
 
-            {/* Highlighted Stories */}
-            {highlightedStories.length > 0 && (
-                <div className="space-y-6 stagger-children">
-                    {highlightedStories.map((story) => (
-                        <blockquote
-                            key={story.id}
-                            className="rounded-xl px-6 py-5 space-y-4"
-                            style={{
-                                backgroundColor: 'hsl(var(--card))',
-                                borderLeft: '3px solid hsl(var(--foreground))',
-                            }}
-                        >
-                            <p
-                                className="text-lg font-light italic leading-relaxed"
+            {/* 2. Biography Preview */}
+            {memorial.bio && (
+                <motion.div variants={fadeIn} initial="hidden" animate="visible">
+                    <p
+                        className="text-[10px] font-medium uppercase tracking-[0.2em]"
+                        style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
+                    >
+                        Biografie
+                    </p>
+                    <h2 className="mt-1 text-3xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
+                        Über {memorial.name.split(' ')[0]}
+                    </h2>
+                    <p
+                        className="mt-4 text-[15px] leading-[1.8] font-light"
+                        style={{ color: 'hsl(var(--foreground) / 0.75)' }}
+                    >
+                        {memorial.bio}
+                    </p>
+                </motion.div>
+            )}
+
+            {/* 3. Favorite Stories */}
+            {favoriteStories.length > 0 && (
+                <div>
+                    <motion.p
+                        variants={fadeIn}
+                        initial="hidden" animate="visible"
+                        className="text-[10px] font-medium uppercase tracking-[0.2em]"
+                        style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
+                    >
+                        Lieblings-Stories
+                    </motion.p>
+                    <motion.h2
+                        variants={fadeIn}
+                        initial="hidden" animate="visible"
+                        className="mt-1 text-3xl tracking-tight"
+                        style={{ color: 'hsl(var(--foreground))' }}
+                    >
+                        Stories
+                    </motion.h2>
+                    <div className="mt-6 space-y-5">
+                        {favoriteStories.map((story) => (
+                            <motion.div
+                                key={story.id}
+                                variants={fadeIn}
+                                initial="hidden" animate="visible"
+                                className="rounded-xl border p-5 shadow-sm"
                                 style={{
-                                    fontFamily: 'var(--font-serif)',
-                                    color: 'hsl(var(--foreground) / 0.7)',
+                                    backgroundColor: 'hsl(var(--card))',
+                                    borderColor: 'hsl(var(--border) / 0.4)',
                                 }}
                             >
-                                &ldquo;{story.text}&rdquo;
-                            </p>
-                            <footer
-                                className="text-xs font-light uppercase tracking-[0.15em]"
-                                style={{ color: 'hsl(var(--muted-foreground))' }}
-                            >
-                                — {story.author}
-                            </footer>
-                        </blockquote>
-                    ))}
+                                <div className="flex items-center gap-3">
+                                    <div
+                                        className="flex h-9 w-9 items-center justify-center rounded-full text-[10px] font-medium"
+                                        style={{
+                                            backgroundColor: 'hsl(var(--muted))',
+                                            color: 'hsl(var(--muted-foreground))',
+                                        }}
+                                    >
+                                        {story.author.substring(0, 2).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
+                                            {story.author}
+                                        </p>
+                                        <p className="text-[11px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}>
+                                            {story.date}
+                                        </p>
+                                    </div>
+                                </div>
+                                <p
+                                    className="mt-4 text-[14px] leading-[1.8] font-light"
+                                    style={{ color: 'hsl(var(--foreground) / 0.7)' }}
+                                >
+                                    {story.text}
+                                </p>
+                            </motion.div>
+                        ))}
+                    </div>
                 </div>
             )}
+
+            {/* Lightbox for Gallery */}
+            <AnimatePresence>
+                {lightbox !== null && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+                        style={{ backgroundColor: 'hsl(var(--foreground) / 0.9)' }}
+                        onClick={() => setLightbox(null)}
+                    >
+                        <button
+                            className="absolute right-4 top-4 rounded-full p-2 transition-colors hover:text-white"
+                            style={{ color: 'hsl(var(--primary-foreground) / 0.7)' }}
+                            onClick={() => setLightbox(null)}
+                        >
+                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <motion.img
+                            key={lightbox}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.3 }}
+                            src={favoriteGallery[lightbox].url}
+                            alt={favoriteGallery[lightbox].caption ?? ''}
+                            className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </section>
     );
 }

@@ -9,7 +9,7 @@
  *   Supabase Auth (Session) → getMemorialsByOwner (Use Case) → SupabaseMemorialRepository → DB
  */
 
-import { SignOutButton } from '@/components/ui/SignOutButton';
+import { DashboardHeader } from '@/components/ui/DashboardHeader';
 import type { Memorial } from '@core/types/index';
 import { getMemorialsByOwner } from '@core/use-cases/getMemorialsByOwner';
 import { SupabaseMemorialRepository } from '@data/repositories/SupabaseMemorialRepository';
@@ -43,16 +43,8 @@ export default async function DashboardPage() {
     return (
         <main className="min-h-screen px-4 py-16">
             <div className="mx-auto max-w-xl animate-fade-up">
-                {/* Header: Begrüßung + Sign-Out */}
-                <header className="flex items-start justify-between">
-                    <div>
-                        <h1 className="text-3xl tracking-tight">
-                            Welcome, {displayName.split(' ')[0]}
-                        </h1>
-                        <p className="mt-1 text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{email}</p>
-                    </div>
-                    <SignOutButton />
-                </header>
+                {/* Header: Begrüßung + Sign-Out + Inbox */}
+                <DashboardHeader displayName={displayName} email={email} />
 
                 <h2 className="mt-10 text-xl tracking-tight">
                     My Memorials
