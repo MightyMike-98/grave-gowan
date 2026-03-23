@@ -79,9 +79,13 @@ function CreateMemorialForm() {
     const [galleryPhotos, setGalleryPhotos] = useState<{ id: string; url: string; favorite: boolean }[]>([
         { id: '1', url: '/placeholder-img-1.jpg', favorite: true },
         { id: '2', url: '/placeholder-img-2.jpg', favorite: false },
+        { id: '3', url: '/placeholder-img-3.jpg', favorite: true },
+        { id: '4', url: '/placeholder-img-4.jpg', favorite: false },
+        { id: '5', url: '/placeholder-img-5.jpg', favorite: true },
     ]);
     const [stories, setStories] = useState<{ id: string; author: string; text: string; date: string; favorite: boolean }[]>([
-        { id: '1', author: 'Sarah M.', text: 'Ein wunderbarer Mensch...', date: 'vor 2 Wochen', favorite: true },
+        { id: '1', author: 'Jane Doe', text: '„Er war ein Vorbild für uns alle. Sein Mut hat mich inspiriert, nie aufzugeben.“', date: 'vor 3 Tagen', favorite: true },
+        { id: '2', author: 'Max B.', text: '„Ich erinnere mich, wie mein Vater und ich seine Kämpfe zusammen geschaut haben.“', date: 'vor 1 Woche', favorite: false },
     ]);
     const [moderationEnabled, setModerationEnabled] = useState(false);
 
@@ -424,14 +428,14 @@ function CreateMemorialForm() {
                         </FormField>
                     ) : isEditorRole && name ? (
                         <FormField label="Full Name" icon="lock">
-                            <div className="field-locked">{name}</div>
+                            <input type="text" value={name} disabled className="field-input opacity-70 bg-muted/20 cursor-not-allowed" />
                         </FormField>
                     ) : null}
 
                     {/* Date of Birth: Editor sieht es read-only */}
                     {isEditorRole ? (
                         <FormField label="Date of Birth" icon="lock">
-                            <div className="field-locked">{formatDate(dateOfBirth)}</div>
+                            <input type="text" value={formatDate(dateOfBirth)} disabled className="field-input opacity-70 bg-muted/20 cursor-not-allowed" />
                         </FormField>
                     ) : (
                         <FormField label="Date of Birth" icon={isEditing ? 'edit' : undefined}>
@@ -459,7 +463,7 @@ function CreateMemorialForm() {
                     {/* Biography: Editor sieht es read-only */}
                     {isEditorRole ? (
                         <FormField label="Biography" icon="lock">
-                            <div className="field-locked whitespace-pre-wrap">{bio || '—'}</div>
+                            <textarea value={bio || '—'} disabled rows={5} className="field-input !h-auto min-h-[150px] resize-none opacity-70 bg-muted/20 cursor-not-allowed" />
                         </FormField>
                     ) : (
                         <FormField label="Biography" icon={isEditing ? 'edit' : undefined}>
@@ -477,7 +481,7 @@ function CreateMemorialForm() {
                     {/* Quote: Editor sieht es read-only */}
                     {isEditorRole ? (
                         <FormField label="Quote (Zitat)" icon="lock">
-                            <div className="field-locked italic">„{quote || '—'}“</div>
+                            <input type="text" value={`„${quote || '—'}“`} disabled className="field-input italic opacity-70 bg-muted/20 cursor-not-allowed" />
                         </FormField>
                     ) : (
                         <FormField label="Quote (Zitat)" icon={isEditing ? 'edit' : undefined}>
@@ -707,9 +711,10 @@ function CreateMemorialForm() {
                                     <div className="flex items-center gap-2">
                                         <button
                                             type="button"
+                                            onClick={() => setStories(prev => prev.map(s => s.id === story.id ? { ...s, favorite: !s.favorite } : s))}
                                             className="rounded-full p-1 transition-colors hover:bg-foreground/10"
                                         >
-                                            <svg className="h-3.5 w-3.5 transition-colors" fill="none" viewBox="0 0 24 24" stroke="hsl(var(--muted-foreground) / 0.3)" strokeWidth={1.5}>
+                                            <svg className="h-3.5 w-3.5 transition-colors" fill={story.favorite ? "hsl(45 93% 55%)" : "none"} viewBox="0 0 24 24" stroke={story.favorite ? "hsl(45 93% 55%)" : "hsl(var(--muted-foreground) / 0.3)"} strokeWidth={1.5}>
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                                             </svg>
                                         </button>
@@ -767,11 +772,15 @@ function CreateMemorialForm() {
                         </p>
                         <div className="flex gap-4 pt-1">
                             <div className="flex items-center gap-1.5">
-                                <svg className="h-3 w-3" fill="hsl(45 93% 55%)" viewBox="0 0 24 24" stroke="none">
-                                    <path d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-                                </svg>
+                                <span className="text-xs font-medium" style={{ color: 'hsl(45 93% 55%)' }}>⭐</span>
                                 <span className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                    {galleryPhotos.filter(g => g.favorite).length} Fotos | {stories.filter(s => s.favorite).length} Stories
+                                    {galleryPhotos.filter(g => g.favorite).length} Fotos
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-medium" style={{ color: 'hsl(45 93% 55%)' }}>⭐</span>
+                                <span className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                    {stories.filter(s => s.favorite).length} Stories
                                 </span>
                             </div>
                         </div>

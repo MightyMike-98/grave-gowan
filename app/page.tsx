@@ -61,7 +61,7 @@ export default function LandingPage() {
                         className="mt-1 text-sm font-normal transition-colors hover:opacity-100"
                         style={{ color: 'hsl(var(--foreground) / 0.7)' }}
                     >
-                        Create New
+                        Login
                     </Link>
 
                     {/* Demo-Link */}
