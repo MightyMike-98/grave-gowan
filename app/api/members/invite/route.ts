@@ -54,21 +54,13 @@ export async function POST(request: NextRequest) {
 
         const cleanEmail = email.trim().toLowerCase();
 
-        // Optional: Supabase-Account per E-Mail suchen
-        // Falls die Admin-API verfügbar ist, schauen wir ob der User bereits existiert
+        // User-ID per E-Mail nachschlagen (RPC-Funktion, braucht keinen Admin-Zugang)
         let targetUserId: string | null = null;
-        try {
-            const { data: { users } } = await supabase.auth.admin.listUsers({
-                page: 1,
-                perPage: 1000,
-            });
-            const found = users?.find(u => u.email?.toLowerCase() === cleanEmail);
-            if (found) {
-                targetUserId = found.id;
-            }
-        } catch {
-            // Admin-API nicht verfügbar → kein Problem, wir speichern als Pending Invite
-            console.warn('[invite] admin.listUsers not available, creating pending invite');
+        const { data: foundUserId } = await supabase.rpc('get_user_id_by_email', {
+            lookup_email: cleanEmail,
+        });
+        if (foundUserId) {
+            targetUserId = foundUserId;
         }
 
         // In memorial_members eintragen

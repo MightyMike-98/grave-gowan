@@ -170,7 +170,9 @@ function LoginForm() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="your@email.com"
-                                className="field-input"
+                                disabled={!!loading}
+                                className="field-input transition-opacity duration-200"
+                                style={{ opacity: loading ? 0.5 : 1 }}
                             />
                             <input
                                 id="input-password"
@@ -179,20 +181,25 @@ function LoginForm() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleEmailSubmit()}
                                 placeholder={mode === 'signup' ? 'Choose a password (min. 6 characters)' : 'Password'}
-                                className="field-input"
+                                disabled={!!loading}
+                                className="field-input transition-opacity duration-200"
+                                style={{ opacity: loading ? 0.5 : 1 }}
                             />
                             <button
                                 onClick={handleEmailSubmit}
                                 disabled={!!loading}
                                 id="btn-email-login"
-                                className="w-full rounded-full py-4 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md disabled:opacity-50 flex items-center justify-center"
+                                className="w-full rounded-full py-4 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-all duration-300 hover:shadow-md disabled:opacity-70 flex items-center justify-center gap-2"
                                 style={{
                                     backgroundColor: 'hsl(var(--primary))',
                                     color: 'hsl(var(--primary-foreground))',
                                 }}
                             >
                                 {loading === 'email' ? (
-                                    <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                                    <>
+                                        <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                                        <span>{mode === 'login' ? 'Signing in...' : 'Creating account...'}</span>
+                                    </>
                                 ) : (
                                     mode === 'login' ? 'Sign In' : 'Create Account'
                                 )}

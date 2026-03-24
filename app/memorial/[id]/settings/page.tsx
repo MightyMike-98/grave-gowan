@@ -121,9 +121,9 @@ function MemberRow({
         viewer: 'bg-stone-100 text-stone-500',
     };
 
-    // Für anstehende Einladungen (Pending Invites) zeigen wir die E-Mail statt der User ID
-    const displayId = isPending ? (member as any).invitedEmail || 'Pending Invite' : member.userId;
-    const initials = isPending ? displayId?.slice(0, 2).toUpperCase() : member.userId!.slice(0, 2).toUpperCase();
+    // Anzeigename: invitedEmail bevorzugen, dann userId, dann Fallback
+    const displayName = member.invitedEmail || member.userId || 'Unknown';
+    const initials = displayName.slice(0, 2).toUpperCase();
 
     return (
         <li className="flex items-center justify-between px-5 py-3 gap-3">
@@ -136,7 +136,7 @@ function MemberRow({
                 </div>
                 <div className="min-w-0">
                     <p className="text-sm font-medium text-stone-800 truncate">
-                        {isCurrentUser ? 'You' : (isPending ? displayId : displayId.slice(0, 8) + '…')}
+                        {isCurrentUser ? 'You' : displayName}
                     </p>
                     <p className="text-xs text-stone-400 truncate">
                         {isPending ? 'Pending Invite' : new Date(member.joinedAt).toLocaleDateString('de-DE')}

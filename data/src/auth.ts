@@ -60,14 +60,22 @@ export async function signUpWithEmail(email: string, password: string): Promise<
     }
 
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
         options: {
             emailRedirectTo: `${APP_URL}/auth/callback`,
         },
     });
-    return { error: error?.message ?? null };
+    if (error) return { error: error.message };
+
+    // Supabase returns an empty identities array for already-registered emails
+    // (user_repeated_signup) without raising an error.
+    if (data.user && data.user.identities?.length === 0) {
+        return { error: 'An account with this email already exists. Please sign in instead.' };
+    }
+
+    return { error: null };
 }
 
 /**

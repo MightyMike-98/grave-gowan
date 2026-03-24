@@ -10,8 +10,11 @@
  */
 
 import { DashboardHeader } from '@/components/ui/DashboardHeader';
+import type { MembershipWithMemorial } from '@core/repositories/MemberRepository';
 import type { Memorial } from '@core/types/index';
 import { getMemorialsByOwner } from '@core/use-cases/getMemorialsByOwner';
+import { getSharedMemorials } from '@core/use-cases/getSharedMemorials';
+import { SupabaseMemberRepository } from '@data/repositories/SupabaseMemberRepository';
 import { SupabaseMemorialRepository } from '@data/repositories/SupabaseMemorialRepository';
 import { createSupabaseServerClient } from '@data/server-client';
 import Image from 'next/image';
@@ -33,11 +36,19 @@ export default async function DashboardPage() {
         email.split('@')[0];
 
     let memorials: Memorial[] = [];
+    let sharedMemorials: MembershipWithMemorial[] = [];
     try {
         const repo = new SupabaseMemorialRepository(supabase);
         memorials = await getMemorialsByOwner(user.id, repo);
     } catch (err) {
         console.warn('[Dashboard] Could not load memorials (table may not exist yet):', err);
+    }
+    try {
+        const memberRepo = new SupabaseMemberRepository(supabase);
+        sharedMemorials = await getSharedMemorials(user.id, memberRepo, email);
+        console.log('[Dashboard] Shared memorials loaded:', sharedMemorials.length);
+    } catch (err) {
+        console.error('[Dashboard] Could not load shared memorials:', err);
     }
 
     return (
@@ -59,20 +70,8 @@ export default async function DashboardPage() {
                         </Link>
                     </div>
 
-                    {/* Echte Memorials aus der DB */}
-                    {memorials.length === 0 ? (
-                        <div className="text-center py-10" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            <p className="text-4xl mb-3">🕊️</p>
-                            <p className="text-sm">No memorials yet. Create your first one above.</p>
-                            <Link
-                                href="/memorial/demo"
-                                className="mt-4 inline-block text-xs underline transition-colors hover:opacity-100"
-                                style={{ color: 'hsl(var(--muted-foreground))' }}
-                            >
-                                View demo memorial →
-                            </Link>
-                        </div>
-                    ) : (
+                    {/* Eigene Memorials aus der DB */}
+
                         <ul className="space-y-4">
                             {memorials.map((memorial) => (
                                 <li key={memorial.id}>
@@ -80,8 +79,24 @@ export default async function DashboardPage() {
                                 </li>
                             ))}
                         </ul>
-                    )}
+                    
                 </div>
+
+                {/* Shared Memorials */}
+                {sharedMemorials.length > 0 && (
+                    <>
+                        <h2 className="mt-12 text-xl tracking-tight">
+                            Shared with me
+                        </h2>
+                        <ul className="mt-5 space-y-4">
+                            {sharedMemorials.map(({ memorial, role }) => (
+                                <li key={memorial.id}>
+                                    <MemorialCard memorial={memorial} role={role} />
+                                </li>
+                            ))}
+                        </ul>
+                    </>
+                )}
             </div>
         </main>
     );
@@ -90,7 +105,7 @@ export default async function DashboardPage() {
 /**
  * Kachel für ein einzelnes Memorial im Dashboard.
  */
-function MemorialCard({ memorial }: { memorial: Memorial }) {
+function MemorialCard({ memorial, role }: { memorial: Memorial; role?: 'owner' | 'editor' | 'viewer' }) {
     const dateRange = [
         memorial.dateOfBirth ? new Date(memorial.dateOfBirth).getFullYear() : null,
         memorial.dateOfDeath ? new Date(memorial.dateOfDeath).getFullYear() : null,
@@ -138,30 +153,51 @@ function MemorialCard({ memorial }: { memorial: Memorial }) {
                             {dateRange}
                         </p>
                     )}
-                    <span
-                        className="inline-block mt-1.5 text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full"
-                        style={{
-                            backgroundColor: 'hsl(var(--secondary))',
-                            color: 'hsl(var(--secondary-foreground))',
-                        }}
-                    >
-                        {memorial.isPublic ? 'Public' : 'Private'}
-                    </span>
+                    <div className="flex items-center gap-2 mt-1.5">
+                        <span
+                            className="inline-block text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full"
+                            style={{
+                                backgroundColor: 'hsl(var(--secondary))',
+                                color: 'hsl(var(--secondary-foreground))',
+                            }}
+                        >
+                            {memorial.isPublic ? 'Public' : 'Private'}
+                        </span>
+                        <span
+                            className="inline-block text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full"
+                            style={{
+                                backgroundColor: !role || role === 'owner'
+                                    ? 'hsl(var(--primary) / 0.1)'
+                                    : role === 'editor'
+                                        ? 'hsl(var(--foreground) / 0.06)'
+                                        : 'hsl(var(--muted))',
+                                color: !role || role === 'owner'
+                                    ? 'hsl(var(--primary))'
+                                    : role === 'editor'
+                                        ? 'hsl(var(--foreground) / 0.5)'
+                                        : 'hsl(var(--muted-foreground))',
+                            }}
+                        >
+                            {!role || role === 'owner' ? 'Creator' : role}
+                        </span>
+                    </div>
                 </div>
             </div>
 
             <div className="mt-5 flex gap-3">
-                <Link
-                    href={`/create?id=${memorial.id}`}
-                    className="flex-1 text-center py-2.5 rounded-lg font-light text-sm shadow-sm transition-colors"
-                    style={{
-                        backgroundColor: 'transparent',
-                        color: 'hsl(var(--foreground))',
-                        border: '1px solid hsl(var(--border) / 0.6)',
-                    }}
-                >
-                    Edit
-                </Link>
+                {(!role || role === 'owner' || role === 'editor') && (
+                    <Link
+                        href={`/create?id=${memorial.id}`}
+                        className="flex-1 text-center py-2.5 rounded-lg font-light text-sm shadow-sm transition-colors"
+                        style={{
+                            backgroundColor: 'transparent',
+                            color: 'hsl(var(--foreground))',
+                            border: '1px solid hsl(var(--border) / 0.6)',
+                        }}
+                    >
+                        Edit
+                    </Link>
+                )}
                 <Link
                     href={`/memorial/${memorial.slug}`}
                     className="flex-1 text-center py-2.5 rounded-lg font-light text-sm shadow-sm transition-colors"
