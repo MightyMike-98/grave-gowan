@@ -2,9 +2,9 @@
  * @file app/login/page.tsx
  * @description Die dedizierte Login-Seite der App.
  *
- * Bietet zwei echte Auth-Methoden via Supabase:
+ * Bietet zwei Auth-Methoden via Supabase:
  * 1. **Google OAuth**: Klick → Weiterleitung zu Google → zurück → Dashboard
- * 2. **Magic Link (Email)**: Nutzer gibt Email ein → bekommt einen Login-Link zugeschickt
+ * 2. **Email + Passwort**: Registrierung oder Login mit E-Mail und Passwort
  *
  * URL-Parameter:
  * - `?next=/create` → nach Login auf diese URL weiterleiten
@@ -13,7 +13,8 @@
 
 'use client';
 
-import { signInWithGoogle, signInWithMagicLink } from '@data/auth';
+import { signInWithEmail, signInWithGoogle, signUpWithEmail } from '@data/auth';
+import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
@@ -29,9 +30,11 @@ function LoginForm() {
     const callbackError = searchParams.get('error');
 
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [mode, setMode] = useState<'login' | 'signup'>('login');
     const [loading, setLoading] = useState<'google' | 'email' | null>(null);
     const [error, setError] = useState<string | null>(callbackError);
-    const [magicLinkSent, setMagicLinkSent] = useState(false);
+    const [signupSuccess, setSignupSuccess] = useState(false);
 
     const handleGoogle = async () => {
         setLoading('google');
@@ -43,39 +46,55 @@ function LoginForm() {
         }
     };
 
-    const handleMagicLink = async () => {
+    const handleEmailSubmit = async () => {
         if (!email.trim()) {
             setError('Please enter your email address.');
             return;
         }
+        if (!password) {
+            setError('Please enter your password.');
+            return;
+        }
+
         setLoading('email');
         setError(null);
-        const { error } = await signInWithMagicLink(email);
-        setLoading(null);
-        if (error) {
-            setError(error);
+
+        if (mode === 'signup') {
+            const { error } = await signUpWithEmail(email, password);
+            setLoading(null);
+            if (error) {
+                setError(error);
+            } else {
+                setSignupSuccess(true);
+            }
         } else {
-            setMagicLinkSent(true);
+            const { error } = await signInWithEmail(email, password);
+            setLoading(null);
+            if (error) {
+                setError(error);
+            } else {
+                window.location.href = next;
+            }
         }
     };
 
-    // Bestätigungsansicht nach Magic Link Versand
-    if (magicLinkSent) {
+    // Bestätigungsansicht nach Registrierung
+    if (signupSuccess) {
         return (
             <main className="min-h-screen flex flex-col items-center justify-center px-4">
                 <div className="w-full max-w-md text-center space-y-6 animate-fade-up">
                     <div className="text-5xl">📬</div>
                     <h1 className="text-2xl tracking-tight">Check your email</h1>
                     <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        We&apos;ve sent a login link to <strong style={{ color: 'hsl(var(--foreground))' }}>{email}</strong>.
-                        Click the link in the email to sign in.
+                        We&apos;ve sent a confirmation link to <strong style={{ color: 'hsl(var(--foreground))' }}>{email}</strong>.
+                        Click the link to activate your account.
                     </p>
                     <button
-                        onClick={() => { setMagicLinkSent(false); setEmail(''); }}
+                        onClick={() => { setSignupSuccess(false); setMode('login'); }}
                         className="text-sm font-light transition-colors hover:opacity-100"
                         style={{ color: 'hsl(var(--muted-foreground))' }}
                     >
-                        Use a different email
+                        Back to login
                     </button>
                 </div>
             </main>
@@ -88,7 +107,19 @@ function LoginForm() {
                 <h1 className="text-4xl tracking-tight">
                     Cloudyard
                 </h1>
-                <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>Sign in to manage your memorials</p>
+                <AnimatePresence mode="wait">
+                    <motion.p
+                        key={mode}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.25 }}
+                        className="font-light"
+                        style={{ color: 'hsl(var(--muted-foreground))' }}
+                    >
+                        {mode === 'login' ? 'Sign in to manage your memorials' : 'Create your account'}
+                    </motion.p>
+                </AnimatePresence>
 
                 <div className="space-y-4">
                     {/* Google OAuth Button */}
@@ -123,37 +154,90 @@ function LoginForm() {
                         <div className="h-px flex-1" style={{ backgroundColor: 'hsl(var(--border) / 0.6)' }} />
                     </div>
 
-                    {/* Magic Link Email */}
-                    <div className="space-y-4">
-                        <input
-                            id="input-email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleMagicLink()}
-                            placeholder="your@email.com"
-                            className="field-input"
-                        />
-                        <button
-                            onClick={handleMagicLink}
-                            disabled={!!loading}
-                            id="btn-email-login"
-                            className="w-full rounded-full py-4 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
-                            style={{
-                                backgroundColor: 'hsl(var(--primary))',
-                                color: 'hsl(var(--primary-foreground))',
-                            }}
+                    {/* Email + Password */}
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={mode}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                            className="space-y-4"
                         >
-                            {loading === 'email' ? (
-                                <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                            <input
+                                id="input-email"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="your@email.com"
+                                className="field-input"
+                            />
+                            <input
+                                id="input-password"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleEmailSubmit()}
+                                placeholder={mode === 'signup' ? 'Choose a password (min. 6 characters)' : 'Password'}
+                                className="field-input"
+                            />
+                            <button
+                                onClick={handleEmailSubmit}
+                                disabled={!!loading}
+                                id="btn-email-login"
+                                className="w-full rounded-full py-4 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md disabled:opacity-50 flex items-center justify-center"
+                                style={{
+                                    backgroundColor: 'hsl(var(--primary))',
+                                    color: 'hsl(var(--primary-foreground))',
+                                }}
+                            >
+                                {loading === 'email' ? (
+                                    <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                                ) : (
+                                    mode === 'login' ? 'Sign In' : 'Create Account'
+                                )}
+                            </button>
+                        </motion.div>
+                    </AnimatePresence>
+
+                    {/* Toggle Login / Sign Up */}
+                    <AnimatePresence mode="wait">
+                        <motion.p
+                            key={mode}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-sm font-light"
+                            style={{ color: 'hsl(var(--muted-foreground))' }}
+                        >
+                            {mode === 'login' ? (
+                                <>
+                                    Don&apos;t have an account?{' '}
+                                    <button
+                                        type="button"
+                                        onClick={() => { setMode('signup'); setError(null); }}
+                                        className="underline underline-offset-4 transition-colors hover:opacity-100"
+                                        style={{ color: 'hsl(var(--foreground) / 0.7)' }}
+                                    >
+                                        Sign up
+                                    </button>
+                                </>
                             ) : (
                                 <>
-                                    <span>✉️</span>
-                                    <span>Send Magic Link</span>
+                                    Already have an account?{' '}
+                                    <button
+                                        type="button"
+                                        onClick={() => { setMode('login'); setError(null); }}
+                                        className="underline underline-offset-4 transition-colors hover:opacity-100"
+                                        style={{ color: 'hsl(var(--foreground) / 0.7)' }}
+                                    >
+                                        Sign in
+                                    </button>
                                 </>
                             )}
-                        </button>
-                    </div>
+                        </motion.p>
+                    </AnimatePresence>
 
                     {/* Fehlermeldung */}
                     {error && (

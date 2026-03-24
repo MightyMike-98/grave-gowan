@@ -2,10 +2,8 @@
  * @file components/ui/MemorialTabs.tsx
  * @description Der zentrale State-Manager der Gedenkseiten-Ansicht.
  *
- * Jetzt MIT Framer Motion AnimatePresence mode="wait":
- * - Alter Tab-Content faded OUT (opacity 0, y -8)
- * - Neuer Tab-Content faded IN (opacity 0→1, y 12→0)
- * => Exakt wie gentle-code-mover
+ * Verwaltet den Photo-State (Upload, Favoriten-Toggle) und reicht
+ * die Daten an GalleryGrid und HighlightsSection weiter.
  */
 
 'use client';
@@ -18,16 +16,15 @@ import { StoriesSection } from '@/components/ui/StoriesSection';
 import { SupportSection } from '@/components/ui/SupportSection';
 import { TabsNavigation } from '@/components/ui/TabsNavigation';
 import { TimelineSection } from '@/components/ui/TimelineSection';
-import type { Memorial } from '@/types';
+import type { Memorial, Photo } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 const TABS = ['Highlights', 'About', 'Timeline', 'Gallery', 'Stories', 'Support'] as const;
 type Tab = (typeof TABS)[number];
 type UserRole = 'owner' | 'editor' | 'viewer' | 'anonymous';
 
-/** Shared animation variants — identical to gentle-code-mover */
 const fadeIn = {
     hidden: { opacity: 0, y: 12 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } },
@@ -39,20 +36,57 @@ interface MemorialTabsProps {
     userRole?: UserRole;
     memorialSlug?: string;
     visitorEmail?: string;
+    initialPhotos?: Photo[];
+    isAuthenticated?: boolean;
 }
 
-export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, visitorEmail }: MemorialTabsProps) {
+export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, visitorEmail, initialPhotos = [], isAuthenticated = false }: MemorialTabsProps) {
     const [activeTab, setActiveTab] = useState<Tab>('Highlights');
     const [flowers, setFlowers] = useState<string[]>([]);
+    const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
 
     const isOwner = userRole === 'owner';
-    const canEdit = userRole === 'owner' || userRole === 'editor';
+    const canEdit = isAuthenticated && (userRole === 'owner' || userRole === 'editor');
+
+    const favoriteIds = useMemo(() => photos.filter(p => p.isFavorite).map(p => p.id), [photos]);
+
+    const handleToggleFavorite = useCallback(async (photoId: string) => {
+        // Optimistic update
+        setPhotos(prev => prev.map(p =>
+            p.id === photoId ? { ...p, isFavorite: !p.isFavorite } : p
+        ));
+
+        try {
+            const res = await fetch(`/api/photos/${photoId}/favorite`, { method: 'POST' });
+            if (!res.ok) {
+                // Revert on error
+                setPhotos(prev => prev.map(p =>
+                    p.id === photoId ? { ...p, isFavorite: !p.isFavorite } : p
+                ));
+            }
+        } catch {
+            // Revert on error
+            setPhotos(prev => prev.map(p =>
+                p.id === photoId ? { ...p, isFavorite: !p.isFavorite } : p
+            ));
+        }
+    }, []);
+
+    const handlePhotoUploaded = useCallback((photo: Photo) => {
+        setPhotos(prev => [...prev, photo]);
+    }, []);
 
     const addFlower = () => {
         const options = ['🌹', '🌸', '🌼', '🌺', '🌷', '🌻'];
         const flower = options[Math.floor(Math.random() * options.length)];
         setFlowers((prev) => [...prev, flower]);
     };
+
+    // Memorial mit aktuellen Photos für HighlightsSection zusammenbauen
+    const memorialWithPhotos = useMemo(() => ({
+        ...memorial,
+        photos,
+    }), [memorial, photos]);
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -61,11 +95,20 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, v
             case 'Timeline':
                 return <TimelineSection events={memorial.timeline} />;
             case 'Gallery':
-                return <GalleryGrid photos={memorial.photos} canEdit={canEdit} />;
+                return (
+                    <GalleryGrid
+                        photos={photos}
+                        canEdit={canEdit}
+                        memorialId={memorial.id}
+                        favoriteIds={favoriteIds}
+                        onToggleFavorite={handleToggleFavorite}
+                        onPhotoUploaded={handlePhotoUploaded}
+                    />
+                );
             case 'Stories':
                 return <StoriesSection stories={memorial.stories} canEdit={canEdit} />;
             case 'Highlights':
-                return <HighlightsSection memorial={memorial} canEdit={canEdit} onTabChange={(tab) => setActiveTab(tab as Tab)} />;
+                return <HighlightsSection memorial={memorialWithPhotos} canEdit={canEdit} onTabChange={(tab) => setActiveTab(tab as Tab)} />;
             case 'Support':
                 return <SupportSection support={memorial.support} onDonate={addFlower} />;
         }

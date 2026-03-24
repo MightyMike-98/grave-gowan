@@ -27,13 +27,13 @@ const MAX_SIZE_BYTES = 5 * 1024 * 1024;
  *
  * @param file - Die Datei vom <input type="file">
  * @param userId - Supabase Auth User-ID (für saubere Ordner-Struktur)
- * @param slot - Entweder 'cover' oder 'portrait' (bestimmt den Unterordner)
+ * @param slot - 'cover', 'portrait' oder 'gallery' (bestimmt den Unterordner)
  * @returns Die öffentliche URL des hochgeladenen Bildes, oder null bei Fehler.
  */
 export async function uploadMemorialImage(
     file: File,
     userId: string,
-    slot: 'cover' | 'portrait',
+    slot: 'cover' | 'portrait' | 'gallery',
 ): Promise<{ url: string | null; error: string | null }> {
     // Validierung
     if (!ALLOWED_TYPES.includes(file.type)) {

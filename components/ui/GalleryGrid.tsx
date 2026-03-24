@@ -2,22 +2,13 @@
 
 /**
  * @file components/ui/GalleryGrid.tsx
- * @description Masonry-Layout Galerie mit Framer Motion Lightbox und Favoriten-Toggle.
- *
- * Matches gentle-code-mover's GalleryTab exakt:
- * - Masonry 2→3 columns
- * - Hover: gradient overlay + caption
- * - Click: AnimatePresence lightbox mit motion.img scale 0.95→1
- * - Stagger animation on gallery items
- *
- * NEU: Favoriten-Toggle (Herz-Icon) für Owner/Editor.
- * Markierte Fotos bekommen einen goldenen Stern und werden in Highlights verwendet.
+ * @description Masonry-Layout Galerie mit Lightbox, Upload und Favoriten-Toggle.
  */
 
 import type { Photo } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 const fadeIn = {
     hidden: { opacity: 0, y: 12 },
@@ -31,14 +22,50 @@ const stagger = {
 interface GalleryGridProps {
     photos: Photo[];
     canEdit?: boolean;
+    memorialId?: string;
     /** IDs der als Favorit markierten Fotos. */
     favoriteIds?: string[];
     /** Callback wenn ein Foto favorisiert/entfavorisiert wird. */
     onToggleFavorite?: (photoId: string) => void;
+    /** Callback wenn ein neues Foto hochgeladen wurde. */
+    onPhotoUploaded?: (photo: Photo) => void;
 }
 
-export function GalleryGrid({ photos, canEdit = false, favoriteIds = [], onToggleFavorite }: GalleryGridProps) {
+export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds = [], onToggleFavorite, onPhotoUploaded }: GalleryGridProps) {
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+    const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !memorialId) return;
+
+        setUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('memorialId', memorialId);
+
+            const res = await fetch('/api/photos/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (res.ok && data.photo) {
+                onPhotoUploaded?.({
+                    id: data.photo.id,
+                    url: data.photo.url,
+                    caption: data.photo.caption,
+                    isFavorite: data.photo.isFavorite,
+                });
+            } else {
+                console.error('[GalleryGrid] Upload error:', data.error);
+            }
+        } catch (err) {
+            console.error('[GalleryGrid] Upload failed:', err);
+        } finally {
+            setUploading(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
 
     return (
         <>
@@ -58,9 +85,9 @@ export function GalleryGrid({ photos, canEdit = false, favoriteIds = [], onToggl
                     )}
                 </motion.div>
 
-                {photos.length === 0 ? (
+                {photos.length === 0 && !canEdit ? (
                     <motion.p variants={fadeIn} className="italic font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        {canEdit ? 'No photos added yet.' : 'No photos yet.'}
+                        No photos yet.
                     </motion.p>
                 ) : (
                     <div className="columns-2 gap-3 space-y-3 md:columns-3">
@@ -123,20 +150,39 @@ export function GalleryGrid({ photos, canEdit = false, favoriteIds = [], onToggl
                                 </motion.div>
                             );
                         })}
+
+                        {/* Upload-Button */}
                         {canEdit && (
                             <motion.button
                                 variants={fadeIn}
                                 className="aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors hover:bg-foreground/5"
                                 style={{ borderColor: 'hsl(var(--border) / 0.4)', backgroundColor: 'hsl(var(--muted) / 0.1)' }}
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploading}
                             >
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                                <span className="text-[10px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>Hinzufügen</span>
+                                {uploading ? (
+                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }} />
+                                ) : (
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    </svg>
+                                )}
+                                <span className="text-[10px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>
+                                    {uploading ? 'Lädt...' : 'Hinzufügen'}
+                                </span>
                             </motion.button>
                         )}
                     </div>
                 )}
+
+                {/* Hidden file input */}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handleUpload}
+                />
             </motion.section>
 
             {/* Lightbox */}

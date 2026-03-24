@@ -44,23 +44,48 @@ export async function signInWithGoogle(): Promise<{ error: string | null }> {
 }
 
 /**
- * Sendet einen Magic Link (Passwordless Email) an die angegebene E-Mail-Adresse.
- * Der Nutzer klickt den Link und wird direkt eingeloggt — kein Passwort nötig.
+ * Registriert einen neuen Nutzer mit E-Mail und Passwort.
+ * Nach der Registrierung wird eine Bestätigungs-E-Mail gesendet.
  *
  * @param email - Die E-Mail-Adresse des Nutzers.
+ * @param password - Das gewählte Passwort (min. 6 Zeichen).
  * @returns Fehler-Objekt oder null bei Erfolg.
  */
-export async function signInWithMagicLink(email: string): Promise<{ error: string | null }> {
+export async function signUpWithEmail(email: string, password: string): Promise<{ error: string | null }> {
+    if (!email || !email.includes('@')) {
+        return { error: 'Please enter a valid email address.' };
+    }
+    if (!password || password.length < 6) {
+        return { error: 'Password must be at least 6 characters.' };
+    }
+
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+            emailRedirectTo: `${APP_URL}/auth/callback`,
+        },
+    });
+    return { error: error?.message ?? null };
+}
+
+/**
+ * Meldet einen bestehenden Nutzer mit E-Mail und Passwort an.
+ *
+ * @param email - Die E-Mail-Adresse des Nutzers.
+ * @param password - Das Passwort.
+ * @returns Fehler-Objekt oder null bei Erfolg.
+ */
+export async function signInWithEmail(email: string, password: string): Promise<{ error: string | null }> {
     if (!email || !email.includes('@')) {
         return { error: 'Please enter a valid email address.' };
     }
 
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
-        options: {
-            emailRedirectTo: `${APP_URL}/auth/callback`,
-        },
+        password,
     });
     return { error: error?.message ?? null };
 }

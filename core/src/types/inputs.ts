@@ -20,3 +20,15 @@ export type UpdateMemorialInput = Partial<
 /** Felder, die beim Erstellen einer Erinnerung angegeben werden müssen/können. */
 export type CreateMemoryInput = Pick<Memory, 'memorialId' | 'authorName' | 'text'> &
     Partial<Pick<Memory, 'authorEmail'>>;
+
+/** Felder, die beim Erstellen eines Galerie-Fotos angegeben werden müssen/können. */
+export interface CreateGalleryPhotoInput {
+    /** UUID der Gedenkseite, zu der das Foto gehört. */
+    memorialId: string;
+    /** Supabase Auth User-ID des hochladenden Users. */
+    uploadedBy: string;
+    /** Öffentliche URL des Bildes (nach erfolgreichem Storage-Upload). */
+    url: string;
+    /** Optionale Bildunterschrift. */
+    caption?: string;
+}

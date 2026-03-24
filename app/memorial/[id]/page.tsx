@@ -17,11 +17,13 @@
 import { MemorialTabs } from '@/components/ui/MemorialTabs';
 import { RequestWidget } from '@/components/ui/RequestWidget';
 import { DUMMY_MEMORIAL } from '@/lib/mock-data';
-import type { Memorial as UIMemorial } from '@/types';
+import type { Memorial as UIMemorial, Photo } from '@/types';
 import type { Memorial as DomainMemorial } from '@core/types/index';
+import { getGalleryPhotos } from '@core/use-cases/getGalleryPhotos';
 import { getMemorialBySlug } from '@core/use-cases/getMemorialBySlug';
 import { SupabaseMemberRepository } from '@data/repositories/SupabaseMemberRepository';
 import { SupabaseMemorialRepository } from '@data/repositories/SupabaseMemorialRepository';
+import { SupabasePhotoRepository } from '@data/repositories/SupabasePhotoRepository';
 import { createSupabaseServerClient } from '@data/server-client';
 import type { Metadata } from 'next';
 import Link from 'next/link';
@@ -75,14 +77,31 @@ function toUIMemorial(d: DomainMemorial): UIMemorial {
 async function loadMemorialWithRole(slug: string, visitorEmail?: string): Promise<{
     memorial: UIMemorial | null;
     role: UserRole;
+    photos: Photo[];
+    isAuthenticated: boolean;
 }> {
-    if (slug === 'demo') return { memorial: DUMMY_MEMORIAL, role: 'anonymous' };
+    if (slug === 'demo') return { memorial: DUMMY_MEMORIAL, role: 'anonymous', photos: DUMMY_MEMORIAL.photos, isAuthenticated: false };
 
     try {
         const supabase = await createSupabaseServerClient();
         const repo = new SupabaseMemorialRepository(supabase);
         const domain = await getMemorialBySlug(slug, repo);
-        if (!domain) return { memorial: null, role: 'anonymous' };
+        if (!domain) return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false };
+
+        // Galerie-Fotos laden
+        let photos: Photo[] = [];
+        try {
+            const photoRepo = new SupabasePhotoRepository(supabase);
+            const dbPhotos = await getGalleryPhotos(domain.id, photoRepo);
+            photos = dbPhotos.map(p => ({
+                id: p.id,
+                url: p.url,
+                caption: p.caption,
+                isFavorite: p.isFavorite,
+            }));
+        } catch (photoErr) {
+            console.warn('[MemorialPage] Could not load gallery photos:', photoErr);
+        }
 
         const { data: { user } } = await supabase.auth.getUser();
         let role: UserRole = 'anonymous';
@@ -109,10 +128,10 @@ async function loadMemorialWithRole(slug: string, visitorEmail?: string): Promis
             }
         }
 
-        return { memorial: toUIMemorial(domain), role };
+        return { memorial: toUIMemorial(domain), role, photos, isAuthenticated: !!user };
     } catch (err) {
         console.error('[MemorialPage] Supabase error:', err);
-        return { memorial: null, role: 'anonymous' };
+        return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false };
     }
 }
 
@@ -142,7 +161,7 @@ export async function generateMetadata({ params }: MemorialPageProps): Promise<M
 export default async function MemorialPage({ params, searchParams }: MemorialPageProps) {
     const { id } = await params;
     const { visitor_email: visitorEmail } = await searchParams;
-    const { memorial, role } = await loadMemorialWithRole(id, visitorEmail);
+    const { memorial, role, photos, isAuthenticated } = await loadMemorialWithRole(id, visitorEmail);
 
     if (!memorial) notFound();
 
@@ -150,7 +169,7 @@ export default async function MemorialPage({ params, searchParams }: MemorialPag
 
     return (
         <div className="min-h-screen relative pb-20">
-            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} visitorEmail={visitorEmail} />
+            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} visitorEmail={visitorEmail} initialPhotos={photos} isAuthenticated={isAuthenticated} />
 
             <footer className="pb-10 pt-10 flex flex-col items-center gap-2">
                 <p className="text-xs uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>Created by Family</p>

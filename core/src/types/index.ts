@@ -58,6 +58,24 @@ export interface Memory {
     createdAt: string;
 }
 
+/** Ein Galerie-Foto, das zu einer Gedenkseite gehört. */
+export interface GalleryPhoto {
+    id: string;
+    /** FK zur zugehörigen Gedenkseite. */
+    memorialId: string;
+    /** Supabase Auth User-ID des Users, der das Foto hochgeladen hat. */
+    uploadedBy: string;
+    /** Öffentliche URL des Bildes (aus Supabase Storage). */
+    url: string;
+    /** Optionale Bildunterschrift. */
+    caption?: string;
+    /** Ob dieses Foto im Highlights-Tab als Favorit angezeigt werden soll. */
+    isFavorite: boolean;
+    /** Reihenfolge innerhalb der Galerie (für späteres Drag & Drop Sortieren). */
+    sortOrder: number;
+    createdAt: string;
+}
+
 /** Ein Mitglied, das Zugang zu einer Gedenkseite hat (Owner, Editor, Viewer). */
 export interface Member {
     id: string;

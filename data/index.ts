@@ -10,9 +10,10 @@
 export { SupabaseMemberRepository } from './src/repositories/SupabaseMemberRepository';
 export { SupabaseMemorialRepository } from './src/repositories/SupabaseMemorialRepository';
 export { SupabaseMemoryRepository } from './src/repositories/SupabaseMemoryRepository';
+export { SupabasePhotoRepository } from './src/repositories/SupabasePhotoRepository';
 
 // Auth-Funktionen
-export { getCurrentUser, signInWithGoogle, signInWithMagicLink, signOut } from './src/auth';
+export { getCurrentUser, signInWithEmail, signInWithGoogle, signOut, signUpWithEmail } from './src/auth';
 
 // Server-Client (für Server Components und Route Handlers)
 export { createSupabaseServerClient } from './src/server-client';
