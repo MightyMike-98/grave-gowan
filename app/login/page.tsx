@@ -68,12 +68,12 @@ function LoginForm() {
                 setSignupSuccess(true);
             }
         } else {
-            const { error } = await signInWithEmail(email, password);
+            const { error, needsSetup } = await signInWithEmail(email, password);
             setLoading(null);
             if (error) {
                 setError(error);
             } else {
-                window.location.href = next;
+                window.location.href = needsSetup ? '/setup' : next;
             }
         }
     };

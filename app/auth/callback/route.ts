@@ -37,9 +37,14 @@ export async function GET(request: NextRequest) {
         const supabase = await createSupabaseServerClient();
 
         // Tauscht den Code gegen eine echte Session aus (setzt Cookies)
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (!error) {
+            // Setup noch nicht abgeschlossen → Setup-Seite zuerst (gilt für alle Auth-Methoden)
+            const setupComplete = data.user?.user_metadata?.setup_complete;
+            if (!setupComplete) {
+                return NextResponse.redirect(`${origin}/setup`);
+            }
             // Erfolg: Weiterleitung zur Ziel-URL
             return NextResponse.redirect(`${origin}${next}`);
         }

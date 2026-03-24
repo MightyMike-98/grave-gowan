@@ -85,17 +85,19 @@ export async function signUpWithEmail(email: string, password: string): Promise<
  * @param password - Das Passwort.
  * @returns Fehler-Objekt oder null bei Erfolg.
  */
-export async function signInWithEmail(email: string, password: string): Promise<{ error: string | null }> {
+export async function signInWithEmail(email: string, password: string): Promise<{ error: string | null; needsSetup?: boolean }> {
     if (!email || !email.includes('@')) {
         return { error: 'Please enter a valid email address.' };
     }
 
     const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
     });
-    return { error: error?.message ?? null };
+    if (error) return { error: error.message };
+    const needsSetup = !data.user?.user_metadata?.setup_complete;
+    return { error: null, needsSetup };
 }
 
 /**
