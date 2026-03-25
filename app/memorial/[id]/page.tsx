@@ -32,7 +32,6 @@ import { notFound } from 'next/navigation';
 /** Next.js-Standard-Props für eine dynamische Seiten-Route. */
 interface MemorialPageProps {
     params: Promise<{ id: string }>;
-    searchParams: Promise<{ visitor_email?: string }>;
 }
 
 /** Rollentyp für den aktuellen User auf dieser Gedenkseite. */
@@ -74,7 +73,7 @@ function toUIMemorial(d: DomainMemorial): UIMemorial {
 /**
  * Lädt das Memorial und die Rolle des aktuell eingeloggten Users.
  */
-async function loadMemorialWithRole(slug: string, visitorEmail?: string): Promise<{
+async function loadMemorialWithRole(slug: string): Promise<{
     memorial: UIMemorial | null;
     role: UserRole;
     photos: Photo[];
@@ -115,17 +114,6 @@ async function loadMemorialWithRole(slug: string, visitorEmail?: string): Promis
             } catch (roleErr) {
                 console.warn('[MemorialPage] Could not load member role:', roleErr);
             }
-        } else if (visitorEmail) {
-            // Nicht eingeloggter Besucher → Rolle per E-Mail nachschlagen (RPC, umgeht RLS)
-            try {
-                const { data: rpcRole } = await supabase.rpc('get_visitor_role_by_email', {
-                    p_email: visitorEmail.toLowerCase(),
-                    p_memorial_id: domain.id,
-                });
-                if (rpcRole) role = rpcRole as UserRole;
-            } catch (err) {
-                console.warn('[MemorialPage] Could not look up visitor role by email:', err);
-            }
         }
 
         return { memorial: toUIMemorial(domain), role, photos, isAuthenticated: !!user };
@@ -158,10 +146,9 @@ export async function generateMetadata({ params }: MemorialPageProps): Promise<M
  * Rendert die vollständige Gedenkseiten-Ansicht.
  * Zeigt 404 wenn kein Memorial gefunden (außer "demo").
  */
-export default async function MemorialPage({ params, searchParams }: MemorialPageProps) {
+export default async function MemorialPage({ params }: MemorialPageProps) {
     const { id } = await params;
-    const { visitor_email: visitorEmail } = await searchParams;
-    const { memorial, role, photos, isAuthenticated } = await loadMemorialWithRole(id, visitorEmail);
+    const { memorial, role, photos, isAuthenticated } = await loadMemorialWithRole(id);
 
     if (!memorial) notFound();
 
@@ -169,7 +156,7 @@ export default async function MemorialPage({ params, searchParams }: MemorialPag
 
     return (
         <div className="min-h-screen relative pb-20">
-            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} visitorEmail={visitorEmail} initialPhotos={photos} isAuthenticated={isAuthenticated} />
+            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} initialPhotos={photos} isAuthenticated={isAuthenticated} />
 
             <footer className="pb-10 pt-10 flex flex-col items-center gap-2">
                 <p className="text-xs uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>Created by Family</p>

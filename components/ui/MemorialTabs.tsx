@@ -35,12 +35,11 @@ interface MemorialTabsProps {
     memorial: Memorial;
     userRole?: UserRole;
     memorialSlug?: string;
-    visitorEmail?: string;
     initialPhotos?: Photo[];
     isAuthenticated?: boolean;
 }
 
-export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, visitorEmail, initialPhotos = [], isAuthenticated = false }: MemorialTabsProps) {
+export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, initialPhotos = [], isAuthenticated = false }: MemorialTabsProps) {
     const [activeTab, setActiveTab] = useState<Tab>('Highlights');
     const [flowers, setFlowers] = useState<string[]>([]);
     const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
@@ -138,7 +137,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, v
             {canEdit && (
                 <div className="fixed bottom-6 right-4 z-10">
                     <Link
-                        href={`/create?id=${memorial.id}${visitorEmail ? `&visitor_email=${encodeURIComponent(visitorEmail)}` : ''}`}
+                        href={`/create?id=${memorial.id}`}
                         className="flex items-center gap-2 rounded-full px-5 py-3 text-sm font-light shadow-lg transition-all"
                         style={{
                             backgroundColor: 'hsl(var(--primary))',
@@ -152,7 +151,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, v
             )}
 
             {/* Hero */}
-            <HeroSection memorial={memorial} flowers={flowers} visitorEmail={visitorEmail} />
+            <HeroSection memorial={memorial} flowers={flowers} />
 
             {/* Tabs */}
             <TabsNavigation

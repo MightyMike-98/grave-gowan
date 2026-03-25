@@ -54,10 +54,8 @@ export async function proxy(request: NextRequest) {
     const pathname = request.nextUrl.pathname;
 
     // Geschützte Routen: umleiten wenn nicht eingeloggt
-    // Ausnahme: /create mit visitor_email (Guest-Editor braucht keinen Login)
     const isProtected = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
-    const hasVisitorEmail = request.nextUrl.searchParams.has('visitor_email');
-    if (isProtected && !user && !hasVisitorEmail) {
+    if (isProtected && !user) {
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('next', pathname);
         return NextResponse.redirect(loginUrl);

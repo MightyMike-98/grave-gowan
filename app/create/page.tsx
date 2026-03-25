@@ -44,7 +44,6 @@ function CreateMemorialForm() {
     const router = useRouter();
     const params = useSearchParams();
     const editId = params.get('id');            // Memorial-ID zum Editieren
-    const visitorEmail = params.get('visitor_email');  // Gastbesucher-E-Mail (kein Login nötig)
     const isEditing = !!editId;
 
     // Core fields
@@ -146,16 +145,7 @@ function CreateMemorialForm() {
 
         // 2. Memorial-Daten laden wenn Edit-Modus
         if (editId) {
-            if (visitorEmail) {
-                // Guest-Editor: Daten via RPC laden (umgeht RLS, prüft Editor-E-Mail)
-                supabase.rpc('get_memorial_for_editor', {
-                    p_email: visitorEmail.toLowerCase(),
-                    p_memorial_id: editId,
-                }).then(({ data }) => {
-                    if (data) applyMemorialData(data as Record<string, unknown>);
-                });
-                setUserRole('editor');
-            } else {
+            {
                 // Eingeloggter User: Daten direkt aus DB laden
                 supabase
                     .from('memorials')
@@ -196,7 +186,7 @@ function CreateMemorialForm() {
                     }
                 });
         }
-    }, [editId, visitorEmail]);
+    }, [editId]);
 
     /**
      * Lädt ein neues Galerie-Foto hoch (Storage + DB) und fügt es zum State hinzu.
@@ -281,8 +271,8 @@ function CreateMemorialForm() {
     const handleSubmit = async () => {
         const fieldErrors: string[] = [];
         if (!bio.trim()) fieldErrors.push('Biography is required.');
-        if (!visitorEmail && !name.trim()) fieldErrors.push('Full Name is required.');
-        if (!visitorEmail && !userId) fieldErrors.push('You must be logged in.');
+        if (!name.trim()) fieldErrors.push('Full Name is required.');
+        if (!userId) fieldErrors.push('You must be logged in.');
         if (fieldErrors.length > 0) { setErrors(fieldErrors); return; }
 
         setErrors([]);
@@ -291,46 +281,20 @@ function CreateMemorialForm() {
             const repo = new SupabaseMemorialRepository();
 
             if (isEditing && editId) {
-                if (visitorEmail) {
-                    // Gastbesucher (Editor): RPC-Funktion nutzen (umgeht RLS, prüft per E-Mail)
-                    const supabase = createSupabaseBrowserClient();
-                    const { data: success, error: rpcErr } = await supabase.rpc('editor_update_memorial', {
-                        p_email: visitorEmail.toLowerCase(),
-                        p_memorial_id: editId,
-                        p_bio: null,
-                        p_date_of_birth: null,
-                        p_date_of_death: dateOfDeath || null,
-                        p_quote: quote.trim() || null,
-                        p_timeline: timelineEvents.length > 0 ? timelineEvents : null,
-                        p_support_title: supportTitle || null,
-                        p_support_url: supportUrl || null,
-                        p_support_desc: supportDesc || null,
+                if (isEditorRole) {
+                    // Eingeloggter Editor: Update über Repo (eingeschränkte Felder)
+                    await repo.update(editId, {
+                        bio: bio.trim(),
+                        quote: quote.trim() || undefined,
+                        dateOfDeath: dateOfDeath || undefined,
+                        timeline: timelineEvents.length > 0 ? timelineEvents : [],
+                        supportTitle: supportTitle || undefined,
+                        supportUrl: supportUrl || undefined,
+                        supportDesc: supportDesc || undefined,
                     });
-                    if (rpcErr || !success) throw new Error(rpcErr?.message ?? 'Could not save. Check your permissions.');
-                    router.push(`/memorial/${existingSlug}?visitor_email=${encodeURIComponent(visitorEmail)}`);
-                } else if (isEditorRole) {
-                    // Eingeloggter Editor: RPC-Funktion nutzen (wie Guest-Editor, nur erlaubte Felder)
-                    const supabase = createSupabaseBrowserClient();
-                    const { data: { user: authUser } } = await supabase.auth.getUser();
-                    const editorEmail = authUser?.email;
-                    if (!editorEmail) throw new Error('Could not determine your email. Please try again.');
-
-                    const { data: success, error: rpcErr } = await supabase.rpc('editor_update_memorial', {
-                        p_email: editorEmail.toLowerCase(),
-                        p_memorial_id: editId,
-                        p_bio: null,
-                        p_date_of_birth: null,
-                        p_date_of_death: dateOfDeath || null,
-                        p_quote: quote.trim() || null,
-                        p_timeline: timelineEvents.length > 0 ? timelineEvents : null,
-                        p_support_title: supportTitle || null,
-                        p_support_url: supportUrl || null,
-                        p_support_desc: supportDesc || null,
-                    });
-                    if (rpcErr || !success) throw new Error(rpcErr?.message ?? 'Could not save. Check your permissions.');
                     router.push(`/memorial/${existingSlug}`);
                 } else {
-                    // Eingeloggter Owner: Standard-Update via Repo (alle Felder erlaubt)
+                    // Owner: Standard-Update via Repo (alle Felder erlaubt)
                     await repo.update(editId, {
                         name: name.trim(),
                         bio: bio.trim(),
@@ -457,10 +421,7 @@ function CreateMemorialForm() {
                         {isEditing ? 'Edit Memorial' : 'Create Memorial'}
                     </h1>
                     <Link
-                        href={visitorEmail && existingSlug
-                            ? `/memorial/${existingSlug}?visitor_email=${encodeURIComponent(visitorEmail)}`
-                            : '/dashboard'
-                        }
+                        href="/dashboard"
                         className="text-sm font-light transition-colors hover:opacity-100"
                         style={{ color: 'hsl(var(--muted-foreground))' }}
                     >

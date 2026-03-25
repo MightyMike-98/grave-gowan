@@ -76,10 +76,9 @@ function CandleWidget() {
 /**
  * Rendert den oberen Hero-Bereich einer Gedenkseite.
  */
-export function HeroSection({ memorial, flowers = [], visitorEmail }: {
+export function HeroSection({ memorial, flowers = [] }: {
     memorial: Memorial;
     flowers?: string[];
-    visitorEmail?: string;
 }) {
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
@@ -110,14 +109,14 @@ export function HeroSection({ memorial, flowers = [], visitorEmail }: {
             {/* Back button */}
             <div className="relative px-6">
                 <Link
-                    href={visitorEmail ? '/' : '/dashboard'}
+                    href="/dashboard"
                     className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors"
                     style={{
                         backgroundColor: 'hsl(var(--foreground) / 0.05)',
                         color: 'hsl(var(--foreground) / 0.6)',
                     }}
                 >
-                    ← <span className="hidden sm:inline">{visitorEmail ? 'Back to Home' : 'Back to Dashboard'}</span>
+                    ← <span className="hidden sm:inline">Back to Dashboard</span>
                 </Link>
             </div>
 
