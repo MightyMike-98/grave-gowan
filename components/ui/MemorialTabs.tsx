@@ -151,7 +151,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
             )}
 
             {/* Hero */}
-            <HeroSection memorial={memorial} flowers={flowers} />
+            <HeroSection memorial={memorial} flowers={flowers} isAuthenticated={isAuthenticated} />
 
             {/* Tabs */}
             <TabsNavigation

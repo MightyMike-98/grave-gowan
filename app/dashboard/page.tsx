@@ -62,24 +62,20 @@ export default async function DashboardPage() {
                 </h2>
 
                 <div className="mt-5 space-y-4">
-                    {/* + New Memorial */}
-                    <div className="rounded-xl border border-dashed p-0 shadow-none" style={{ borderColor: 'hsl(var(--border) / 0.7)', backgroundColor: 'transparent' }}>
-                        <Link href="/create" className="flex flex-col items-center justify-center py-12 gap-2 transition-colors" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            <span className="text-3xl font-light">+</span>
-                            <span className="text-sm font-light">New Memorial</span>
-                        </Link>
-                    </div>
-
                     {/* Eigene Memorials aus der DB */}
+                    <ul className="space-y-4">
+                        {memorials.map((memorial) => (
+                            <li key={memorial.id}>
+                                <MemorialCard memorial={memorial} />
+                            </li>
+                        ))}
+                    </ul>
 
-                        <ul className="space-y-4">
-                            {memorials.map((memorial) => (
-                                <li key={memorial.id}>
-                                    <MemorialCard memorial={memorial} />
-                                </li>
-                            ))}
-                        </ul>
-                    
+                    {/* + New Memorial */}
+                    <Link href="/create" className="flex items-center justify-center gap-2 py-4 rounded-xl border border-dashed transition-colors" style={{ borderColor: 'hsl(var(--border) / 0.7)', color: 'hsl(var(--muted-foreground))' }}>
+                        <span className="text-lg font-light">+</span>
+                        <span className="text-sm font-light">New Memorial</span>
+                    </Link>
                 </div>
 
                 {/* Shared Memorials */}
