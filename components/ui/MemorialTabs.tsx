@@ -117,7 +117,8 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
     const memorialWithPhotos = useMemo(() => ({
         ...memorial,
         photos,
-    }), [memorial, photos]);
+        stories,
+    }), [memorial, photos, stories]);
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -142,8 +143,10 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                     <StoriesSection
                         stories={stories}
                         canEdit={canEdit}
+                        memorialId={memorial.id}
                         onToggleFavorite={handleToggleStoryFavorite}
                         onDeleteStory={handleDeleteStory}
+                        onStoryAdded={(story) => setStories(prev => [story, ...prev])}
                     />
                 );
             case 'Highlights':

@@ -11,6 +11,7 @@
 'use client';
 
 import type { Story } from '@/types';
+import { createSupabaseBrowserClient } from '@data/browser-client';
 import { useCallback, useRef, useState } from 'react';
 
 const LONG_PRESS_MS = 700;
@@ -18,8 +19,10 @@ const LONG_PRESS_MS = 700;
 interface StoriesSectionProps {
     stories: Story[];
     canEdit?: boolean;
+    memorialId?: string;
     onToggleFavorite?: (storyId: string) => void;
     onDeleteStory?: (storyId: string) => void;
+    onStoryAdded?: (story: Story) => void;
 }
 
 function getInitials(name: string): string {
@@ -32,9 +35,13 @@ function getInitials(name: string): string {
         .toUpperCase();
 }
 
-export function StoriesSection({ stories, canEdit = false, onToggleFavorite, onDeleteStory }: StoriesSectionProps) {
+export function StoriesSection({ stories, canEdit = false, memorialId, onToggleFavorite, onDeleteStory, onStoryAdded }: StoriesSectionProps) {
     const [pressingId, setPressingId] = useState<string | null>(null);
     const [confirmId, setConfirmId] = useState<string | null>(null);
+    const [showForm, setShowForm] = useState(false);
+    const [authorName, setAuthorName] = useState('');
+    const [storyText, setStoryText] = useState('');
+    const [submitting, setSubmitting] = useState(false);
     const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const startPress = useCallback((storyId: string) => {
@@ -51,6 +58,40 @@ export function StoriesSection({ stories, canEdit = false, onToggleFavorite, onD
         pressTimer.current = null;
         setPressingId(null);
     }, []);
+
+    const handleSubmitStory = async () => {
+        const author = authorName.trim();
+        const text = storyText.trim();
+        if (!author || !text || !memorialId) return;
+
+        setSubmitting(true);
+        try {
+            const supabase = createSupabaseBrowserClient();
+            const { data, error } = await supabase
+                .from('memorial_stories')
+                .insert({ memorial_id: memorialId, author, text })
+                .select()
+                .single();
+
+            if (!error && data) {
+                const newStory: Story = {
+                    id: data.id,
+                    author,
+                    text,
+                    date: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+                    isFavorite: false,
+                };
+                onStoryAdded?.(newStory);
+                setAuthorName('');
+                setStoryText('');
+                setShowForm(false);
+            }
+        } catch (err) {
+            console.error('[StoriesSection] Submit story error:', err);
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <section aria-label="Memories" className="py-10 space-y-5">
@@ -166,28 +207,81 @@ export function StoriesSection({ stories, canEdit = false, onToggleFavorite, onD
                 ))}
             </div>
 
-            {/* Write a Story CTA */}
-            <div
-                className="mt-8 flex flex-col items-center gap-3 rounded-xl p-8"
-                style={{
-                    backgroundColor: 'hsl(var(--muted) / 0.2)',
-                    border: '1px dashed hsl(var(--border) / 0.4)',
-                }}
-            >
-                <span className="text-2xl">✍️</span>
-                <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    Teile deine Erinnerung
-                </p>
-                <button
-                    className="rounded-full px-6 py-2 text-xs font-light uppercase tracking-[0.15em] transition-colors"
+            {/* Write a Story CTA / Form */}
+            {!showForm ? (
+                <div
+                    className="mt-8 flex flex-col items-center gap-3 rounded-xl p-8"
                     style={{
-                        color: 'hsl(var(--foreground))',
-                        border: '1px solid hsl(var(--border) / 0.6)',
+                        backgroundColor: 'hsl(var(--muted) / 0.2)',
+                        border: '1px dashed hsl(var(--border) / 0.4)',
                     }}
                 >
-                    Geschichte schreiben
-                </button>
-            </div>
+                    <span className="text-2xl">✍️</span>
+                    <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                        Teile deine Erinnerung
+                    </p>
+                    <button
+                        onClick={() => setShowForm(true)}
+                        className="rounded-full px-6 py-2 text-xs font-light uppercase tracking-[0.15em] transition-colors"
+                        style={{
+                            color: 'hsl(var(--foreground))',
+                            border: '1px solid hsl(var(--border) / 0.6)',
+                        }}
+                    >
+                        Geschichte schreiben
+                    </button>
+                </div>
+            ) : (
+                <div
+                    className="mt-6 rounded-xl p-4 space-y-3"
+                    style={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border) / 0.4)',
+                    }}
+                >
+                    <input
+                        type="text"
+                        placeholder="Dein Name"
+                        value={authorName}
+                        onChange={(e) => setAuthorName(e.target.value)}
+                        className="w-full rounded-lg border px-3 py-2 text-xs font-light outline-none transition-colors focus:ring-1"
+                        style={{
+                            borderColor: 'hsl(var(--border) / 0.4)',
+                            backgroundColor: 'hsl(var(--background))',
+                            color: 'hsl(var(--foreground))',
+                        }}
+                    />
+                    <textarea
+                        placeholder="Teile deine Erinnerung..."
+                        value={storyText}
+                        onChange={(e) => setStoryText(e.target.value)}
+                        rows={3}
+                        className="w-full rounded-lg border px-3 py-2 text-xs font-light outline-none transition-colors focus:ring-1 resize-none"
+                        style={{
+                            borderColor: 'hsl(var(--border) / 0.4)',
+                            backgroundColor: 'hsl(var(--background))',
+                            color: 'hsl(var(--foreground))',
+                        }}
+                    />
+                    <div className="flex gap-2 justify-end">
+                        <button
+                            onClick={() => { setShowForm(false); setAuthorName(''); setStoryText(''); }}
+                            className="rounded-full px-4 py-1.5 text-[11px] font-light tracking-wider transition-all"
+                            style={{ color: 'hsl(var(--muted-foreground))' }}
+                        >
+                            Abbrechen
+                        </button>
+                        <button
+                            onClick={handleSubmitStory}
+                            disabled={submitting || !authorName.trim() || !storyText.trim()}
+                            className="rounded-full px-4 py-1.5 text-[11px] font-light tracking-wider transition-all disabled:opacity-40"
+                            style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
+                        >
+                            {submitting ? 'Speichern...' : 'Veröffentlichen'}
+                        </button>
+                    </div>
+                </div>
+            )}
         </section>
     );
 }
