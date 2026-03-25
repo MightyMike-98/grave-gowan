@@ -64,13 +64,6 @@ export default function VisitPage() {
     return (
         <main className="flex min-h-screen flex-col items-center justify-center px-4">
             <div className="w-full max-w-md space-y-6 text-center animate-fade-up">
-                <Link
-                    href="/"
-                    className="text-sm font-light transition-colors hover:opacity-100"
-                    style={{ color: 'hsl(var(--muted-foreground))' }}
-                >
-                    ← Back
-                </Link>
 
                 <h1 className="text-4xl tracking-tight">
                     Visit a Memorial
@@ -167,6 +160,16 @@ export default function VisitPage() {
                             View demo memorial
                         </button>
                     </p>
+                                                <div className="w-full max-w-md space-y-6 text-center animate-fade-up">
+
+                                    <Link
+                    href="/"
+                    className="text-sm font-light transition-colors hover:opacity-100"
+                    style={{ color: 'hsl(var(--muted-foreground))' }}
+                >
+                    ← Back
+                </Link>
+                </div>
                 </div>
             </div>
         </main>

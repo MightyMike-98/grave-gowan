@@ -41,7 +41,7 @@ type UserRole = 'owner' | 'editor' | 'viewer' | 'anonymous';
  * Mappt ein Domain-Memorial (aus der DB) auf das UI-Memorial-Format.
  * Füllt fehlende Felder (stories, photos, timeline) mit leeren Arrays.
  */
-function toUIMemorial(d: DomainMemorial): UIMemorial {
+function toUIMemorial(d: DomainMemorial, stories: UIMemorial['stories'] = []): UIMemorial {
     return {
         id: d.id,
         name: d.name,
@@ -54,7 +54,7 @@ function toUIMemorial(d: DomainMemorial): UIMemorial {
         coverUrl: d.coverUrl,
         portraitUrl: d.portraitUrl,
         theme: d.theme,
-        stories: [],
+        stories,
         photos: [],
         facts: [],
         timeline: (d.timeline ?? []).map((e, i) => ({
@@ -102,6 +102,27 @@ async function loadMemorialWithRole(slug: string): Promise<{
             console.warn('[MemorialPage] Could not load gallery photos:', photoErr);
         }
 
+        // Stories laden
+        let stories: UIMemorial['stories'] = [];
+        try {
+            const { data: dbStories } = await supabase
+                .from('memorial_stories')
+                .select('id, author, text, is_favorite, created_at')
+                .eq('memorial_id', domain.id)
+                .order('created_at', { ascending: false });
+            if (dbStories) {
+                stories = dbStories.map((s: { id: string; author: string; text: string; is_favorite: boolean; created_at: string }) => ({
+                    id: s.id,
+                    author: s.author,
+                    text: s.text,
+                    isFavorite: s.is_favorite,
+                    date: new Date(s.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+                }));
+            }
+        } catch (storyErr) {
+            console.warn('[MemorialPage] Could not load stories:', storyErr);
+        }
+
         const { data: { user } } = await supabase.auth.getUser();
         let role: UserRole = 'anonymous';
 
@@ -116,7 +137,7 @@ async function loadMemorialWithRole(slug: string): Promise<{
             }
         }
 
-        return { memorial: toUIMemorial(domain), role, photos, isAuthenticated: !!user };
+        return { memorial: toUIMemorial(domain, stories), role, photos, isAuthenticated: !!user };
     } catch (err) {
         console.error('[MemorialPage] Supabase error:', err);
         return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false };

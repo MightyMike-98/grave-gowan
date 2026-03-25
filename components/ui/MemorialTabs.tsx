@@ -16,7 +16,8 @@ import { StoriesSection } from '@/components/ui/StoriesSection';
 import { SupportSection } from '@/components/ui/SupportSection';
 import { TabsNavigation } from '@/components/ui/TabsNavigation';
 import { TimelineSection } from '@/components/ui/TimelineSection';
-import type { Memorial, Photo } from '@/types';
+import type { Memorial, Photo, Story } from '@/types';
+import { createSupabaseBrowserClient } from '@data/browser-client';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useCallback, useMemo, useState } from 'react';
@@ -43,6 +44,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
     const [activeTab, setActiveTab] = useState<Tab>('Highlights');
     const [flowers, setFlowers] = useState<string[]>([]);
     const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
+    const [stories, setStories] = useState<Story[]>(memorial.stories ?? []);
 
     const isOwner = userRole === 'owner';
     const canEdit = isAuthenticated && (userRole === 'owner' || userRole === 'editor');
@@ -50,24 +52,54 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
     const favoriteIds = useMemo(() => photos.filter(p => p.isFavorite).map(p => p.id), [photos]);
 
     const handleToggleFavorite = useCallback(async (photoId: string) => {
-        // Optimistic update
         setPhotos(prev => prev.map(p =>
             p.id === photoId ? { ...p, isFavorite: !p.isFavorite } : p
         ));
-
         try {
             const res = await fetch(`/api/photos/${photoId}/favorite`, { method: 'POST' });
             if (!res.ok) {
-                // Revert on error
                 setPhotos(prev => prev.map(p =>
                     p.id === photoId ? { ...p, isFavorite: !p.isFavorite } : p
                 ));
             }
         } catch {
-            // Revert on error
             setPhotos(prev => prev.map(p =>
                 p.id === photoId ? { ...p, isFavorite: !p.isFavorite } : p
             ));
+        }
+    }, []);
+
+    const handleDeletePhoto = useCallback(async (photoId: string) => {
+        setPhotos(prev => prev.filter(p => p.id !== photoId));
+        try {
+            const res = await fetch(`/api/photos/${photoId}/delete`, { method: 'POST' });
+            if (!res.ok) {
+                console.error('[MemorialTabs] Delete photo failed');
+            }
+        } catch {
+            console.error('[MemorialTabs] Delete photo error');
+        }
+    }, []);
+
+    const handleToggleStoryFavorite = useCallback(async (storyId: string) => {
+        const story = stories.find(s => s.id === storyId);
+        if (!story) return;
+        setStories(prev => prev.map(s => s.id === storyId ? { ...s, isFavorite: !s.isFavorite } : s));
+        try {
+            const supabase = createSupabaseBrowserClient();
+            await supabase.from('memorial_stories').update({ is_favorite: !story.isFavorite }).eq('id', storyId);
+        } catch {
+            setStories(prev => prev.map(s => s.id === storyId ? { ...s, isFavorite: !s.isFavorite } : s));
+        }
+    }, [stories]);
+
+    const handleDeleteStory = useCallback(async (storyId: string) => {
+        setStories(prev => prev.filter(s => s.id !== storyId));
+        try {
+            const supabase = createSupabaseBrowserClient();
+            await supabase.from('memorial_stories').delete().eq('id', storyId);
+        } catch {
+            console.error('[MemorialTabs] Delete story error');
         }
     }, []);
 
@@ -102,10 +134,18 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                         favoriteIds={favoriteIds}
                         onToggleFavorite={handleToggleFavorite}
                         onPhotoUploaded={handlePhotoUploaded}
+                        onDeletePhoto={handleDeletePhoto}
                     />
                 );
             case 'Stories':
-                return <StoriesSection stories={memorial.stories} canEdit={canEdit} />;
+                return (
+                    <StoriesSection
+                        stories={stories}
+                        canEdit={canEdit}
+                        onToggleFavorite={handleToggleStoryFavorite}
+                        onDeleteStory={handleDeleteStory}
+                    />
+                );
             case 'Highlights':
                 return <HighlightsSection memorial={memorialWithPhotos} canEdit={canEdit} onTabChange={(tab) => setActiveTab(tab as Tab)} />;
             case 'Support':

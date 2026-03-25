@@ -8,7 +8,9 @@
 import type { Photo } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+
+const LONG_PRESS_MS = 700;
 
 const fadeIn = {
     hidden: { opacity: 0, y: 12 },
@@ -29,12 +31,34 @@ interface GalleryGridProps {
     onToggleFavorite?: (photoId: string) => void;
     /** Callback wenn ein neues Foto hochgeladen wurde. */
     onPhotoUploaded?: (photo: Photo) => void;
+    /** Callback wenn ein Foto gelöscht wurde. */
+    onDeletePhoto?: (photoId: string) => void;
 }
 
-export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds = [], onToggleFavorite, onPhotoUploaded }: GalleryGridProps) {
+export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds = [], onToggleFavorite, onPhotoUploaded, onDeletePhoto }: GalleryGridProps) {
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [uploading, setUploading] = useState(false);
+    const [pressingId, setPressingId] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const longPressTriggered = useRef(false);
+
+    const startPress = useCallback((photoId: string) => {
+        if (!canEdit) return;
+        longPressTriggered.current = false;
+        setPressingId(photoId);
+        pressTimer.current = setTimeout(() => {
+            longPressTriggered.current = true;
+            setPressingId(null);
+            onDeletePhoto?.(photoId);
+        }, LONG_PRESS_MS);
+    }, [canEdit, onDeletePhoto]);
+
+    const cancelPress = useCallback(() => {
+        if (pressTimer.current) clearTimeout(pressTimer.current);
+        pressTimer.current = null;
+        setPressingId(null);
+    }, []);
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -69,6 +93,9 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
 
     return (
         <>
+            {/* Long-press animation keyframe */}
+            <style>{`@keyframes longpress-fill { from { opacity: 0; } to { opacity: 1; } }`}</style>
+
             <motion.section
                 aria-label="Gallery"
                 className="py-10"
@@ -80,7 +107,7 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
                     <h2 className="text-3xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>Gallery</h2>
                     {canEdit && (
                         <p className="text-sm font-light mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            Füge Fotos hinzu, die das Leben erzählen. Markiere Favoriten mit ⭐ für die Highlights.
+                            Markiere Favoriten mit ⭐ für die Highlights. Gedrückt halten zum Löschen.
                         </p>
                     )}
                 </motion.div>
@@ -97,8 +124,12 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
                                 <motion.div
                                     key={photo.id}
                                     variants={fadeIn}
-                                    className="group relative cursor-pointer overflow-hidden rounded-lg break-inside-avoid"
-                                    onClick={() => setLightboxIndex(index)}
+                                    className="group relative cursor-pointer overflow-hidden rounded-lg break-inside-avoid select-none"
+                                    onClick={() => { if (!longPressTriggered.current) setLightboxIndex(index); }}
+                                    onPointerDown={() => startPress(photo.id)}
+                                    onPointerUp={cancelPress}
+                                    onPointerLeave={cancelPress}
+                                    onContextMenu={canEdit ? (e) => e.preventDefault() : undefined}
                                 >
                                     <Image
                                         src={photo.url}
@@ -120,6 +151,17 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
                                         {photo.caption}
                                     </p>
 
+                                    {/* Long-press delete overlay */}
+                                    {canEdit && pressingId === photo.id && (
+                                        <div
+                                            className="absolute inset-0 z-20 pointer-events-none"
+                                            style={{
+                                                backgroundColor: 'hsl(var(--destructive) / 0.35)',
+                                                animation: `longpress-fill ${LONG_PRESS_MS}ms ease-in forwards`,
+                                            }}
+                                        />
+                                    )}
+
                                     {/* Favorite toggle — nur für Owner/Editor sichtbar */}
                                     {canEdit && (
                                         <button
@@ -127,6 +169,7 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
                                                 e.stopPropagation();
                                                 onToggleFavorite?.(photo.id);
                                             }}
+                                            onPointerDown={(e) => e.stopPropagation()}
                                             className="absolute top-1.5 right-1.5 z-10 flex items-center justify-center rounded-full p-1.5 transition-colors hover:bg-foreground/10"
                                             title="Toggle Highlight"
                                         >

@@ -44,9 +44,9 @@ export async function POST(request: NextRequest) {
         const caption = formData.get('caption') as string | null;
 
         // Pflichtfelder prüfen
-        if (!file || !memorialId) {
+        if (!file) {
             return NextResponse.json(
-                { error: 'Pflichtfelder fehlen: file, memorialId.' },
+                { error: 'Pflichtfeld fehlt: file.' },
                 { status: 400 },
             );
         }
@@ -82,6 +82,11 @@ export async function POST(request: NextRequest) {
 
         const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
         const url = urlData.publicUrl;
+
+        // Wenn keine memorialId: nur URL zurückgeben (Create-Mode, staged)
+        if (!memorialId) {
+            return NextResponse.json({ url }, { status: 201 });
+        }
 
         // Datensatz in DB anlegen (via Use Case + Repository)
         const photoRepo = new SupabasePhotoRepository(supabase);
