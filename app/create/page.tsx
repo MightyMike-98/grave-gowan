@@ -80,6 +80,7 @@ function CreateMemorialForm() {
     const [galleryPhotos, setGalleryPhotos] = useState<{ id: string; url: string; favorite: boolean }[]>([]);
     const [galleryUploading, setGalleryUploading] = useState(false);
     const [stories, setStories] = useState<{ id: string; author: string; text: string; date: string; favorite: boolean }[]>([]);
+    const [pendingStories, setPendingStories] = useState<{ id: string; author: string; text: string; date: string }[]>([]);
     const [storyAuthor, setStoryAuthor] = useState('');
     const [storyText, setStoryText] = useState('');
     const [moderationEnabled, setModerationEnabled] = useState(false);
@@ -232,11 +233,12 @@ function CreateMemorialForm() {
                     }
                 });
 
-            // 4. Stories aus DB laden
+            // 4. Approved Stories laden
             supabase
                 .from('memorial_stories')
                 .select('*')
                 .eq('memorial_id', editId)
+                .eq('status', 'approved')
                 .order('created_at', { ascending: false })
                 .then(({ data: dbStories }) => {
                     if (dbStories) {
@@ -246,6 +248,24 @@ function CreateMemorialForm() {
                             text: s.text,
                             date: new Date(s.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
                             favorite: s.is_favorite ?? false,
+                        })));
+                    }
+                });
+
+            // 5. Pending Stories laden (Warteschlange)
+            supabase
+                .from('memorial_stories')
+                .select('*')
+                .eq('memorial_id', editId)
+                .eq('status', 'pending')
+                .order('created_at', { ascending: false })
+                .then(({ data: dbPending }) => {
+                    if (dbPending) {
+                        setPendingStories(dbPending.map((s: { id: string; author: string; text: string; created_at: string }) => ({
+                            id: s.id,
+                            author: s.author,
+                            text: s.text,
+                            date: new Date(s.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
                         })));
                     }
                 });
@@ -340,7 +360,7 @@ function CreateMemorialForm() {
             const supabase = createSupabaseBrowserClient();
             const { data, error } = await supabase
                 .from('memorial_stories')
-                .insert({ memorial_id: editId, author, text })
+                .insert({ memorial_id: editId, author, text, status: 'approved' })
                 .select()
                 .single();
             if (!error && data) {
@@ -351,6 +371,27 @@ function CreateMemorialForm() {
         }
         setStoryAuthor('');
         setStoryText('');
+    };
+
+    /** Genehmigt eine pending Story — setzt status auf 'approved' und verschiebt sie in die Story-Liste. */
+    const handleApproveStory = async (storyId: string) => {
+        const story = pendingStories.find(s => s.id === storyId);
+        if (!story) return;
+        const supabase = createSupabaseBrowserClient();
+        const { error } = await supabase.from('memorial_stories').update({ status: 'approved' }).eq('id', storyId);
+        if (!error) {
+            setPendingStories(prev => prev.filter(s => s.id !== storyId));
+            setStories(prev => [{ ...story, favorite: false }, ...prev]);
+        }
+    };
+
+    /** Lehnt eine pending Story ab — löscht sie aus der DB. */
+    const handleRejectStory = async (storyId: string) => {
+        const supabase = createSupabaseBrowserClient();
+        const { error } = await supabase.from('memorial_stories').delete().eq('id', storyId);
+        if (!error) {
+            setPendingStories(prev => prev.filter(s => s.id !== storyId));
+        }
     };
 
     /** Toggelt den Favoriten-Status einer Story (edit mode: DB-Call, create mode: nur State). */
@@ -951,8 +992,82 @@ function CreateMemorialForm() {
                         Stories <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>(Gästebuch)</span>
                     </h2>
                     <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        Füge erste Erinnerungen hinzu. Markiere Favoriten mit ⭐ für die Highlights. Gedrückt halten zum Löschen.
+                        Erlaube Besuchern, persönliche Erinnerungen und Geschichten zu teilen. Markiere Favoriten mit ⭐ für die Highlights.
                     </p>
+
+                    {/* Warteschlange — Pending Stories */}
+                    {pendingStories.length > 0 && (
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2.5">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <h3 className="text-base tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>Warteschlange</h3>
+                                <span
+                                    className="rounded-full px-2.5 py-0.5 text-[10px] font-medium"
+                                    style={{ backgroundColor: 'hsl(var(--foreground) / 0.08)', color: 'hsl(var(--foreground))' }}
+                                >
+                                    {pendingStories.length} ausstehend
+                                </span>
+                            </div>
+
+                            {pendingStories.map(story => (
+                                <div
+                                    key={story.id}
+                                    className="rounded-xl border p-5 space-y-4"
+                                    style={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border) / 0.4)' }}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs" style={{ backgroundColor: 'hsl(var(--muted) / 0.6)', color: 'hsl(var(--muted-foreground))' }}>
+                                                {story.author.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>{story.author}</p>
+                                                <p className="text-[11px] font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{story.date}</p>
+                                            </div>
+                                        </div>
+                                        <span
+                                            className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-normal"
+                                            style={{ border: '1px solid hsl(var(--border) / 0.5)', color: 'hsl(var(--muted-foreground))' }}
+                                        >
+                                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Ausstehend
+                                        </span>
+                                    </div>
+                                    <p className="text-sm font-light leading-relaxed" style={{ color: 'hsl(var(--foreground) / 0.75)' }}>
+                                        {story.text}
+                                    </p>
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleApproveStory(story.id)}
+                                            className="flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-light tracking-wider transition-all"
+                                            style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
+                                        >
+                                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                            </svg>
+                                            Genehmigen
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRejectStory(story.id)}
+                                            className="flex-1 flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-light tracking-wider transition-all"
+                                            style={{ color: 'hsl(var(--destructive))', border: '1px solid hsl(var(--destructive) / 0.3)', backgroundColor: 'hsl(var(--destructive) / 0.05)' }}
+                                        >
+                                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                            Ablehnen
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     {/* Add Story Form */}
                     <div className="rounded-xl p-5 space-y-3" style={{ backgroundColor: 'hsl(var(--muted) / 0.15)', border: '1px dashed hsl(var(--border) / 0.5)' }}>

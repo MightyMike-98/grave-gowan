@@ -51,11 +51,42 @@ export default async function DashboardPage() {
         console.error('[Dashboard] Could not load shared memorials:', err);
     }
 
+    // Pending Stories zaehlen fuer alle Memorials wo User Owner oder Editor ist
+    let pendingStoryInfos: { memorialId: string; memorialName: string; count: number }[] = [];
+    try {
+        const allMemorials = [
+            ...memorials.map(m => ({ id: m.id, name: m.name })),
+            ...sharedMemorials.filter(s => s.role === 'editor').map(s => ({ id: s.memorial.id, name: s.memorial.name })),
+        ];
+        if (allMemorials.length > 0) {
+            const { data: pending } = await supabase
+                .from('memorial_stories')
+                .select('memorial_id')
+                .in('memorial_id', allMemorials.map(m => m.id))
+                .eq('status', 'pending');
+
+            if (pending && pending.length > 0) {
+                const countMap = new Map<string, number>();
+                pending.forEach((r: { memorial_id: string }) => {
+                    countMap.set(r.memorial_id, (countMap.get(r.memorial_id) ?? 0) + 1);
+                });
+                const nameMap = new Map(allMemorials.map(m => [m.id, m.name]));
+                pendingStoryInfos = Array.from(countMap.entries()).map(([mid, count]) => ({
+                    memorialId: mid,
+                    memorialName: nameMap.get(mid) ?? 'Memorial',
+                    count,
+                }));
+            }
+        }
+    } catch {
+        // status column may not exist yet
+    }
+
     return (
         <main className="min-h-screen px-4 py-16">
             <div className="mx-auto max-w-xl animate-fade-up">
                 {/* Header: Begrüßung + Sign-Out + Inbox */}
-                <DashboardHeader displayName={displayName} email={email} />
+                <DashboardHeader displayName={displayName} email={email} pendingStoryInfos={pendingStoryInfos} />
 
                 <h2 className="mt-10 text-xl tracking-tight">
                     My Memorials

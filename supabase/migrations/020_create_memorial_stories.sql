@@ -6,7 +6,11 @@
 -- (Stories) einer Gedenkseite gespeichert werden.
 -- Favorisierte Stories erscheinen im Highlights-Tab.
 --
--- Berechtigungen:
+-- Moderationssystem:
+--   Stories von Editoren/Ownern → status 'approved' (sofort sichtbar)
+--   Stories von Besuchern (Visit Memorial) → status 'pending' (Server Action)
+--
+-- Berechtigungen (unveraendert):
 --   SELECT → öffentlich (jeder darf Stories lesen)
 --   INSERT → jeder authentifizierte Nutzer (Besucher dürfen schreiben)
 --   UPDATE → Owner + Editor (Favoriten-Status toggeln)
@@ -14,7 +18,24 @@
 -- =============================================================================
 
 -- -----------------------------------------------------------------------
--- 1. Tabelle erstellen
+-- 0. Falls Tabelle bereits existiert: status-Spalte nachrüsten
+--    Bestehende Stories bekommen 'approved' (waren ja schon sichtbar).
+-- -----------------------------------------------------------------------
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'memorial_stories')
+       AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'memorial_stories' AND column_name = 'status')
+    THEN
+        ALTER TABLE memorial_stories ADD COLUMN status TEXT NOT NULL DEFAULT 'approved'
+            CHECK (status IN ('pending', 'approved'));
+
+        CREATE INDEX IF NOT EXISTS idx_memorial_stories_pending
+            ON memorial_stories(memorial_id) WHERE status = 'pending';
+    END IF;
+END $$;
+
+-- -----------------------------------------------------------------------
+-- 1. Tabelle erstellen (nur wenn sie noch nicht existiert)
 -- -----------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS memorial_stories (
     id          UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -31,6 +52,9 @@ CREATE TABLE IF NOT EXISTS memorial_stories (
     -- Ob diese Story im Highlights-Tab angezeigt werden soll.
     is_favorite BOOLEAN      NOT NULL DEFAULT false,
 
+    -- Moderationsstatus: Besucher-Stories kommen als 'pending'
+    status      TEXT         NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved')),
+
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 
@@ -42,6 +66,9 @@ CREATE INDEX IF NOT EXISTS idx_memorial_stories_memorial
 
 CREATE INDEX IF NOT EXISTS idx_memorial_stories_favorites
     ON memorial_stories(memorial_id) WHERE is_favorite = true;
+
+CREATE INDEX IF NOT EXISTS idx_memorial_stories_pending
+    ON memorial_stories(memorial_id) WHERE status = 'pending';
 
 -- -----------------------------------------------------------------------
 -- 3. RLS aktivieren

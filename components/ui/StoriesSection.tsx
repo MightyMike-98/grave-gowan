@@ -10,6 +10,7 @@
 
 'use client';
 
+import { submitVisitorStory } from '@/app/actions/submitVisitorStory';
 import type { Story } from '@/types';
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { useCallback, useRef, useState } from 'react';
@@ -42,6 +43,7 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
     const [authorName, setAuthorName] = useState('');
     const [storyText, setStoryText] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
     const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const startPress = useCallback((storyId: string) => {
@@ -66,26 +68,42 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
 
         setSubmitting(true);
         try {
-            const supabase = createSupabaseBrowserClient();
-            const { data, error } = await supabase
-                .from('memorial_stories')
-                .insert({ memorial_id: memorialId, author, text })
-                .select()
-                .single();
+            if (canEdit) {
+                // Editor/Owner: direkt als approved einfügen (normaler Auth-Client)
+                const supabase = createSupabaseBrowserClient();
+                const { data, error } = await supabase
+                    .from('memorial_stories')
+                    .insert({ memorial_id: memorialId, author, text, status: 'approved' })
+                    .select()
+                    .single();
 
-            if (!error && data) {
-                const newStory: Story = {
-                    id: data.id,
-                    author,
-                    text,
-                    date: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-                    isFavorite: false,
-                };
-                onStoryAdded?.(newStory);
-                setAuthorName('');
-                setStoryText('');
-                setShowForm(false);
+                if (error) {
+                    console.error('[StoriesSection] Insert error:', error.message);
+                    return;
+                }
+
+                if (data) {
+                    onStoryAdded?.({
+                        id: data.id,
+                        author,
+                        text,
+                        date: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+                        isFavorite: false,
+                    });
+                }
+            } else {
+                // Besucher: Server Action (Service Role, bypassed RLS), status 'pending'
+                const result = await submitVisitorStory(memorialId, author, text);
+                if (result.error) {
+                    console.error('[StoriesSection] Visitor submit error:', result.error);
+                    return;
+                }
+                setSubmitted(true);
             }
+
+            setAuthorName('');
+            setStoryText('');
+            setShowForm(false);
         } catch (err) {
             console.error('[StoriesSection] Submit story error:', err);
         } finally {
@@ -207,8 +225,24 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
                 ))}
             </div>
 
+            {/* Success message for pending stories */}
+            {submitted && (
+                <div
+                    className="mt-6 rounded-xl p-5 text-center space-y-1"
+                    style={{
+                        backgroundColor: 'hsl(var(--muted) / 0.2)',
+                        border: '1px solid hsl(var(--border) / 0.4)',
+                    }}
+                >
+                    <p className="text-sm" style={{ color: 'hsl(var(--foreground))' }}>Danke für deine Erinnerung!</p>
+                    <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                        Deine Geschichte wird vom Ersteller geprüft und dann veröffentlicht.
+                    </p>
+                </div>
+            )}
+
             {/* Write a Story CTA / Form */}
-            {!showForm ? (
+            {submitted ? null : !showForm ? (
                 <div
                     className="mt-8 flex flex-col items-center gap-3 rounded-xl p-8"
                     style={{
@@ -233,53 +267,88 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
                 </div>
             ) : (
                 <div
-                    className="mt-6 rounded-xl p-4 space-y-3"
+                    className="mt-6 rounded-2xl p-6 space-y-5 shadow-sm"
                     style={{
                         backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border) / 0.4)',
+                        border: '1px solid hsl(var(--border) / 0.3)',
                     }}
                 >
-                    <input
-                        type="text"
-                        placeholder="Dein Name"
-                        value={authorName}
-                        onChange={(e) => setAuthorName(e.target.value)}
-                        className="w-full rounded-lg border px-3 py-2 text-xs font-light outline-none transition-colors focus:ring-1"
-                        style={{
-                            borderColor: 'hsl(var(--border) / 0.4)',
-                            backgroundColor: 'hsl(var(--background))',
-                            color: 'hsl(var(--foreground))',
-                        }}
-                    />
-                    <textarea
-                        placeholder="Teile deine Erinnerung..."
-                        value={storyText}
-                        onChange={(e) => setStoryText(e.target.value)}
-                        rows={3}
-                        className="w-full rounded-lg border px-3 py-2 text-xs font-light outline-none transition-colors focus:ring-1 resize-none"
-                        style={{
-                            borderColor: 'hsl(var(--border) / 0.4)',
-                            backgroundColor: 'hsl(var(--background))',
-                            color: 'hsl(var(--foreground))',
-                        }}
-                    />
-                    <div className="flex gap-2 justify-end">
+                    {/* Header */}
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h3 className="text-lg tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
+                                Geschichte schreiben
+                            </h3>
+                            <p className="text-xs font-light mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                Teile deine persönliche Erinnerung.{!canEdit && ' Der Ersteller prüft sie vor der Veröffentlichung.'}
+                            </p>
+                        </div>
                         <button
                             onClick={() => { setShowForm(false); setAuthorName(''); setStoryText(''); }}
-                            className="rounded-full px-4 py-1.5 text-[11px] font-light tracking-wider transition-all"
+                            className="transition-colors hover:opacity-70 -mt-0.5"
                             style={{ color: 'hsl(var(--muted-foreground))' }}
                         >
-                            Abbrechen
-                        </button>
-                        <button
-                            onClick={handleSubmitStory}
-                            disabled={submitting || !authorName.trim() || !storyText.trim()}
-                            className="rounded-full px-4 py-1.5 text-[11px] font-light tracking-wider transition-all disabled:opacity-40"
-                            style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
-                        >
-                            {submitting ? 'Speichern...' : 'Veröffentlichen'}
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         </button>
                     </div>
+
+                    {/* Name */}
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
+                            Dein Name
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="z.B. Anna M."
+                            value={authorName}
+                            onChange={(e) => setAuthorName(e.target.value)}
+                            className="w-full rounded-xl border px-4 py-3 text-sm font-light outline-none transition-colors focus:ring-1"
+                            style={{
+                                borderColor: 'hsl(var(--border) / 0.4)',
+                                backgroundColor: 'hsl(var(--muted) / 0.15)',
+                                color: 'hsl(var(--foreground))',
+                            }}
+                        />
+                    </div>
+
+                    {/* Story */}
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
+                            Deine Geschichte
+                        </label>
+                        <textarea
+                            placeholder="Erzähle deine Erinnerung..."
+                            value={storyText}
+                            onChange={(e) => setStoryText(e.target.value)}
+                            rows={5}
+                            className="w-full rounded-xl border px-4 py-3 text-sm font-light outline-none transition-colors focus:ring-1 resize-none"
+                            style={{
+                                borderColor: 'hsl(var(--border) / 0.4)',
+                                backgroundColor: 'hsl(var(--muted) / 0.15)',
+                                color: 'hsl(var(--foreground))',
+                            }}
+                        />
+                    </div>
+
+                    {/* Moderation hint (nur für Besucher) */}
+                    {!canEdit && (
+                        <p className="flex items-center gap-2 text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                            <span>🔒</span>
+                            Wird erst nach Freigabe durch den Ersteller veröffentlicht
+                        </p>
+                    )}
+
+                    {/* Submit */}
+                    <button
+                        onClick={handleSubmitStory}
+                        disabled={submitting || !authorName.trim() || !storyText.trim()}
+                        className="w-full rounded-xl py-3 text-sm font-light tracking-wider transition-all disabled:opacity-40"
+                        style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
+                    >
+                        {submitting ? 'Speichern...' : 'Veröffentlichen'}
+                    </button>
                 </div>
             )}
         </section>

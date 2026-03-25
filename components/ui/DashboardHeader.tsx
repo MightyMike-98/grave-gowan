@@ -1,13 +1,21 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useMemo, useState } from 'react';
 import { SignOutButton } from '@/components/ui/SignOutButton';
 import type { Suggestion } from '@/types';
+
+export interface PendingStoryInfo {
+    memorialId: string;
+    memorialName: string;
+    count: number;
+}
 
 interface DashboardHeaderProps {
     displayName: string;
     email: string;
+    pendingStoryInfos?: PendingStoryInfo[];
 }
 
 const mockMessages: Suggestion[] = [
@@ -60,6 +68,12 @@ const CategoryIcon = ({ category }: { category: string }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                 </svg>
             );
+        case 'Moderation':
+            return (
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            );
         default:
             return (
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -69,13 +83,30 @@ const CategoryIcon = ({ category }: { category: string }) => {
     }
 };
 
-export function DashboardHeader({ displayName, email }: DashboardHeaderProps) {
+export function DashboardHeader({ displayName, email, pendingStoryInfos = [] }: DashboardHeaderProps) {
+    const router = useRouter();
     const [inboxOpen, setInboxOpen] = useState(false);
     const [messages, setMessages] = useState<Suggestion[]>(mockMessages);
     const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
-    const unreadCount = messages.filter((m) => !m.read).length;
 
-    const selectedMsg = messages.find((m) => m.id === selectedMessageId);
+    // System Moderation messages aus pending stories generieren
+    const totalPending = pendingStoryInfos.reduce((sum, s) => sum + s.count, 0);
+    const systemMessages: Suggestion[] = useMemo(() => {
+        if (totalPending === 0) return [];
+        return pendingStoryInfos.map((info) => ({
+            id: `moderation_${info.memorialId}`,
+            from: 'System',
+            category: 'Moderation',
+            text: `${info.count} neue ${info.count === 1 ? 'Story wartet' : 'Stories warten'} auf deine Freigabe. Prüfe sie im Edit-Modus.`,
+            hasImage: false,
+            time: '',
+            read: false,
+        }));
+    }, [pendingStoryInfos, totalPending]);
+
+    const allMessages = useMemo(() => [...systemMessages, ...messages], [systemMessages, messages]);
+    const unreadCount = allMessages.filter((m) => !m.read).length;
+    const selectedMsg = allMessages.find((m) => m.id === selectedMessageId);
 
     const markRead = (id: string) => {
         setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m)));
@@ -212,15 +243,21 @@ export function DashboardHeader({ displayName, email }: DashboardHeaderProps) {
                                     </button>
                                 </div>
                                 <div className="max-h-[350px] divide-y overflow-y-auto" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
-                                    {messages.length === 0 ? (
+                                    {allMessages.length === 0 ? (
                                         <p className="px-5 py-8 text-center text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
                                             Keine Nachrichten
                                         </p>
                                     ) : (
-                                        messages.map((msg) => (
+                                        allMessages.map((msg) => (
                                             <button
                                                 key={msg.id}
                                                 onClick={() => {
+                                                    if (msg.id.startsWith('moderation_')) {
+                                                        const memorialId = msg.id.replace('moderation_', '');
+                                                        router.push(`/create?id=${memorialId}`);
+                                                        setInboxOpen(false);
+                                                        return;
+                                                    }
                                                     markRead(msg.id);
                                                     setSelectedMessageId(msg.id);
                                                 }}
