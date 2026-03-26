@@ -109,6 +109,7 @@ async function loadMemorialWithRole(slug: string): Promise<{
                 .from('memorial_stories')
                 .select('id, author, text, is_favorite, created_at')
                 .eq('memorial_id', domain.id)
+                .eq('status', 'approved')
                 .order('created_at', { ascending: false });
             if (dbStories) {
                 stories = dbStories.map((s: { id: string; author: string; text: string; is_favorite: boolean; created_at: string }) => ({
