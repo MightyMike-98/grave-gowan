@@ -98,6 +98,8 @@ export const DUMMY_MEMORIAL: Memorial = {
             { title: 'World Wildlife Fund', url: 'https://www.worldwildlife.org' },
         ],
     },
+    candleCount: 24,
+    flowerCount: 17,
 };
 
 /**

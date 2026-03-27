@@ -82,11 +82,44 @@ export default async function DashboardPage() {
         // status column may not exist yet
     }
 
+    // Requests aus memorial_requests laden
+    let requestInfos: { id: string; memorialId: string; memorialName: string; author: string; category: string; message: string; hasImage: boolean; isRead: boolean; createdAt: string }[] = [];
+    try {
+        const allMemorials = [
+            ...memorials.map(m => ({ id: m.id, name: m.name })),
+            ...sharedMemorials.filter(s => s.role === 'editor').map(s => ({ id: s.memorial.id, name: s.memorial.name })),
+        ];
+        if (allMemorials.length > 0) {
+            const nameMap = new Map(allMemorials.map(m => [m.id, m.name]));
+            const { data: reqs } = await supabase
+                .from('memorial_requests')
+                .select('id, memorial_id, author, category, message, image_url, is_read, created_at')
+                .in('memorial_id', allMemorials.map(m => m.id))
+                .order('created_at', { ascending: false });
+
+            if (reqs) {
+                requestInfos = reqs.map((r: { id: string; memorial_id: string; author: string; category: string; message: string; image_url: string | null; is_read: boolean; created_at: string }) => ({
+                    id: r.id,
+                    memorialId: r.memorial_id,
+                    memorialName: nameMap.get(r.memorial_id) ?? 'Memorial',
+                    author: r.author,
+                    category: r.category,
+                    message: r.message,
+                    hasImage: !!r.image_url,
+                    isRead: r.is_read,
+                    createdAt: r.created_at,
+                }));
+            }
+        }
+    } catch {
+        // table may not exist yet
+    }
+
     return (
         <main className="min-h-screen px-4 py-16">
             <div className="mx-auto max-w-xl animate-fade-up">
                 {/* Header: Begrüßung + Sign-Out + Inbox */}
-                <DashboardHeader displayName={displayName} email={email} pendingStoryInfos={pendingStoryInfos} />
+                <DashboardHeader displayName={displayName} email={email} pendingStoryInfos={pendingStoryInfos} requests={requestInfos} />
 
                 <h2 className="mt-10 text-xl tracking-tight">
                     My Memorials

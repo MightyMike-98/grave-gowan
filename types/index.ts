@@ -105,4 +105,6 @@ export interface Memorial {
     facts: string[];
     timeline: TimelineEvent[];
     support?: SupportSection;
+    candleCount: number;
+    flowerCount: number;
 }

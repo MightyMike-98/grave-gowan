@@ -18,15 +18,17 @@ import { useState } from 'react';
 /**
  * Kerzen-Widget — interaktives Element zum "Kerze anzünden".
  */
-function CandleWidget() {
-    const [count, setCount] = useState(24);
+function CandleWidget({ memorialId, initialCount }: { memorialId: string; initialCount: number }) {
+    const [count, setCount] = useState(initialCount);
     const [lit, setLit] = useState(false);
 
-    const lightCandle = () => {
-        if (!lit) {
-            setCount((c) => c + 1);
-            setLit(true);
-        }
+    const lightCandle = async () => {
+        if (lit) return;
+        setCount((c) => c + 1);
+        setLit(true);
+        const { createSupabaseBrowserClient } = await import('@data/browser-client');
+        const supabase = createSupabaseBrowserClient();
+        await supabase.rpc('increment_candle', { p_memorial_id: memorialId });
     };
 
     return (
@@ -76,10 +78,11 @@ function CandleWidget() {
 /**
  * Rendert den oberen Hero-Bereich einer Gedenkseite.
  */
-export function HeroSection({ memorial, flowers = [], isAuthenticated = false }: {
+export function HeroSection({ memorial, flowers = [], isAuthenticated = false, candleCount = 0 }: {
     memorial: Memorial;
     flowers?: string[];
     isAuthenticated?: boolean;
+    candleCount?: number;
 }) {
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
@@ -195,7 +198,7 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false }:
                 )}
 
                 {/* Candle Widget */}
-                <CandleWidget />
+                <CandleWidget memorialId={memorial.id} initialCount={candleCount} />
 
                 {/* Flower row (legacy support) */}
                 {flowers.length > 0 && (

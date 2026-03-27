@@ -40,6 +40,10 @@ export interface Memorial {
     supportUrl?: string;
     /** Kurzbeschreibung der Spendenaktion. */
     supportDesc?: string;
+    /** Anzahl angezündeter Kerzen. */
+    candleCount: number;
+    /** Anzahl niedergelegter Blumen. */
+    flowerCount: number;
     createdAt: string;
     updatedAt: string;
 }

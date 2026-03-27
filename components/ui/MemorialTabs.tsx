@@ -152,7 +152,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
             case 'Highlights':
                 return <HighlightsSection memorial={memorialWithPhotos} canEdit={canEdit} onTabChange={(tab) => setActiveTab(tab as Tab)} />;
             case 'Support':
-                return <SupportSection support={memorial.support} onDonate={addFlower} />;
+                return <SupportSection support={memorial.support} onDonate={addFlower} memorialId={memorial.id} initialFlowerCount={memorial.flowerCount} />;
         }
     };
 
@@ -194,7 +194,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
             )}
 
             {/* Hero */}
-            <HeroSection memorial={memorial} flowers={flowers} isAuthenticated={isAuthenticated} />
+            <HeroSection memorial={memorial} flowers={flowers} isAuthenticated={isAuthenticated} candleCount={memorial.candleCount} />
 
             {/* Tabs */}
             <TabsNavigation

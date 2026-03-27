@@ -10,6 +10,8 @@
 -- Anwendungsebene (nur wer den Slug kennt, kommt rein).
 -- =============================================================================
 
+DROP FUNCTION IF EXISTS get_memorial_by_slug(TEXT);
+
 CREATE OR REPLACE FUNCTION get_memorial_by_slug(p_slug TEXT)
 RETURNS TABLE (
     id UUID,
@@ -28,6 +30,8 @@ RETURNS TABLE (
     support_title TEXT,
     support_url TEXT,
     support_desc TEXT,
+    candle_count INTEGER,
+    flower_count INTEGER,
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ
 )
@@ -36,6 +40,7 @@ LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
            date_of_birth, date_of_death, bio, quote,
            cover_url, portrait_url, theme, is_public,
            timeline, support_title, support_url, support_desc,
+           candle_count, flower_count,
            created_at, updated_at
     FROM memorials m
     WHERE m.slug = p_slug

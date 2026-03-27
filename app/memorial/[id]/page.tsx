@@ -67,6 +67,8 @@ function toUIMemorial(d: DomainMemorial, stories: UIMemorial['stories'] = []): U
             description: d.supportDesc ?? '',
             links: [{ title: d.supportTitle, url: d.supportUrl ?? '' }]
         } : undefined,
+        candleCount: d.candleCount ?? 0,
+        flowerCount: d.flowerCount ?? 0,
     };
 }
 
@@ -187,7 +189,7 @@ export default async function MemorialPage({ params }: MemorialPageProps) {
                 </Link>
             </footer>
 
-            {!canEdit && <RequestWidget />}
+            {!canEdit && <RequestWidget memorialId={memorial.id} />}
         </div>
     );
 }

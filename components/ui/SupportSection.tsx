@@ -19,17 +19,23 @@ import { useState } from 'react';
 interface SupportSectionProps {
     support?: SupportSectionType;
     onDonate?: () => void;
+    memorialId?: string;
+    initialFlowerCount?: number;
 }
 
-export function SupportSection({ support, onDonate }: SupportSectionProps) {
+export function SupportSection({ support, onDonate, memorialId, initialFlowerCount = 0 }: SupportSectionProps) {
     const [flowerLaid, setFlowerLaid] = useState(false);
-    const [flowerCount, setFlowerCount] = useState(17);
+    const [flowerCount, setFlowerCount] = useState(initialFlowerCount);
 
-    const layFlower = () => {
-        if (!flowerLaid) {
-            setFlowerCount((c) => c + 1);
-            setFlowerLaid(true);
-            onDonate?.();
+    const layFlower = async () => {
+        if (flowerLaid) return;
+        setFlowerCount((c) => c + 1);
+        setFlowerLaid(true);
+        onDonate?.();
+        if (memorialId) {
+            const { createSupabaseBrowserClient } = await import('@data/browser-client');
+            const supabase = createSupabaseBrowserClient();
+            await supabase.rpc('increment_flower', { p_memorial_id: memorialId });
         }
     };
 

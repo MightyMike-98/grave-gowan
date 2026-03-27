@@ -2,9 +2,10 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { SignOutButton } from '@/components/ui/SignOutButton';
 import type { Suggestion } from '@/types';
+import { createSupabaseBrowserClient } from '@data/browser-client';
 
 export interface PendingStoryInfo {
     memorialId: string;
@@ -12,41 +13,28 @@ export interface PendingStoryInfo {
     count: number;
 }
 
+export interface RequestInfo {
+    id: string;
+    memorialId: string;
+    memorialName: string;
+    author: string;
+    category: string;
+    message: string;
+    hasImage: boolean;
+    isRead: boolean;
+    createdAt: string;
+}
+
 interface DashboardHeaderProps {
     displayName: string;
     email: string;
     pendingStoryInfos?: PendingStoryInfo[];
+    requests?: RequestInfo[];
 }
 
-const mockMessages: Suggestion[] = [
-    {
-        id: '1',
-        from: 'Sarah K.',
-        category: 'Gallery',
-        text: 'Ich habe ein tolles Foto von Ali beim Training in den 70ern gefunden. Möchtest du es hinzufügen?',
-        hasImage: true,
-        time: 'vor 2 Std.',
-        read: false,
-    },
-    {
-        id: '2',
-        from: 'Ahmed M.',
-        category: 'Stories',
-        text: 'Mein Großvater hat Ali mal persönlich getroffen. Darf ich die Geschichte teilen?',
-        hasImage: false,
-        time: 'vor 1 Tag',
-        read: false,
-    },
-    {
-        id: '3',
-        from: 'Lisa W.',
-        category: 'Highlights',
-        text: 'Das Zitat in der Bio ist leider falsch geschrieben – es müsste "sting like a bee" heißen.',
-        hasImage: false,
-        time: 'vor 3 Tagen',
-        read: true,
-    },
-];
+function getInitials(name: string): string {
+    return name.split(/[\s()]+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+}
 
 const CategoryIcon = ({ category }: { category: string }) => {
     switch (category) {
@@ -83,13 +71,87 @@ const CategoryIcon = ({ category }: { category: string }) => {
     }
 };
 
-export function DashboardHeader({ displayName, email, pendingStoryInfos = [] }: DashboardHeaderProps) {
+function timeAgo(dateStr: string): string {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diffMs = now.getTime() - date.getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'gerade eben';
+    if (mins < 60) return `vor ${mins} Min.`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `vor ${hours} Std.`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'vor 1 Tag';
+    return `vor ${days} Tagen`;
+}
+
+function MessageRow({
+    msg,
+    onClick,
+    onDelete,
+}: {
+    msg: Suggestion;
+    onClick: () => void;
+    onDelete: (id: string) => void;
+}) {
+    return (
+        <div
+            className="group px-5 py-3.5 cursor-pointer transition-colors hover:bg-[hsl(var(--muted)/0.15)]"
+            style={{ backgroundColor: msg.read ? 'hsl(var(--card))' : 'hsl(var(--muted) / 0.2)' }}
+            onClick={onClick}
+        >
+            <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>{msg.from}</span>
+                        <span
+                            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-normal"
+                            style={{ backgroundColor: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))' }}
+                        >
+                            <CategoryIcon category={msg.category} />
+                            {msg.category}
+                        </span>
+                        {msg.hasImage && (
+                            <span
+                                className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-normal"
+                                style={{ borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }}
+                            >
+                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Bild
+                            </span>
+                        )}
+                        {!msg.read && <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: 'hsl(var(--foreground))' }} />}
+                    </div>
+                    <p className="mt-1 truncate text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{msg.text}</p>
+                </div>
+
+                {/* Right column: timestamp + trash */}
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <span className="whitespace-nowrap text-[11px]" style={{ color: 'hsl(var(--muted-foreground) / 0.7)' }}>{msg.time}</span>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onDelete(msg.id); }}
+                        className="opacity-30 transition-opacity group-hover:opacity-70 hover:!opacity-100"
+                        style={{ color: 'hsl(var(--muted-foreground))' }}
+                    >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+export function DashboardHeader({ displayName, email, pendingStoryInfos = [], requests = [] }: DashboardHeaderProps) {
     const router = useRouter();
     const [inboxOpen, setInboxOpen] = useState(false);
-    const [messages, setMessages] = useState<Suggestion[]>(mockMessages);
+    const [readIds, setReadIds] = useState<Set<string>>(new Set());
+    const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
     const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
 
-    // System Moderation messages aus pending stories generieren
     const totalPending = pendingStoryInfos.reduce((sum, s) => sum + s.count, 0);
     const systemMessages: Suggestion[] = useMemo(() => {
         if (totalPending === 0) return [];
@@ -104,12 +166,42 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [] }: 
         }));
     }, [pendingStoryInfos, totalPending]);
 
-    const allMessages = useMemo(() => [...systemMessages, ...messages], [systemMessages, messages]);
+    const requestMessages: Suggestion[] = useMemo(() => {
+        return requests.filter(r => !deletedIds.has(r.id)).map((r) => ({
+            id: r.id,
+            from: r.author,
+            category: r.category,
+            text: r.message,
+            hasImage: r.hasImage,
+            time: timeAgo(r.createdAt),
+            read: r.isRead || readIds.has(r.id),
+        }));
+    }, [requests, readIds, deletedIds]);
+
+    const allMessages = useMemo(() => [...systemMessages, ...requestMessages], [systemMessages, requestMessages]);
     const unreadCount = allMessages.filter((m) => !m.read).length;
     const selectedMsg = allMessages.find((m) => m.id === selectedMessageId);
 
-    const markRead = (id: string) => {
-        setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m)));
+    const closeInbox = useCallback(() => {
+        setInboxOpen(false);
+        setSelectedMessageId(null);
+    }, []);
+
+    const markRead = async (id: string) => {
+        setReadIds((prev) => new Set(prev).add(id));
+        if (!id.startsWith('moderation_')) {
+            const supabase = createSupabaseBrowserClient();
+            await supabase.from('memorial_requests').update({ is_read: true }).eq('id', id);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        setDeletedIds((prev) => new Set(prev).add(id));
+        if (selectedMessageId === id) setSelectedMessageId(null);
+        if (!id.startsWith('moderation_')) {
+            const supabase = createSupabaseBrowserClient();
+            await supabase.from('memorial_requests').delete().eq('id', id);
+        }
     };
 
     return (
@@ -140,7 +232,7 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [] }: 
                         </svg>
                         {unreadCount > 0 && (
                             <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[10px] font-medium"
-                                style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
+                                style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
                             >
                                 {unreadCount}
                             </span>
@@ -150,155 +242,186 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [] }: 
                 </div>
             </header>
 
-            {/* Inbox Overlay */}
+            {/* ── Inbox backdrop (dims page when open, but not blurred) ── */}
             <AnimatePresence>
                 {inboxOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 16 }}
-                        transition={{ duration: 0.25, ease: 'easeOut' }}
-                        className="absolute right-0 top-full mt-4 w-full max-w-sm rounded-xl border shadow-lg overflow-hidden"
+                        key="inbox-backdrop"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-0 z-40"
+                        style={{ backgroundColor: 'hsl(var(--background) / 0.4)' }}
+                        onClick={closeInbox}
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* ── Inbox dropdown panel ── */}
+            <AnimatePresence>
+                {inboxOpen && (
+                    <motion.div
+                        key="inbox-panel"
+                        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 12, scale: 0.98 }}
+                        transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        className="absolute right-0 top-full mt-4 w-full max-w-sm rounded-xl border shadow-xl overflow-hidden z-50"
                         style={{
                             backgroundColor: 'hsl(var(--card))',
-                            borderColor: 'hsl(var(--border) / 0.6)',
+                            borderColor: 'hsl(var(--border) / 0.5)',
                         }}
                     >
-                        {selectedMsg ? (
-                            <div className="flex flex-col h-[350px]">
-                                <div className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: 'hsl(var(--border) / 0.4)' }}>
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={() => setSelectedMessageId(null)} className="p-1 rounded-md transition-colors hover:bg-accent" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                                            </svg>
-                                        </button>
-                                        <div>
-                                            <p className="text-sm font-medium leading-none" style={{ color: 'hsl(var(--foreground))' }}>{selectedMsg.from}</p>
-                                            <p className="text-[10px] mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{selectedMsg.category}</p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => { setInboxOpen(false); setSelectedMessageId(null); }}
-                                        className="transition-colors hover:opacity-70"
-                                        style={{ color: 'hsl(var(--muted-foreground))' }}
-                                    >
-                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                
-                                <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ backgroundColor: 'hsl(var(--card))' }}>
-                                    <div className="flex flex-col items-start gap-1">
-                                        <div className="rounded-2xl rounded-tl-sm px-4 py-3 text-sm font-light shadow-sm" style={{ backgroundColor: 'hsl(var(--muted) / 0.5)', color: 'hsl(var(--foreground))' }}>
-                                            {selectedMsg.text}
-                                            {selectedMsg.hasImage && (
-                                                <div className="mt-3 flex items-center justify-center rounded-lg border border-dashed p-4" style={{ borderColor: 'hsl(var(--border))', backgroundColor: 'hsl(var(--background))' }}>
-                                                    <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>[Angehängtes Bild]</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <span className="text-[10px]" style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}>{selectedMsg.time}</span>
-                                    </div>
-                                </div>
+                        <div className="flex items-center justify-between border-b px-5 py-3.5" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
+                            <h3 className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
+                                Postfach{' '}
+                                {unreadCount > 0 && (
+                                    <span className="ml-1.5 text-xs font-normal" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                        {unreadCount} neu
+                                    </span>
+                                )}
+                            </h3>
+                            <button
+                                onClick={closeInbox}
+                                className="transition-opacity hover:opacity-60"
+                                style={{ color: 'hsl(var(--muted-foreground))' }}
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="max-h-[360px] divide-y overflow-y-auto" style={{ borderColor: 'hsl(var(--border) / 0.2)' }}>
+                            {allMessages.length === 0 ? (
+                                <p className="px-5 py-8 text-center text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                    Keine Nachrichten
+                                </p>
+                            ) : (
+                                allMessages.map((msg) => (
+                                    <MessageRow
+                                        key={msg.id}
+                                        msg={msg}
+                                        onDelete={handleDelete}
+                                        onClick={() => {
+                                            if (msg.id.startsWith('moderation_')) {
+                                                const memId = msg.id.replace('moderation_', '');
+                                                router.push(`/create?id=${memId}`);
+                                                closeInbox();
+                                                return;
+                                            }
+                                            markRead(msg.id);
+                                            setSelectedMessageId(msg.id);
+                                        }}
+                                    />
+                                ))
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                                <div className="p-3 border-t" style={{ borderColor: 'hsl(var(--border) / 0.4)', backgroundColor: 'hsl(var(--card))' }}>
-                                    <form className="flex items-center gap-2" onSubmit={(e) => { e.preventDefault(); setSelectedMessageId(null); }}>
-                                        <input 
-                                            type="text" 
-                                            placeholder="Antworten..." 
-                                            className="flex-1 rounded-full border px-4 py-2 text-sm outline-none transition-colors" 
-                                            style={{ borderColor: 'hsl(var(--border) / 0.6)', backgroundColor: 'transparent', color: 'hsl(var(--foreground))' }} 
-                                        />
-                                        <button 
-                                            type="submit"
-                                            className="rounded-full px-4 py-2 text-sm font-medium transition-colors hover:opacity-90"
-                                            style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
-                                        >
-                                            Senden
-                                        </button>
-                                    </form>
+            {/* ── Detail modal — floats centered over blurred backdrop ── */}
+            <AnimatePresence>
+                {selectedMsg && (
+                    <>
+                        {/* Blur backdrop — covers everything including the inbox panel */}
+                        <motion.div
+                            key="detail-backdrop"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.25 }}
+                            className="fixed inset-0 z-[60] backdrop-blur-sm"
+                            style={{ backgroundColor: 'hsl(var(--background) / 0.5)' }}
+                            onClick={() => setSelectedMessageId(null)}
+                        />
+
+                        {/* Detail card — centered, scale-up animation */}
+                        <motion.div
+                            key="detail-card"
+                            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.94, y: 16 }}
+                            transition={{ duration: 0.28, ease: [0.25, 0.46, 0.45, 0.94] }}
+                            className="fixed left-1/2 top-1/2 z-[61] w-[90vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border shadow-2xl overflow-hidden"
+                            style={{
+                                backgroundColor: 'hsl(var(--card))',
+                                borderColor: 'hsl(var(--border) / 0.4)',
+                            }}
+                        >
+                            {/* Header: Avatar + Name + Time + Close */}
+                            <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: 'hsl(var(--border) / 0.25)' }}>
+                                <div
+                                    className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium shrink-0"
+                                    style={{
+                                        backgroundColor: 'hsl(var(--muted) / 0.6)',
+                                        color: 'hsl(var(--muted-foreground))',
+                                    }}
+                                >
+                                    {getInitials(selectedMsg.from)}
                                 </div>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="flex items-center justify-between border-b px-5 py-3.5" style={{ borderColor: 'hsl(var(--border) / 0.4)' }}>
-                                    <h3 className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
-                                        Postfach{' '}
-                                        {unreadCount > 0 && (
-                                            <span className="ml-1.5 text-xs font-normal" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                                {unreadCount} neu
-                                            </span>
-                                        )}
-                                    </h3>
-                                    <button
-                                        onClick={() => setInboxOpen(false)}
-                                        className="transition-colors hover:opacity-70"
-                                        style={{ color: 'hsl(var(--muted-foreground))' }}
-                                    >
-                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <div className="max-h-[350px] divide-y overflow-y-auto" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
-                                    {allMessages.length === 0 ? (
-                                        <p className="px-5 py-8 text-center text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                            Keine Nachrichten
-                                        </p>
-                                    ) : (
-                                        allMessages.map((msg) => (
-                                            <button
-                                                key={msg.id}
-                                                onClick={() => {
-                                                    if (msg.id.startsWith('moderation_')) {
-                                                        const memorialId = msg.id.replace('moderation_', '');
-                                                        router.push(`/create?id=${memorialId}`);
-                                                        setInboxOpen(false);
-                                                        return;
-                                                    }
-                                                    markRead(msg.id);
-                                                    setSelectedMessageId(msg.id);
-                                                }}
-                                                className="w-full px-5 py-3.5 text-left transition-colors hover:bg-accent/50"
-                                                style={{ backgroundColor: msg.read ? 'transparent' : 'hsl(var(--muted) / 0.4)' }}
-                                            >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>{msg.from}</span>
-                                                            <span
-                                                                className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-normal"
-                                                                style={{ backgroundColor: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))' }}
-                                                            >
-                                                                <CategoryIcon category={msg.category} />
-                                                                {msg.category}
-                                                            </span>
-                                                            {msg.hasImage && (
-                                                                <span
-                                                                    className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-normal"
-                                                                    style={{ borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }}
-                                                                >
-                                                                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                                    </svg>
-                                                                    Bild
-                                                                </span>
-                                                            )}
-                                                            {!msg.read && <span className="h-2 w-2 rounded-full" style={{ backgroundColor: 'hsl(var(--primary))' }} />}
-                                                        </div>
-                                                        <p className="mt-1 truncate text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{msg.text}</p>
-                                                    </div>
-                                                    <span className="whitespace-nowrap text-[11px]" style={{ color: 'hsl(var(--muted-foreground) / 0.8)' }}>{msg.time}</span>
-                                                </div>
-                                            </button>
-                                        ))
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>{selectedMsg.from}</p>
+                                    {selectedMsg.time && (
+                                        <p className="text-[11px] font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{selectedMsg.time}</p>
                                     )}
                                 </div>
-                            </>
-                        )}
-                    </motion.div>
+                                <button
+                                    onClick={() => setSelectedMessageId(null)}
+                                    className="transition-opacity hover:opacity-60 shrink-0"
+                                    style={{ color: 'hsl(var(--muted-foreground))' }}
+                                >
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            {/* Message bubble */}
+                            <div className="px-5 py-4 space-y-4">
+                                <div
+                                    className="rounded-2xl p-4"
+                                    style={{
+                                        backgroundColor: 'hsl(var(--muted) / 0.2)',
+                                        border: '1px solid hsl(var(--border) / 0.15)',
+                                    }}
+                                >
+                                    <p className="text-sm font-light leading-relaxed" style={{ color: 'hsl(var(--foreground))' }}>
+                                        {selectedMsg.text}
+                                    </p>
+                                    {selectedMsg.hasImage && (
+                                        <div
+                                            className="mt-3 flex items-center gap-2 rounded-lg border p-2.5"
+                                            style={{
+                                                borderColor: 'hsl(var(--border) / 0.3)',
+                                                backgroundColor: 'hsl(var(--background))',
+                                            }}
+                                        >
+                                            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                            <span className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>Bild angehängt</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Category badge */}
+                                <div className="pb-1">
+                                    <span
+                                        className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-light"
+                                        style={{
+                                            borderColor: 'hsl(var(--border) / 0.4)',
+                                            color: 'hsl(var(--muted-foreground))',
+                                        }}
+                                    >
+                                        <CategoryIcon category={selectedMsg.category} />
+                                        {selectedMsg.category}
+                                    </span>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
                 )}
             </AnimatePresence>
         </div>

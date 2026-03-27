@@ -38,6 +38,8 @@ function mapMemorialRow(row: any): Memorial {
         supportTitle: row.support_title ?? undefined,
         supportUrl: row.support_url ?? undefined,
         supportDesc: row.support_desc ?? undefined,
+        candleCount: row.candle_count ?? 0,
+        flowerCount: row.flower_count ?? 0,
         createdAt: row.created_at,
         updatedAt: row.updated_at,
     };
