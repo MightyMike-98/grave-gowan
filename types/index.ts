@@ -72,6 +72,10 @@ export interface Suggestion {
     text: string;
     /** Ob ein Bild angehängt ist. */
     hasImage: boolean;
+    /** Öffentliche URL des angehängten Bildes (falls vorhanden). */
+    imageUrl?: string;
+    /** Name des Memorials, auf das sich der Vorschlag bezieht. */
+    memorialName?: string;
     /** Zeitstempel oder relative Zeitangabe (z.B. "vor 2 Std."). */
     time: string;
     /** Ob die Nachricht bereits gelesen wurde. */

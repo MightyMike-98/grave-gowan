@@ -25,7 +25,13 @@ export function RequestWidget({ memorialId }: RequestWidgetProps) {
 
         setSending(true);
         try {
-            const result = await submitVisitorRequest(memorialId, authorName.trim(), category, message.trim());
+            const result = await submitVisitorRequest(
+                memorialId,
+                authorName.trim(),
+                category,
+                message.trim(),
+                image ?? undefined,
+            );
             if (result.error) {
                 console.error('[RequestWidget] Error:', result.error);
                 return;

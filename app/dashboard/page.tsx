@@ -83,7 +83,7 @@ export default async function DashboardPage() {
     }
 
     // Requests aus memorial_requests laden
-    let requestInfos: { id: string; memorialId: string; memorialName: string; author: string; category: string; message: string; hasImage: boolean; isRead: boolean; createdAt: string }[] = [];
+    let requestInfos: { id: string; memorialId: string; memorialName: string; author: string; category: string; message: string; hasImage: boolean; imageUrl?: string; isRead: boolean; createdAt: string }[] = [];
     try {
         const allMemorials = [
             ...memorials.map(m => ({ id: m.id, name: m.name })),
@@ -106,6 +106,7 @@ export default async function DashboardPage() {
                     category: r.category,
                     message: r.message,
                     hasImage: !!r.image_url,
+                    imageUrl: r.image_url ?? undefined,
                     isRead: r.is_read,
                     createdAt: r.created_at,
                 }));

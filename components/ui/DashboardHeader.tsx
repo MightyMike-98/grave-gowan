@@ -21,6 +21,7 @@ export interface RequestInfo {
     category: string;
     message: string;
     hasImage: boolean;
+    imageUrl?: string;
     isRead: boolean;
     createdAt: string;
 }
@@ -111,15 +112,12 @@ function MessageRow({
                             <CategoryIcon category={msg.category} />
                             {msg.category}
                         </span>
-                        {msg.hasImage && (
+                        {msg.memorialName && (
                             <span
-                                className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-normal"
-                                style={{ borderColor: 'hsl(var(--border))', color: 'hsl(var(--foreground))' }}
+                                className="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-normal truncate max-w-[110px]"
+                                style={{ borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}
                             >
-                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                Bild
+                                {msg.memorialName}
                             </span>
                         )}
                         {!msg.read && <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: 'hsl(var(--foreground))' }} />}
@@ -161,6 +159,7 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
             category: 'Moderation',
             text: `${info.count} neue ${info.count === 1 ? 'Story wartet' : 'Stories warten'} auf deine Freigabe. Prüfe sie im Edit-Modus.`,
             hasImage: false,
+            memorialName: info.memorialName,
             time: '',
             read: false,
         }));
@@ -173,6 +172,8 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
             category: r.category,
             text: r.message,
             hasImage: r.hasImage,
+            imageUrl: r.imageUrl,
+            memorialName: r.memorialName,
             time: timeAgo(r.createdAt),
             read: r.isRead || readIds.has(r.id),
         }));
@@ -181,6 +182,13 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
     const allMessages = useMemo(() => [...systemMessages, ...requestMessages], [systemMessages, requestMessages]);
     const unreadCount = allMessages.filter((m) => !m.read).length;
     const selectedMsg = allMessages.find((m) => m.id === selectedMessageId);
+
+    // id → imageUrl, used to clean up Storage on delete
+    const imageUrlMap = useMemo(() => {
+        const map = new Map<string, string>();
+        requests.forEach(r => { if (r.imageUrl) map.set(r.id, r.imageUrl); });
+        return map;
+    }, [requests]);
 
     const closeInbox = useCallback(() => {
         setInboxOpen(false);
@@ -200,6 +208,14 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
         if (selectedMessageId === id) setSelectedMessageId(null);
         if (!id.startsWith('moderation_')) {
             const supabase = createSupabaseBrowserClient();
+            // Delete image from Storage if one exists
+            const imgUrl = imageUrlMap.get(id);
+            if (imgUrl) {
+                const storagePath = imgUrl.split('/request-images/')[1];
+                if (storagePath) {
+                    await supabase.storage.from('request-images').remove([storagePath]);
+                }
+            }
             await supabase.from('memorial_requests').delete().eq('id', id);
         }
     };
@@ -390,18 +406,46 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
                                     <p className="text-sm font-light leading-relaxed" style={{ color: 'hsl(var(--foreground))' }}>
                                         {selectedMsg.text}
                                     </p>
-                                    {selectedMsg.hasImage && (
-                                        <div
-                                            className="mt-3 flex items-center gap-2 rounded-lg border p-2.5"
-                                            style={{
-                                                borderColor: 'hsl(var(--border) / 0.3)',
-                                                backgroundColor: 'hsl(var(--background))',
-                                            }}
-                                        >
-                                            <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                            <span className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>Bild angehängt</span>
+                                    {selectedMsg.hasImage && selectedMsg.imageUrl && (
+                                        <div className="mt-3 space-y-2">
+                                            {/* Preview */}
+                                            <div className="overflow-hidden rounded-lg" style={{ border: '1px solid hsl(var(--border) / 0.2)' }}>
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img
+                                                    src={selectedMsg.imageUrl}
+                                                    alt="Angehängtes Bild"
+                                                    className="w-full object-cover max-h-48"
+                                                />
+                                            </div>
+                                            {/* Download — fetch as blob to force download on cross-origin URLs */}
+                                            <button
+                                                className="flex items-center gap-2 w-full rounded-lg px-3 py-2 text-xs font-light transition-opacity hover:opacity-70"
+                                                style={{
+                                                    backgroundColor: 'hsl(var(--muted) / 0.3)',
+                                                    border: '1px solid hsl(var(--border) / 0.2)',
+                                                    color: 'hsl(var(--foreground))',
+                                                }}
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+                                                    try {
+                                                        const res = await fetch(selectedMsg.imageUrl!);
+                                                        const blob = await res.blob();
+                                                        const url = URL.createObjectURL(blob);
+                                                        const a = document.createElement('a');
+                                                        a.href = url;
+                                                        a.download = `bild_${selectedMsg.id}.${blob.type.split('/')[1] ?? 'jpg'}`;
+                                                        a.click();
+                                                        URL.revokeObjectURL(url);
+                                                    } catch {
+                                                        window.open(selectedMsg.imageUrl, '_blank');
+                                                    }
+                                                }}
+                                            >
+                                                <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                                </svg>
+                                                Bild herunterladen
+                                            </button>
                                         </div>
                                     )}
                                 </div>
