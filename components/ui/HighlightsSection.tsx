@@ -8,6 +8,7 @@
 
 import type { Memorial } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 const fadeIn = {
@@ -22,6 +23,7 @@ interface HighlightsSectionProps {
 }
 
 export function HighlightsSection({ memorial, canEdit = false, onTabChange }: HighlightsSectionProps) {
+    const t = useTranslations('highlights');
     const favoriteGallery = memorial.photos.filter((p) => p.isFavorite);
     const favoriteStories = memorial.stories.filter((s) => s.isFavorite);
     const [lightbox, setLightbox] = useState<number | null>(null);
@@ -38,10 +40,10 @@ export function HighlightsSection({ memorial, canEdit = false, onTabChange }: Hi
                         className="text-[10px] font-medium uppercase tracking-[0.2em]"
                         style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
                     >
-                        Erinnerungen
+                        {t('memories')}
                     </p>
                     <h2 className="mt-1 text-3xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
-                        Bilder
+                        {t('photos')}
                     </h2>
                     <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3">
                         {favoriteGallery.map((img, i) => (
@@ -79,10 +81,10 @@ export function HighlightsSection({ memorial, canEdit = false, onTabChange }: Hi
                         className="text-[10px] font-medium uppercase tracking-[0.2em]"
                         style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
                     >
-                        Biografie
+                        {t('biography')}
                     </p>
                     <h2 className="mt-1 text-3xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
-                        Über {memorial.name.split(' ')[0]}
+                        {t('aboutHeading', { name: memorial.name.split(' ')[0] })}
                     </h2>
                     <p
                         className="mt-4 text-[15px] leading-[1.8] font-light"
@@ -102,7 +104,7 @@ export function HighlightsSection({ memorial, canEdit = false, onTabChange }: Hi
                         className="text-[10px] font-medium uppercase tracking-[0.2em]"
                         style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
                     >
-                        Lieblings-Stories
+                        {t('favoriteStories')}
                     </motion.p>
                     <motion.h2
                         variants={fadeIn}
@@ -110,7 +112,7 @@ export function HighlightsSection({ memorial, canEdit = false, onTabChange }: Hi
                         className="mt-1 text-3xl tracking-tight"
                         style={{ color: 'hsl(var(--foreground))' }}
                     >
-                        Stories
+                        {t('stories')}
                     </motion.h2>
                     <div className="mt-6 space-y-5">
                         {favoriteStories.map((story) => (

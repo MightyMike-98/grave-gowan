@@ -12,6 +12,7 @@
 import { DashboardHeader } from '@/components/ui/DashboardHeader';
 import type { MembershipWithMemorial } from '@core/repositories/MemberRepository';
 import type { Memorial } from '@core/types/index';
+import { getTranslations } from 'next-intl/server';
 import { getMemorialsByOwner } from '@core/use-cases/getMemorialsByOwner';
 import { getSharedMemorials } from '@core/use-cases/getSharedMemorials';
 import { SupabaseMemberRepository } from '@data/repositories/SupabaseMemberRepository';
@@ -116,43 +117,41 @@ export default async function DashboardPage() {
         // table may not exist yet
     }
 
+    const t = await getTranslations('dashboard');
+
     return (
         <main className="min-h-screen px-4 py-16">
             <div className="mx-auto max-w-xl animate-fade-up">
-                {/* Header: Begrüßung + Sign-Out + Inbox */}
                 <DashboardHeader displayName={displayName} email={email} pendingStoryInfos={pendingStoryInfos} requests={requestInfos} />
 
                 <h2 className="mt-10 text-xl tracking-tight">
-                    My Memorials
+                    {t('myMemorials')}
                 </h2>
 
                 <div className="mt-5 space-y-4">
-                    {/* Eigene Memorials aus der DB */}
                     <ul className="space-y-4">
                         {memorials.map((memorial) => (
                             <li key={memorial.id}>
-                                <MemorialCard memorial={memorial} />
+                                <MemorialCard memorial={memorial} labels={{ edit: t('edit'), view: t('view'), public: t('public'), private: t('private'), creator: t('creator') }} />
                             </li>
                         ))}
                     </ul>
 
-                    {/* + New Memorial */}
                     <Link href="/create" className="flex items-center justify-center gap-2 py-4 rounded-xl border border-dashed transition-colors" style={{ borderColor: 'hsl(var(--border) / 0.7)', color: 'hsl(var(--muted-foreground))' }}>
                         <span className="text-lg font-light">+</span>
-                        <span className="text-sm font-light">New Memorial</span>
+                        <span className="text-sm font-light">{t('newMemorial')}</span>
                     </Link>
                 </div>
 
-                {/* Shared Memorials */}
                 {sharedMemorials.length > 0 && (
                     <>
                         <h2 className="mt-12 text-xl tracking-tight">
-                            Shared with me
+                            {t('sharedWithMe')}
                         </h2>
                         <ul className="mt-5 space-y-4">
                             {sharedMemorials.map(({ memorial, role }) => (
                                 <li key={memorial.id}>
-                                    <MemorialCard memorial={memorial} role={role} />
+                                    <MemorialCard memorial={memorial} role={role} labels={{ edit: t('edit'), view: t('view'), public: t('public'), private: t('private'), creator: t('creator') }} />
                                 </li>
                             ))}
                         </ul>
@@ -166,7 +165,8 @@ export default async function DashboardPage() {
 /**
  * Kachel für ein einzelnes Memorial im Dashboard.
  */
-function MemorialCard({ memorial, role }: { memorial: Memorial; role?: 'owner' | 'editor' | 'viewer' }) {
+interface CardLabels { edit: string; view: string; public: string; private: string; creator: string; }
+function MemorialCard({ memorial, role, labels }: { memorial: Memorial; role?: 'owner' | 'editor' | 'viewer'; labels: CardLabels }) {
     const dateRange = [
         memorial.dateOfBirth ? new Date(memorial.dateOfBirth).getFullYear() : null,
         memorial.dateOfDeath ? new Date(memorial.dateOfDeath).getFullYear() : null,
@@ -222,7 +222,7 @@ function MemorialCard({ memorial, role }: { memorial: Memorial; role?: 'owner' |
                                 color: 'hsl(var(--secondary-foreground))',
                             }}
                         >
-                            {memorial.isPublic ? 'Public' : 'Private'}
+                            {memorial.isPublic ? labels.public : labels.private}
                         </span>
                         <span
                             className="inline-block text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full"
@@ -239,7 +239,7 @@ function MemorialCard({ memorial, role }: { memorial: Memorial; role?: 'owner' |
                                         : 'hsl(var(--muted-foreground))',
                             }}
                         >
-                            {!role || role === 'owner' ? 'Creator' : role}
+                            {!role || role === 'owner' ? labels.creator : role}
                         </span>
                     </div>
                 </div>
@@ -256,7 +256,7 @@ function MemorialCard({ memorial, role }: { memorial: Memorial; role?: 'owner' |
                             border: '1px solid hsl(var(--border) / 0.6)',
                         }}
                     >
-                        Edit
+                        {labels.edit}
                     </Link>
                 )}
                 <Link
@@ -267,7 +267,7 @@ function MemorialCard({ memorial, role }: { memorial: Memorial; role?: 'owner' |
                         color: 'hsl(var(--primary-foreground))',
                     }}
                 >
-                    View
+                    {labels.view}
                 </Link>
             </div>
         </article>

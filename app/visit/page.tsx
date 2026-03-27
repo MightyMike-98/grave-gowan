@@ -14,10 +14,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function VisitPage() {
+    const t = useTranslations('visit');
     const router = useRouter();
 
     const [memorialId, setMemorialId] = useState('');
@@ -30,12 +32,12 @@ export default function VisitPage() {
         const e = email.trim().toLowerCase();
 
         if (!id || !e) {
-            setError('Please enter both your email address and the Memorial ID.');
+            setError(t('errorBothRequired'));
             return;
         }
 
         if (!e.includes('@')) {
-            setError('Please enter a valid email address.');
+            setError(t('errorInvalidEmail'));
             return;
         }
 
@@ -53,9 +55,9 @@ export default function VisitPage() {
                 return;
             }
 
-            setError(json.error ?? 'No memorial found. Please check both the Memorial ID and your email address.');
+            setError(json.error ?? t('errorNotFound'));
         } catch {
-            setError('Network error. Please try again.');
+            setError(t('errorNetwork'));
         }
 
         setLoading(false);
@@ -66,10 +68,10 @@ export default function VisitPage() {
             <div className="w-full max-w-md space-y-6 text-center animate-fade-up">
 
                 <h1 className="text-4xl tracking-tight">
-                    Visit a Memorial
+                    {t('heading')}
                 </h1>
                 <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    Enter your email and the Memorial ID you received.
+                    {t('description')}
                 </p>
 
                 <div className="space-y-5 text-left">
@@ -80,7 +82,7 @@ export default function VisitPage() {
                             className="block text-[11px] font-medium uppercase tracking-[0.15em]"
                             style={{ color: 'hsl(var(--muted-foreground))' }}
                         >
-                            Your Email
+                            {t('emailLabel')}
                         </label>
                         <input
                             id="visitor-email"
@@ -88,7 +90,7 @@ export default function VisitPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
-                            placeholder="name@example.com"
+                            placeholder={t('emailPlaceholder')}
                             className="field-input"
                         />
                     </div>
@@ -100,7 +102,7 @@ export default function VisitPage() {
                             className="block text-[11px] font-medium uppercase tracking-[0.15em]"
                             style={{ color: 'hsl(var(--muted-foreground))' }}
                         >
-                            Memorial ID
+                            {t('idLabel')}
                         </label>
                         <input
                             id="memorial-id"
@@ -108,13 +110,13 @@ export default function VisitPage() {
                             value={memorialId}
                             onChange={(e) => setMemorialId(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
-                            placeholder="e.g., 7c302e48-4a5b-4a1a-..."
+                            placeholder={t('idPlaceholder')}
                             autoCapitalize="none"
                             autoCorrect="off"
                             className="field-input font-mono"
                         />
                         <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            Ask the memorial owner for the ID — it&apos;s shown under Team Access in the edit page.
+                            {t('idHelper')}
                         </p>
                     </div>
 
@@ -144,20 +146,20 @@ export default function VisitPage() {
                         {loading ? (
                             <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
                         ) : (
-                            'Open Memorial'
+                            t('openMemorial')
                         )}
                     </button>
 
                     {/* Demo-Link */}
                     <p className="text-center text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        No ID?{' '}
+                        {t('noId')}{' '}
                         <button
                             type="button"
                             onClick={() => router.push('/memorial/demo')}
                             className="underline underline-offset-4 transition-colors hover:opacity-100"
                             style={{ color: 'hsl(var(--foreground) / 0.7)' }}
                         >
-                            View demo memorial
+                            {t('viewDemo')}
                         </button>
                     </p>
                                                 <div className="w-full max-w-md space-y-6 text-center animate-fade-up">
@@ -167,7 +169,7 @@ export default function VisitPage() {
                     className="text-sm font-light transition-colors hover:opacity-100"
                     style={{ color: 'hsl(var(--muted-foreground))' }}
                 >
-                    ← Back
+                    {t('back')}
                 </Link>
                 </div>
                 </div>

@@ -16,11 +16,13 @@
 import { signInWithEmail, signInWithGoogle, signUpWithEmail } from '@data/auth';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 
 /** Die eigentliche Login-Form, wrapped in Suspense für useSearchParams. */
 function LoginForm() {
+    const t = useTranslations('login');
     const searchParams = useSearchParams();
 
     /** Ziel-URL nach erfolgreichem Login. */
@@ -48,11 +50,11 @@ function LoginForm() {
 
     const handleEmailSubmit = async () => {
         if (!email.trim()) {
-            setError('Please enter your email address.');
+            setError(t('errorEnterEmail'));
             return;
         }
         if (!password) {
-            setError('Please enter your password.');
+            setError(t('errorEnterPassword'));
             return;
         }
 
@@ -84,17 +86,16 @@ function LoginForm() {
             <main className="min-h-screen flex flex-col items-center justify-center px-4">
                 <div className="w-full max-w-md text-center space-y-6 animate-fade-up">
                     <div className="text-5xl">📬</div>
-                    <h1 className="text-2xl tracking-tight">Check your email</h1>
+                    <h1 className="text-2xl tracking-tight">{t('checkEmail')}</h1>
                     <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        We&apos;ve sent a confirmation link to <strong style={{ color: 'hsl(var(--foreground))' }}>{email}</strong>.
-                        Click the link to activate your account.
+                        {t('confirmationSent', { email })}
                     </p>
                     <button
                         onClick={() => { setSignupSuccess(false); setMode('login'); }}
                         className="text-sm font-light transition-colors hover:opacity-100"
                         style={{ color: 'hsl(var(--muted-foreground))' }}
                     >
-                        Back to login
+                        {t('backToLogin')}
                     </button>
                 </div>
             </main>
@@ -117,7 +118,7 @@ function LoginForm() {
                         className="font-light"
                         style={{ color: 'hsl(var(--muted-foreground))' }}
                     >
-                        {mode === 'login' ? 'Sign in to manage your memorials' : 'Create your account'}
+                        {mode === 'login' ? t('signInSubtext') : t('createAccountSubtext')}
                     </motion.p>
                 </AnimatePresence>
 
@@ -144,13 +145,13 @@ function LoginForm() {
                                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                             </svg>
                         )}
-                        Continue with Google
+                        {t('continueWithGoogle')}
                     </button>
 
                     {/* Divider */}
                     <div className="flex items-center gap-4">
                         <div className="h-px flex-1" style={{ backgroundColor: 'hsl(var(--border) / 0.6)' }} />
-                        <span className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>or</span>
+                        <span className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('or')}</span>
                         <div className="h-px flex-1" style={{ backgroundColor: 'hsl(var(--border) / 0.6)' }} />
                     </div>
 
@@ -169,7 +170,7 @@ function LoginForm() {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="your@email.com"
+                                placeholder={t('emailPlaceholder')}
                                 disabled={!!loading}
                                 className="field-input transition-opacity duration-200"
                                 style={{ opacity: loading ? 0.5 : 1 }}
@@ -180,7 +181,7 @@ function LoginForm() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleEmailSubmit()}
-                                placeholder={mode === 'signup' ? 'Choose a password (min. 6 characters)' : 'Password'}
+                                placeholder={mode === 'signup' ? t('passwordPlaceholderSignup') : t('passwordPlaceholderLogin')}
                                 disabled={!!loading}
                                 className="field-input transition-opacity duration-200"
                                 style={{ opacity: loading ? 0.5 : 1 }}
@@ -198,10 +199,10 @@ function LoginForm() {
                                 {loading === 'email' ? (
                                     <>
                                         <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                                        <span>{mode === 'login' ? 'Signing in...' : 'Creating account...'}</span>
+                                        <span>{mode === 'login' ? t('signingIn') : t('creatingAccount')}</span>
                                     </>
                                 ) : (
-                                    mode === 'login' ? 'Sign In' : 'Create Account'
+                                    mode === 'login' ? t('signIn') : t('createAccount')
                                 )}
                             </button>
                         </motion.div>
@@ -220,26 +221,26 @@ function LoginForm() {
                         >
                             {mode === 'login' ? (
                                 <>
-                                    Don&apos;t have an account?{' '}
+                                    {t('noAccount')}{' '}
                                     <button
                                         type="button"
                                         onClick={() => { setMode('signup'); setError(null); }}
                                         className="underline underline-offset-4 transition-colors hover:opacity-100"
                                         style={{ color: 'hsl(var(--foreground) / 0.7)' }}
                                     >
-                                        Sign up
+                                        {t('signUp')}
                                     </button>
                                 </>
                             ) : (
                                 <>
-                                    Already have an account?{' '}
+                                    {t('haveAccount')}{' '}
                                     <button
                                         type="button"
                                         onClick={() => { setMode('login'); setError(null); }}
                                         className="underline underline-offset-4 transition-colors hover:opacity-100"
                                         style={{ color: 'hsl(var(--foreground) / 0.7)' }}
                                     >
-                                        Sign in
+                                        {t('signIn')}
                                     </button>
                                 </>
                             )}
@@ -266,7 +267,7 @@ function LoginForm() {
                     className="inline-block text-sm font-light transition-colors hover:opacity-100"
                     style={{ color: 'hsl(var(--muted-foreground))' }}
                 >
-                    ← Back to Home
+                    {t('backToHome')}
                 </Link>
 
                 {/* Hidden next-param für den Callback */}

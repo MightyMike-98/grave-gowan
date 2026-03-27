@@ -1,6 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
 import { SignOutButton } from '@/components/ui/SignOutButton';
@@ -72,19 +73,6 @@ const CategoryIcon = ({ category }: { category: string }) => {
     }
 };
 
-function timeAgo(dateStr: string): string {
-    const now = new Date();
-    const date = new Date(dateStr);
-    const diffMs = now.getTime() - date.getTime();
-    const mins = Math.floor(diffMs / 60000);
-    if (mins < 1) return 'gerade eben';
-    if (mins < 60) return `vor ${mins} Min.`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `vor ${hours} Std.`;
-    const days = Math.floor(hours / 24);
-    if (days === 1) return 'vor 1 Tag';
-    return `vor ${days} Tagen`;
-}
 
 function MessageRow({
     msg,
@@ -144,11 +132,26 @@ function MessageRow({
 }
 
 export function DashboardHeader({ displayName, email, pendingStoryInfos = [], requests = [] }: DashboardHeaderProps) {
+    const t = useTranslations('inbox');
     const router = useRouter();
     const [inboxOpen, setInboxOpen] = useState(false);
     const [readIds, setReadIds] = useState<Set<string>>(new Set());
     const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
     const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+
+    const timeAgo = (dateStr: string): string => {
+        const now = new Date();
+        const date = new Date(dateStr);
+        const diffMs = now.getTime() - date.getTime();
+        const mins = Math.floor(diffMs / 60000);
+        if (mins < 1) return t('timeJustNow');
+        if (mins < 60) return t('timeMinutes', { count: mins });
+        const hours = Math.floor(mins / 60);
+        if (hours < 24) return t('timeHours', { count: hours });
+        const days = Math.floor(hours / 24);
+        if (days === 1) return t('timeOneDay');
+        return t('timeDays', { count: days });
+    };
 
     const totalPending = pendingStoryInfos.reduce((sum, s) => sum + s.count, 0);
     const systemMessages: Suggestion[] = useMemo(() => {
@@ -157,7 +160,7 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
             id: `moderation_${info.memorialId}`,
             from: 'System',
             category: 'Moderation',
-            text: `${info.count} neue ${info.count === 1 ? 'Story wartet' : 'Stories warten'} auf deine Freigabe. Prüfe sie im Edit-Modus.`,
+            text: info.count === 1 ? t('pendingStoriesOne') : t('pendingStoriesMany', { count: info.count }),
             hasImage: false,
             memorialName: info.memorialName,
             time: '',
@@ -241,7 +244,7 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
                             border: '1px solid hsl(var(--border) / 0.6)',
                             backgroundColor: inboxOpen ? 'hsl(var(--accent))' : 'transparent',
                         }}
-                        title="Postfach"
+                        title={t('title')}
                     >
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -291,10 +294,10 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
                     >
                         <div className="flex items-center justify-between border-b px-5 py-3.5" style={{ borderColor: 'hsl(var(--border) / 0.3)' }}>
                             <h3 className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
-                                Postfach{' '}
+                                {t('title')}{' '}
                                 {unreadCount > 0 && (
                                     <span className="ml-1.5 text-xs font-normal" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                        {unreadCount} neu
+                                        {t('unread', { count: unreadCount })}
                                     </span>
                                 )}
                             </h3>
@@ -311,7 +314,7 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
                         <div className="max-h-[360px] divide-y overflow-y-auto" style={{ borderColor: 'hsl(var(--border) / 0.2)' }}>
                             {allMessages.length === 0 ? (
                                 <p className="px-5 py-8 text-center text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                    Keine Nachrichten
+                                    {t('noMessages')}
                                 </p>
                             ) : (
                                 allMessages.map((msg) => (
@@ -444,7 +447,7 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
                                                 <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
                                                 </svg>
-                                                Bild herunterladen
+                                                {t('downloadImage')}
                                             </button>
                                         </div>
                                     )}

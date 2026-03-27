@@ -7,6 +7,7 @@
 
 import type { Photo } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useCallback, useRef, useState } from 'react';
 
@@ -36,6 +37,7 @@ interface GalleryGridProps {
 }
 
 export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds = [], onToggleFavorite, onPhotoUploaded, onDeletePhoto }: GalleryGridProps) {
+    const t = useTranslations('gallery');
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [uploading, setUploading] = useState(false);
     const [pressingId, setPressingId] = useState<string | null>(null);
@@ -108,7 +110,7 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
                     <h2 className="text-3xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>Gallery</h2>
                     {canEdit && (
                         <p className="text-sm font-light mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            Markiere Favoriten mit ⭐ für die Highlights. Gedrückt halten zum Löschen.
+                            {t('editHint')}
                         </p>
                     )}
                 </motion.div>
@@ -243,7 +245,7 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
                                     </svg>
                                 )}
                                 <span className="text-[10px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>
-                                    {uploading ? 'Lädt...' : 'Hinzufügen'}
+                                    {uploading ? t('uploading') : t('add')}
                                 </span>
                             </motion.button>
                         )}

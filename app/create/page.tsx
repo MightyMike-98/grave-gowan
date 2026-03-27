@@ -22,6 +22,7 @@ import { createMemorial } from '@core/use-cases/createMemorial';
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { SupabaseMemorialRepository } from '@data/repositories/SupabaseMemorialRepository';
 import { uploadMemorialImage } from '@data/storage';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
@@ -43,6 +44,7 @@ interface TimelineEventDraft {
  * der `Suspense`-Wrapper in `CreatePage` es wrappen kann (Pflicht bei `useSearchParams`).
  */
 function CreateMemorialForm() {
+    const t = useTranslations('create');
     const router = useRouter();
     const params = useSearchParams();
     const editId = params.get('id');            // Memorial-ID zum Editieren
@@ -418,7 +420,7 @@ function CreateMemorialForm() {
      */
     const addTimelineEvent = () => {
         if (!tempYear || !tempTitle) {
-            alert('Please enter at least a Year and Title.');
+            alert(t('errorYearTitle'));
             return;
         }
         setTimelineEvents((prev) => [...prev, { year: tempYear, title: tempTitle, description: tempDesc }]);
@@ -441,9 +443,9 @@ function CreateMemorialForm() {
      */
     const handleSubmit = async () => {
         const fieldErrors: string[] = [];
-        if (!bio.trim()) fieldErrors.push('Biography is required.');
-        if (!name.trim()) fieldErrors.push('Full Name is required.');
-        if (!userId) fieldErrors.push('You must be logged in.');
+        if (!bio.trim()) fieldErrors.push(t('errorBioRequired'));
+        if (!name.trim()) fieldErrors.push(t('errorNameRequired'));
+        if (!userId) fieldErrors.push(t('errorLoginRequired'));
         if (fieldErrors.length > 0) { setErrors(fieldErrors); return; }
 
         setErrors([]);
@@ -570,8 +572,8 @@ function CreateMemorialForm() {
             const msg = err instanceof Error ? err.message : '';
             const isDuplicate = msg.includes('duplicate') || msg.includes('unique') || msg.includes('slug');
             setErrors([isDuplicate
-                ? 'A memorial with this name already exists. Try a slightly different name.'
-                : (msg || 'Could not save. Please try again.')
+                ? t('errorNameExists')
+                : (msg || t('errorSaveFailed'))
             ]);
             setLoading(false);
         }
@@ -593,7 +595,7 @@ function CreateMemorialForm() {
             <div className="max-w-xl mx-auto flex justify-center">
                 {isOwnerRole ? (
                     <ImageUploader
-                        label="Portrait Photo"
+                        label={t('sectionPortrait')}
                         currentUrl={portraitUrl}
                         onUpload={async (file: File) => {
                             if (!userId) throw new Error('Not logged in.');
@@ -605,7 +607,7 @@ function CreateMemorialForm() {
                 ) : portraitUrl ? (
                     <div className="relative">
                         <p className="text-xs font-light tracking-wider text-center mb-2 flex items-center justify-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            <span style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>🔒</span> Portrait Photo
+                            <span style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>🔒</span> {t('sectionPortrait')}
                         </p>
                         <div className="w-28 h-28 rounded-full overflow-hidden shadow-sm opacity-80" style={{ border: '2px solid hsl(var(--border))' }}>
                             <img src={portraitUrl} alt="Portrait" className="w-full h-full object-cover" />
@@ -617,7 +619,7 @@ function CreateMemorialForm() {
             <div className="mx-auto max-w-xl pb-20 space-y-10 mt-8">
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl tracking-tight">
-                        {isEditing ? 'Edit Memorial' : 'Create Memorial'}
+                        {isEditing ? t('titleEdit') : t('titleCreate')}
                     </h1>
                     <Link
                         href="/dashboard"
@@ -639,33 +641,33 @@ function CreateMemorialForm() {
 
                 {/* Core Info */}
                 <section className="space-y-5">
-                    <h2 className="text-xl tracking-tight">Core Information</h2>
+                    <h2 className="text-xl tracking-tight">{t('sectionCoreInfo')}</h2>
 
                     {/* Name: Owner kann editieren, Editor sieht es read-only */}
                     {isOwnerRole ? (
-                        <FormField label="Full Name" icon="edit">
+                        <FormField label={t('fieldName')} icon="edit">
                             <input
                                 id="field-name"
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder="e.g., Sarah Jenkins"
+                                placeholder={t('placeholderName')}
                                 className="field-input"
                             />
                         </FormField>
                     ) : isEditorRole && name ? (
-                        <FormField label="Full Name" icon="lock">
+                        <FormField label={t('fieldName')} icon="lock">
                             <input type="text" value={name} disabled className="field-input opacity-70 bg-muted/20 cursor-not-allowed" />
                         </FormField>
                     ) : null}
 
                     {/* Date of Birth: Editor sieht es read-only */}
                     {isEditorRole ? (
-                        <FormField label="Date of Birth" icon="lock">
+                        <FormField label={t('fieldDob')} icon="lock">
                             <input type="text" value={formatDate(dateOfBirth)} disabled className="field-input opacity-70 bg-muted/20 cursor-not-allowed" />
                         </FormField>
                     ) : (
-                        <FormField label="Date of Birth" icon={isEditing ? 'edit' : undefined}>
+                        <FormField label={t('fieldDob')} icon={isEditing ? 'edit' : undefined}>
                             <input
                                 id="field-dob"
                                 type="date"
@@ -677,7 +679,7 @@ function CreateMemorialForm() {
                     )}
 
                     {/* Date of Death: Editor kann editieren */}
-                    <FormField label="Date of Death" icon={isEditing ? 'edit' : undefined}>
+                    <FormField label={t('fieldDod')} icon={isEditing ? 'edit' : undefined}>
                         <input
                             id="field-dod"
                             type="date"
@@ -689,16 +691,16 @@ function CreateMemorialForm() {
 
                     {/* Biography: Editor sieht es read-only */}
                     {isEditorRole ? (
-                        <FormField label="Biography" icon="lock">
+                        <FormField label={t('fieldBio')} icon="lock">
                             <textarea value={bio || '—'} disabled rows={5} className="field-input !h-auto min-h-[150px] resize-none opacity-70 bg-muted/20 cursor-not-allowed" />
                         </FormField>
                     ) : (
-                        <FormField label="Biography" icon={isEditing ? 'edit' : undefined}>
+                        <FormField label={t('fieldBio')} icon={isEditing ? 'edit' : undefined}>
                             <textarea
                                 id="field-bio"
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
-                                placeholder="Share a brief memory..."
+                                placeholder={t('placeholderBio')}
                                 rows={5}
                                 className="field-input !h-auto min-h-[150px] resize-y"
                             />
@@ -707,17 +709,17 @@ function CreateMemorialForm() {
 
                     {/* Quote: Editor sieht es read-only */}
                     {isEditorRole ? (
-                        <FormField label="Quote (Zitat)" icon="lock">
-                            <input type="text" value={`„${quote || '—'}“`} disabled className="field-input italic opacity-70 bg-muted/20 cursor-not-allowed" />
+                        <FormField label={t('fieldQuote')} icon="lock">
+                            <input type="text" value={`„${quote || '—'}"`} disabled className="field-input italic opacity-70 bg-muted/20 cursor-not-allowed" />
                         </FormField>
                     ) : (
-                        <FormField label="Quote (Zitat)" icon={isEditing ? 'edit' : undefined}>
+                        <FormField label={t('fieldQuote')} icon={isEditing ? 'edit' : undefined}>
                             <input
                                 id="field-quote"
                                 type="text"
                                 value={quote}
                                 onChange={(e) => setQuote(e.target.value)}
-                                placeholder="e.g., In the end, it's not the years in your life that count..."
+                                placeholder={t('placeholderQuote')}
                                 className="field-input italic"
                             />
                         </FormField>
@@ -727,24 +729,24 @@ function CreateMemorialForm() {
                 {/* Support */}
                 <section className="pt-12 space-y-5">
                     <div className="mb-8 h-px" style={{ backgroundColor: 'hsl(var(--border) / 0.4)' }} />
-                    <h2 className="text-xl tracking-tight">Donations & Support <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>(Optional)</span></h2>
+                    <h2 className="text-xl tracking-tight">{t('sectionDonations')} <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('sectionOptional')}</span></h2>
 
                     {/* Cause Title + Dropdown in einer Zeile */}
-                    <FormField label="Cause Title">
+                    <FormField label={t('fieldCauseTitle')}>
                         <div className="relative">
                             <input
                                 id="field-support-title"
                                 type="text"
                                 value={supportTitle}
                                 onChange={(e) => setSupportTitle(e.target.value)}
-                                placeholder="e.g., Cancer Research"
+                                placeholder={t('placeholderCauseTitle')}
                                 className="field-input pr-12"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowDropdown(!showDropdown)}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 px-2 py-1 text-sm transition-colors"
-                                title="Popular causes"
+                                title={t('popularCauses')}
                             >
                                 {showDropdown ? '▲' : '▼'}
                             </button>
@@ -770,23 +772,23 @@ function CreateMemorialForm() {
                         </div>
                     </FormField>
 
-                    <FormField label="Donation URL">
+                    <FormField label={t('fieldCauseUrl')}>
                         <input
                             id="field-support-url"
                             type="url"
                             value={supportUrl}
                             onChange={(e) => setSupportUrl(e.target.value)}
-                            placeholder="https://..."
+                            placeholder={t('placeholderCauseUrl')}
                             className="field-input"
                         />
                     </FormField>
 
-                    <FormField label="Short Description">
+                    <FormField label={t('fieldCauseDesc')}>
                         <textarea
                             id="field-support-desc"
                             value={supportDesc}
                             onChange={(e) => setSupportDesc(e.target.value)}
-                            placeholder="Why is this cause important?"
+                            placeholder={t('placeholderCauseDesc')}
                             rows={2}
                             className="field-input resize-none"
                         />
@@ -796,40 +798,40 @@ function CreateMemorialForm() {
                 {/* Timeline */}
                 <section className="pt-12 space-y-5">
                     <div className="mb-8 h-px" style={{ backgroundColor: 'hsl(var(--border) / 0.4)' }} />
-                    <h2 className="text-xl tracking-tight">Life Timeline</h2>
+                    <h2 className="text-xl tracking-tight">{t('sectionLifeTimeline')}</h2>
 
                     <div className="grid grid-cols-3 gap-3">
                         <div className="space-y-1">
-                            <label htmlFor="tl-year" className="block text-[11px] font-medium uppercase tracking-[0.15em]" style={{ color: 'hsl(var(--muted-foreground))' }}>Year</label>
+                            <label htmlFor="tl-year" className="block text-[11px] font-medium uppercase tracking-[0.15em]" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('fieldYear')}</label>
                             <input
                                 id="tl-year"
                                 type="text"
                                 value={tempYear}
                                 onChange={(e) => setTempYear(e.target.value)}
-                                placeholder="1980"
+                                placeholder={t('placeholderYear')}
                                 className="field-input"
                             />
                         </div>
                         <div className="col-span-2 space-y-1">
-                            <label htmlFor="tl-title" className="block text-[11px] font-medium uppercase tracking-[0.15em]" style={{ color: 'hsl(var(--muted-foreground))' }}>Title</label>
+                            <label htmlFor="tl-title" className="block text-[11px] font-medium uppercase tracking-[0.15em]" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('fieldTitle')}</label>
                             <input
                                 id="tl-title"
                                 type="text"
                                 value={tempTitle}
                                 onChange={(e) => setTempTitle(e.target.value)}
-                                placeholder="Graduated"
+                                placeholder={t('placeholderEventTitle')}
                                 className="field-input"
                             />
                         </div>
                     </div>
 
-                    <FormField label="Description (Optional)">
+                    <FormField label={t('fieldDescOptional')}>
                         <input
                             id="tl-desc"
                             type="text"
                             value={tempDesc}
                             onChange={(e) => setTempDesc(e.target.value)}
-                            placeholder="Details..."
+                            placeholder={t('placeholderDetails')}
                             className="field-input"
                         />
                     </FormField>
@@ -877,9 +879,9 @@ function CreateMemorialForm() {
                 <section className="pt-12 space-y-5">
                     <div className="mb-8 h-px" style={{ backgroundColor: 'hsl(var(--border) / 0.4)' }} />
                     <style>{`@keyframes longpress-fill { from { opacity: 0; } to { opacity: 1; } }`}</style>
-                    <h2 className="text-xl tracking-tight">Gallery</h2>
+                    <h2 className="text-xl tracking-tight">{t('sectionGallery')}</h2>
                     <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        Markiere Favoriten mit ⭐ für die Highlights. Gedrückt halten zum Löschen.
+                        {t('galleryHint')}
                     </p>
 
                     <div className="grid grid-cols-3 gap-3">
@@ -919,7 +921,7 @@ function CreateMemorialForm() {
                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2} style={{ color: 'hsl(var(--muted-foreground))' }}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                         </svg>
-                                        <p className="text-[10px] font-light tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>Entfernen?</p>
+                                        <p className="text-[10px] font-light tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('storyRemoveConfirm')}</p>
                                         <div className="flex flex-col gap-1 w-full px-3">
                                             <button
                                                 type="button"
@@ -927,7 +929,7 @@ function CreateMemorialForm() {
                                                 className="w-full rounded-full py-1 text-[10px] font-light tracking-wider transition-all"
                                                 style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
                                             >
-                                                Entfernen
+                                                {t('storyRemove')}
                                             </button>
                                             <button
                                                 type="button"
@@ -935,7 +937,7 @@ function CreateMemorialForm() {
                                                 className="w-full rounded-full py-1 text-[10px] font-light tracking-wider transition-all"
                                                 style={{ color: 'hsl(var(--muted-foreground))' }}
                                             >
-                                                Abbrechen
+                                                {t('storyCancel')}
                                             </button>
                                         </div>
                                     </div>
@@ -969,7 +971,7 @@ function CreateMemorialForm() {
                                 </svg>
                             )}
                             <span className="text-[10px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>
-                                {galleryUploading ? 'Lädt...' : 'Hinzufügen'}
+                                {galleryUploading ? t('loading') : t('addButton')}
                             </span>
                             <input
                                 type="file"
@@ -989,10 +991,10 @@ function CreateMemorialForm() {
                 <section className="pt-12 space-y-5">
                     <div className="mb-8 h-px" style={{ backgroundColor: 'hsl(var(--border) / 0.4)' }} />
                     <h2 className="text-xl tracking-tight">
-                        Stories <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>(Gästebuch)</span>
+                        {t('sectionStories')} <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>({t('storiesGuestbook')})</span>
                     </h2>
                     <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        Erlaube Besuchern, persönliche Erinnerungen und Geschichten zu teilen. Markiere Favoriten mit ⭐ für die Highlights.
+                        {t('storiesDescription')}
                     </p>
 
                     {/* Warteschlange — Pending Stories */}
@@ -1002,12 +1004,12 @@ function CreateMemorialForm() {
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--muted-foreground))' }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <h3 className="text-base tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>Warteschlange</h3>
+                                <h3 className="text-base tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>{t('queue')}</h3>
                                 <span
                                     className="rounded-full px-2.5 py-0.5 text-[10px] font-medium"
                                     style={{ backgroundColor: 'hsl(var(--foreground) / 0.08)', color: 'hsl(var(--foreground))' }}
                                 >
-                                    {pendingStories.length} ausstehend
+                                    {t('pendingCount', { count: pendingStories.length })}
                                 </span>
                             </div>
 
@@ -1034,7 +1036,7 @@ function CreateMemorialForm() {
                                             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            Ausstehend
+                                            {t('pendingBadge')}
                                         </span>
                                     </div>
                                     <p className="text-sm font-light leading-relaxed" style={{ color: 'hsl(var(--foreground) / 0.75)' }}>
@@ -1050,7 +1052,7 @@ function CreateMemorialForm() {
                                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                                             </svg>
-                                            Genehmigen
+                                            {t('approve')}
                                         </button>
                                         <button
                                             type="button"
@@ -1061,7 +1063,7 @@ function CreateMemorialForm() {
                                             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                             </svg>
-                                            Ablehnen
+                                            {t('reject')}
                                         </button>
                                     </div>
                                 </div>
@@ -1075,13 +1077,13 @@ function CreateMemorialForm() {
                             type="text"
                             value={storyAuthor}
                             onChange={(e) => setStoryAuthor(e.target.value)}
-                            placeholder="Name des Autors"
+                            placeholder={t('placeholderAuthor')}
                             className="field-input"
                         />
                         <textarea
                             value={storyText}
                             onChange={(e) => setStoryText(e.target.value)}
-                            placeholder="Erinnerung oder Geschichte..."
+                            placeholder={t('placeholderStory')}
                             rows={3}
                             className="field-input resize-none"
                         />
@@ -1092,7 +1094,7 @@ function CreateMemorialForm() {
                             className="rounded-full px-5 py-2 text-xs font-light uppercase tracking-[0.15em] transition-colors disabled:opacity-40"
                             style={{ backgroundColor: 'hsl(var(--foreground) / 0.08)', color: 'hsl(var(--foreground) / 0.7)', border: '1px solid hsl(var(--border) / 0.4)' }}
                         >
-                            + Story hinzufügen
+                            {t('addStory')}
                         </button>
                     </div>
 
@@ -1130,7 +1132,7 @@ function CreateMemorialForm() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                             </svg>
                                             <p className="text-sm font-light tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                                Story entfernen?
+                                                {t('storyRemoveConfirm')}
                                             </p>
                                             <div className="flex gap-3 mt-1">
                                                 <button
@@ -1139,7 +1141,7 @@ function CreateMemorialForm() {
                                                     className="rounded-full px-5 py-2 text-xs font-light tracking-wider transition-all"
                                                     style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
                                                 >
-                                                    Entfernen
+                                                    {t('storyRemove')}
                                                 </button>
                                                 <button
                                                     type="button"
@@ -1147,7 +1149,7 @@ function CreateMemorialForm() {
                                                     className="rounded-full px-5 py-2 text-xs font-light tracking-wider transition-all"
                                                     style={{ color: 'hsl(var(--muted-foreground))', border: '1px solid hsl(var(--border) / 0.5)' }}
                                                 >
-                                                    Abbrechen
+                                                    {t('storyCancel')}
                                                 </button>
                                             </div>
                                         </div>
@@ -1213,7 +1215,7 @@ function CreateMemorialForm() {
                                         onClick={() => setShowMemorialId(!showMemorialId)}
                                         className="transition-colors"
                                         style={{ color: 'hsl(var(--muted-foreground))' }}
-                                        title={showMemorialId ? 'Hide ID' : 'Show ID'}
+                                        title={showMemorialId ? t('hideId') : t('showId')}
                                     >
                                         {showMemorialId ? '🔒' : '👁'}
                                     </button>
@@ -1232,7 +1234,7 @@ function CreateMemorialForm() {
                             >
                                 <div className="flex items-center gap-2.5">
                                     <span>⚙️</span>
-                                    <span className="text-sm font-light">Manage Team & Roles</span>
+                                    <span className="text-sm font-light">{t('manageTeam')}</span>
                                 </div>
                                 <span style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>→</span>
                             </a>
@@ -1261,7 +1263,7 @@ function CreateMemorialForm() {
                                                 setTempEmail('');
                                             }
                                         }}
-                                        placeholder="user@example.com"
+                                        placeholder={t('placeholderEmail')}
                                         className="field-input"
                                     />
                                 </div>
@@ -1277,8 +1279,8 @@ function CreateMemorialForm() {
                                         onChange={(e) => setTempRole(e.target.value as 'editor' | 'viewer')}
                                         className="field-input"
                                     >
-                                        <option value="viewer">👁 Viewer — can read the memorial</option>
-                                        <option value="editor">✏️ Editor — can edit the memorial</option>
+                                        <option value="viewer">{t('roleViewer')}</option>
+                                        <option value="editor">{t('roleEditor')}</option>
                                     </select>
                                 </div>
 
@@ -1317,7 +1319,7 @@ function CreateMemorialForm() {
                                                         onClick={() => setInvites(prev => prev.filter((_, j) => j !== i))}
                                                         className="text-lg leading-none shrink-0 px-2 transition-colors"
                                                         style={{ color: 'hsl(var(--destructive) / 0.7)' }}
-                                                        title="Remove invite"
+                                                        title={t('removeInvite')}
                                                     >
                                                         ×
                                                     </button>
@@ -1342,9 +1344,9 @@ function CreateMemorialForm() {
                     {loading ? (
                         <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
                     ) : isEditing ? (
-                        'Update Memorial'
+                        t('saveUpdate')
                     ) : (
-                        'Create Memorial'
+                        t('saveCreate')
                     )}
                 </button>
 
@@ -1352,7 +1354,7 @@ function CreateMemorialForm() {
                 {isEditing && editId && isOwnerRole && (
                     <section className="pt-8 mt-4">
                         <div className="rounded-xl p-6 space-y-4" style={{ backgroundColor: 'hsl(var(--destructive) / 0.05)', border: '1px solid hsl(var(--destructive) / 0.2)' }}>
-                            <h3 className="text-lg" style={{ fontFamily: 'var(--font-inter)', fontWeight: 600, color: 'hsl(var(--destructive))' }}>Danger Zone</h3>
+                            <h3 className="text-lg" style={{ fontFamily: 'var(--font-inter)', fontWeight: 600, color: 'hsl(var(--destructive))' }}>{t('dangerZone')}</h3>
                             <p className="text-sm font-light" style={{ color: 'hsl(var(--destructive) / 0.7)' }}>
                                 This action is permanent and cannot be undone. All memories, photos, and team members will be deleted.
                             </p>
@@ -1369,7 +1371,7 @@ function CreateMemorialForm() {
                             ) : (
                                 <div className="space-y-3">
                                     <p className="text-red-700 text-sm font-medium">
-                                        Type <strong>&quot;{name}&quot;</strong> to confirm:
+                                        {t('deleteConfirmLabel', { name })}
                                     </p>
                                     <input
                                         type="text"
@@ -1399,7 +1401,7 @@ function CreateMemorialForm() {
                                             {deleting ? (
                                                 <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                                             ) : (
-                                                'Permanently Delete'
+                                                t('deleteButton')
                                             )}
                                         </button>
                                         <button

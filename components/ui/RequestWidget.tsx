@@ -2,6 +2,7 @@
 
 import { submitVisitorRequest } from '@/app/actions/submitVisitorRequest';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 
 const categories = ['Gallery', 'Highlights', 'Biography', 'Stories', 'Allgemein'] as const;
@@ -11,6 +12,7 @@ interface RequestWidgetProps {
 }
 
 export function RequestWidget({ memorialId }: RequestWidgetProps) {
+    const t = useTranslations('request');
     const [open, setOpen] = useState(false);
     const [category, setCategory] = useState<string>(categories[0]);
     const [authorName, setAuthorName] = useState('');
@@ -72,7 +74,7 @@ export function RequestWidget({ memorialId }: RequestWidgetProps) {
                     onClick={() => setOpen(true)}
                     className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105"
                     style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
-                    title="Vorschlag senden"
+                    title={t('title')}
                 >
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -106,9 +108,9 @@ export function RequestWidget({ memorialId }: RequestWidgetProps) {
                             {sent ? (
                                 <div className="flex flex-col items-center justify-center py-10 px-6 text-center space-y-2">
                                     <span className="text-3xl">✅</span>
-                                    <h3 className="text-base tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>Gesendet!</h3>
+                                    <h3 className="text-base tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>{t('sent')}</h3>
                                     <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                        Der Ersteller wurde benachrichtigt.
+                                        {t('sentSubtext')}
                                     </p>
                                 </div>
                             ) : (
@@ -116,9 +118,9 @@ export function RequestWidget({ memorialId }: RequestWidgetProps) {
                                     {/* Header */}
                                     <div className="flex items-start justify-between">
                                         <div>
-                                            <h3 className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>Vorschlag senden</h3>
+                                            <h3 className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>{t('title')}</h3>
                                             <p className="text-[11px] font-light mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                                Hast du eine Idee oder Änderung? Schreib dem Ersteller.
+                                                {t('subtext')}
                                             </p>
                                         </div>
                                         <button
@@ -135,13 +137,13 @@ export function RequestWidget({ memorialId }: RequestWidgetProps) {
                                     {/* Author name */}
                                     <div className="space-y-1.5">
                                         <label className="text-[11px] font-medium uppercase tracking-[0.1em]" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                            Dein Name
+                                            {t('yourName')}
                                         </label>
                                         <input
                                             type="text"
                                             value={authorName}
                                             onChange={(e) => setAuthorName(e.target.value)}
-                                            placeholder="z.B. Anna M."
+                                            placeholder={t('namePlaceholder')}
                                             className="w-full rounded-lg border px-3 py-2 text-xs font-light focus:outline-none focus:ring-1"
                                             style={{
                                                 backgroundColor: 'hsl(var(--muted) / 0.15)',
@@ -154,35 +156,39 @@ export function RequestWidget({ memorialId }: RequestWidgetProps) {
                                     {/* Category pills */}
                                     <div className="space-y-1.5">
                                         <label className="text-[11px] font-medium uppercase tracking-[0.1em]" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                            Bereich
+                                            {t('category')}
                                         </label>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {categories.map((c) => (
-                                                <button
-                                                    key={c}
-                                                    onClick={() => setCategory(c)}
-                                                    className="rounded-full px-3 py-1 text-[11px] font-light transition-all"
-                                                    style={{
-                                                        backgroundColor: category === c ? 'hsl(var(--foreground))' : 'transparent',
-                                                        color: category === c ? 'hsl(var(--background))' : 'hsl(var(--foreground))',
-                                                        border: `1px solid ${category === c ? 'hsl(var(--foreground))' : 'hsl(var(--border) / 0.6)'}`,
-                                                    }}
-                                                >
-                                                    {c}
-                                                </button>
-                                            ))}
+                                            {categories.map((c) => {
+                                                const labelKey = `cat${c.charAt(0).toUpperCase()}${c.slice(1)}` as Parameters<typeof t>[0];
+                                                const label = t(labelKey);
+                                                return (
+                                                    <button
+                                                        key={c}
+                                                        onClick={() => setCategory(c)}
+                                                        className="rounded-full px-3 py-1 text-[11px] font-light transition-all"
+                                                        style={{
+                                                            backgroundColor: category === c ? 'hsl(var(--foreground))' : 'transparent',
+                                                            color: category === c ? 'hsl(var(--background))' : 'hsl(var(--foreground))',
+                                                            border: `1px solid ${category === c ? 'hsl(var(--foreground))' : 'hsl(var(--border) / 0.6)'}`,
+                                                        }}
+                                                    >
+                                                        {label}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 
                                     {/* Message */}
                                     <div className="space-y-1.5">
                                         <label className="text-[11px] font-medium uppercase tracking-[0.1em]" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                            Nachricht
+                                            {t('message')}
                                         </label>
                                         <textarea
                                             value={message}
                                             onChange={(e) => setMessage(e.target.value)}
-                                            placeholder="Dein Vorschlag..."
+                                            placeholder={t('messagePlaceholder')}
                                             rows={3}
                                             className="w-full rounded-lg border px-3 py-2 text-xs font-light focus:outline-none focus:ring-1 resize-none"
                                             style={{
@@ -209,7 +215,7 @@ export function RequestWidget({ memorialId }: RequestWidgetProps) {
                                         {image ? (
                                             <span className="truncate" style={{ color: 'hsl(var(--foreground))' }}>{image.name}</span>
                                         ) : (
-                                            <span>Bild anhängen (optional)</span>
+                                            <span>{t('attachImage')}</span>
                                         )}
                                     </button>
                                     <input
@@ -233,7 +239,7 @@ export function RequestWidget({ memorialId }: RequestWidgetProps) {
                                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
                                         </svg>
-                                        {sending ? 'Senden...' : 'Absenden'}
+                                        {sending ? t('sending') : t('submit')}
                                     </button>
                                 </div>
                             )}

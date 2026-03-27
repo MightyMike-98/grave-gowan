@@ -20,6 +20,7 @@ import type { Memorial, Photo, Story } from '@/types';
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
 
 const TABS = ['Highlights', 'About', 'Timeline', 'Gallery', 'Stories', 'Support'] as const;
@@ -41,6 +42,8 @@ interface MemorialTabsProps {
 }
 
 export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, initialPhotos = [], isAuthenticated = false }: MemorialTabsProps) {
+    const t = useTranslations('tabs');
+    const tHero = useTranslations('hero');
     const [activeTab, setActiveTab] = useState<Tab>('Highlights');
     const [flowers, setFlowers] = useState<string[]>([]);
     const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
@@ -48,6 +51,15 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
 
     const isOwner = userRole === 'owner';
     const canEdit = isAuthenticated && (userRole === 'owner' || userRole === 'editor');
+
+    const tabLabel = (tab: Tab): string => ({
+        Highlights: t('highlights'),
+        About: t('about'),
+        Timeline: t('timeline'),
+        Gallery: t('gallery'),
+        Stories: t('stories'),
+        Support: t('support'),
+    }[tab]);
 
     const favoriteIds = useMemo(() => photos.filter(p => p.isFavorite).map(p => p.id), [photos]);
 
@@ -143,6 +155,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                     <StoriesSection
                         stories={stories}
                         canEdit={canEdit}
+                        canWrite={memorialSlug !== 'demo'}
                         memorialId={memorial.id}
                         onToggleFavorite={handleToggleStoryFavorite}
                         onDeleteStory={handleDeleteStory}
@@ -171,7 +184,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                         }}
                     >
                         <span>⚙️</span>
-                        <span>Team</span>
+                        <span>{tHero('team')}</span>
                     </Link>
                 </div>
             )}
@@ -188,7 +201,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                         }}
                     >
                         <span>✏️</span>
-                        <span>Edit Memorial</span>
+                        <span>{tHero('editMemorial')}</span>
                     </Link>
                 </div>
             )}
@@ -201,6 +214,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                 tabs={[...TABS]}
                 activeTab={activeTab}
                 onTabChange={(tab) => setActiveTab(tab as Tab)}
+                tabLabels={TABS.map(tabLabel)}
             />
 
             {/* Content — AnimatePresence mode="wait" for smooth exit→enter */}

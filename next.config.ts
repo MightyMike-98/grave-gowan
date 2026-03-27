@@ -1,4 +1,7 @@
+import createNextIntlPlugin from 'next-intl/plugin';
 import type { NextConfig } from 'next';
+
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -13,12 +16,10 @@ const nextConfig: NextConfig = {
         hostname: 'images.unsplash.com',
       },
       {
-        // Google-Profilbilder (Avatar nach Google-Login)
         protocol: 'https',
         hostname: '*.googleusercontent.com',
       },
       {
-        // Supabase Storage (hochgeladene Memorial-Bilder)
         protocol: 'https',
         hostname: 'ypolhurdtkirvtcnqrkh.supabase.co',
       },
@@ -26,4 +27,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

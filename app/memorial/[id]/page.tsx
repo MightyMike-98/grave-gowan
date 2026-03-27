@@ -189,7 +189,7 @@ export default async function MemorialPage({ params }: MemorialPageProps) {
                 </Link>
             </footer>
 
-            {!canEdit && <RequestWidget memorialId={memorial.id} />}
+            {!canEdit && memorial.id !== 'demo' && <RequestWidget memorialId={memorial.id} />}
         </div>
     );
 }

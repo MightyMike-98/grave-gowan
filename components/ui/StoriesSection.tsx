@@ -13,6 +13,7 @@
 import { submitVisitorStory } from '@/app/actions/submitVisitorStory';
 import type { Story } from '@/types';
 import { createSupabaseBrowserClient } from '@data/browser-client';
+import { useTranslations } from 'next-intl';
 import { useCallback, useRef, useState } from 'react';
 
 const LONG_PRESS_MS = 700;
@@ -20,6 +21,7 @@ const LONG_PRESS_MS = 700;
 interface StoriesSectionProps {
     stories: Story[];
     canEdit?: boolean;
+    canWrite?: boolean;
     memorialId?: string;
     onToggleFavorite?: (storyId: string) => void;
     onDeleteStory?: (storyId: string) => void;
@@ -36,7 +38,8 @@ function getInitials(name: string): string {
         .toUpperCase();
 }
 
-export function StoriesSection({ stories, canEdit = false, memorialId, onToggleFavorite, onDeleteStory, onStoryAdded }: StoriesSectionProps) {
+export function StoriesSection({ stories, canEdit = false, canWrite = true, memorialId, onToggleFavorite, onDeleteStory, onStoryAdded }: StoriesSectionProps) {
+    const t = useTranslations('stories');
     const [pressingId, setPressingId] = useState<string | null>(null);
     const [confirmId, setConfirmId] = useState<string | null>(null);
     const [showForm, setShowForm] = useState(false);
@@ -140,7 +143,7 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
                             <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                         </svg>
                         <p className="text-sm font-light tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            Story entfernen?
+                            {t('deleteConfirm')}
                         </p>
                         <div className="flex gap-3 mt-1">
                             <button
@@ -148,14 +151,14 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
                                 className="rounded-full px-5 py-2 text-xs font-light tracking-wider transition-all"
                                 style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
                             >
-                                Entfernen
+                                {t('deleteYes')}
                             </button>
                             <button
                                 onClick={() => setConfirmId(null)}
                                 className="rounded-full px-5 py-2 text-xs font-light tracking-wider transition-all"
                                 style={{ color: 'hsl(var(--muted-foreground))', border: '1px solid hsl(var(--border) / 0.5)' }}
                             >
-                                Abbrechen
+                                {t('deleteCancel')}
                             </button>
                         </div>
                     </div>
@@ -206,13 +209,13 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
     const storiesAbove = stories.slice(0, 2);
     const storiesBelow = stories.slice(2);
 
-    const ctaOrForm = submitted ? (
+    const ctaOrForm = !canWrite ? null : submitted ? (
         <div
             className="py-3 text-center space-y-0.5"
         >
-            <p className="text-sm font-light" style={{ color: 'hsl(var(--foreground))' }}>Danke für deine Erinnerung!</p>
+            <p className="text-sm font-light" style={{ color: 'hsl(var(--foreground))' }}>{t('thankYou')}</p>
             <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                Deine Geschichte wird vom Ersteller geprüft und dann veröffentlicht.
+                {t('pendingNotice')}
             </p>
         </div>
     ) : !showForm ? (
@@ -222,7 +225,7 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
         >
             <span className="text-base">✏️</span>
             <span className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                Eigene Erinnerung teilen
+                {t('shareCta')}
             </span>
         </button>
     ) : (
@@ -236,11 +239,11 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="text-sm tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
-                        Geschichte schreiben
+                        {t('heading')}
                     </h3>
                     {!canEdit && (
                         <p className="text-[11px] font-light mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            Teile deine persönliche Erinnerung. Der Ersteller prüft sie vor der Veröffentlichung.
+                            {t('subtext')}
                         </p>
                     )}
                 </div>
@@ -257,11 +260,11 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
 
             <div className="space-y-1">
                 <label className="text-xs font-medium" style={{ color: 'hsl(var(--foreground))' }}>
-                    Dein Name
+                    {t('namePlaceholder')}
                 </label>
                 <input
                     type="text"
-                    placeholder="z.B. Anna M."
+                    placeholder={t('namePlaceholder')}
                     value={authorName}
                     onChange={(e) => setAuthorName(e.target.value)}
                     className="w-full rounded-lg border px-3 py-2 text-xs font-light outline-none transition-colors focus:ring-1"
@@ -275,10 +278,10 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
 
             <div className="space-y-1">
                 <label className="text-xs font-medium" style={{ color: 'hsl(var(--foreground))' }}>
-                    Deine Geschichte
+                    {t('yourStory')}
                 </label>
                 <textarea
-                    placeholder="Erzähle deine Erinnerung..."
+                    placeholder={t('storyPlaceholder')}
                     value={storyText}
                     onChange={(e) => setStoryText(e.target.value)}
                     rows={3}
@@ -297,7 +300,7 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
                         <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                         </svg>
-                        Wird erst nach Freigabe durch den Ersteller veröffentlicht
+                        {t('moderationHint')}
                     </p>
                 ) : <span />}
                 <button
@@ -306,7 +309,7 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
                     className="shrink-0 rounded-full px-4 py-1.5 text-[11px] font-light tracking-wider transition-all disabled:opacity-40"
                     style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
                 >
-                    {submitting ? 'Speichern...' : 'Veröffentlichen'}
+                    {submitting ? t('saving') : t('publish')}
                 </button>
             </div>
         </div>
@@ -318,11 +321,11 @@ export function StoriesSection({ stories, canEdit = false, memorialId, onToggleF
 
             <div>
                 <h2 className="text-xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
-                    Stories <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>(Gästebuch)</span>
+                    Stories <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>({t('guestbook')})</span>
                 </h2>
                 {canEdit && (
                     <p className="text-sm font-light mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        Markiere Favoriten mit ⭐ für die Highlights. Gedrückt halten zum Löschen.
+                        {t('editHint')}
                     </p>
                 )}
             </div>

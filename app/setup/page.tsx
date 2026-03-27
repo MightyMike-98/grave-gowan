@@ -1,10 +1,12 @@
 'use client';
 
 import { createSupabaseBrowserClient } from '@data/browser-client';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function SetupPage() {
+    const t = useTranslations('setup');
     const router = useRouter();
     const [name, setName] = useState('');
     const [loading, setLoading] = useState(false);
@@ -22,7 +24,7 @@ export default function SetupPage() {
     const handleSave = async () => {
         const trimmed = name.trim();
         if (!trimmed) {
-            setError('Please enter your name.');
+            setError(t('errorEnterName'));
             return;
         }
 
@@ -46,9 +48,9 @@ export default function SetupPage() {
     return (
         <main className="flex min-h-screen flex-col items-center justify-center px-4">
             <div className="w-full max-w-md space-y-6 text-center animate-fade-up">
-                <h1 className="text-4xl tracking-tight">One last step</h1>
+                <h1 className="text-4xl tracking-tight">{t('heading')}</h1>
                 <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    What should we call you?
+                    {t('subtext')}
                 </p>
 
                 <div className="space-y-4 text-left">
@@ -57,7 +59,7 @@ export default function SetupPage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                        placeholder="Your name"
+                        placeholder={t('namePlaceholder')}
                         autoFocus
                         className="field-input"
                     />
@@ -86,7 +88,7 @@ export default function SetupPage() {
                         {loading ? (
                             <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                         ) : (
-                            'Continue'
+                            t('continue')
                         )}
                     </button>
                 </div>

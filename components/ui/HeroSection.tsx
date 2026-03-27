@@ -13,12 +13,14 @@ import type { Memorial } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 /**
  * Kerzen-Widget — interaktives Element zum "Kerze anzünden".
  */
 function CandleWidget({ memorialId, initialCount }: { memorialId: string; initialCount: number }) {
+    const t = useTranslations('hero');
     const [count, setCount] = useState(initialCount);
     const [lit, setLit] = useState(false);
 
@@ -66,10 +68,10 @@ function CandleWidget({ memorialId, initialCount }: { memorialId: string; initia
                 )}
             </button>
             <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                {lit ? 'Deine Kerze leuchtet' : 'Kerze anzünden'}
+                {lit ? t('candleLit') : t('lightCandle')}
             </p>
             <p className="text-[11px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}>
-                {count} {count === 1 ? 'Kerze' : 'Kerzen'} leuchten
+                {count === 1 ? t('candlesOne') : t('candlesMany', { count })}
             </p>
         </motion.div>
     );
@@ -84,6 +86,7 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
     isAuthenticated?: boolean;
     candleCount?: number;
 }) {
+    const t = useTranslations('hero');
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
     return (
@@ -120,7 +123,7 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
                         color: 'hsl(var(--foreground) / 0.6)',
                     }}
                 >
-                    ← <span className="hidden sm:inline">{isAuthenticated ? 'Back to Dashboard' : 'Back to Homepage'}</span>
+                    ← <span className="hidden sm:inline">{isAuthenticated ? t('backToDashboard') : t('backToHome')}</span>
                 </Link>
             </div>
 
@@ -178,7 +181,7 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
 
                 {/* "In Loving Memory" */}
                 <p className="mt-1 text-[11px] font-light uppercase tracking-[0.35em]" style={{ color: 'hsl(var(--muted-foreground) / 0.7)' }}>
-                    In Loving Memory
+                    {t('inLovingMemory')}
                 </p>
 
                 {/* Quote */}

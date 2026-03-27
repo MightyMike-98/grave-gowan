@@ -16,9 +16,10 @@ interface TabsNavigationProps {
     tabs: string[];
     activeTab: string;
     onTabChange: (tab: string) => void;
+    tabLabels?: string[];
 }
 
-export function TabsNavigation({ tabs, activeTab, onTabChange }: TabsNavigationProps) {
+export function TabsNavigation({ tabs, activeTab, onTabChange, tabLabels }: TabsNavigationProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     const handleTabClick = (tab: string) => {
@@ -40,8 +41,9 @@ export function TabsNavigation({ tabs, activeTab, onTabChange }: TabsNavigationP
                 className="flex gap-0 overflow-x-auto px-6"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-                {tabs.map((tab) => {
+                {tabs.map((tab, index) => {
                     const isActive = activeTab === tab;
+                    const label = tabLabels?.[index] ?? tab;
                     return (
                         <button
                             key={tab}
@@ -56,7 +58,7 @@ export function TabsNavigation({ tabs, activeTab, onTabChange }: TabsNavigationP
                                     : 'hsl(var(--muted-foreground) / 0.6)',
                             }}
                         >
-                            {tab.toUpperCase()}
+                            {label.toUpperCase()}
                             {/* Animated indicator — layoutId makes it glide between tabs */}
                             {isActive && (
                                 <motion.div

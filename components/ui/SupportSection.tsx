@@ -14,6 +14,7 @@
 'use client';
 
 import type { SupportSection as SupportSectionType } from '@/types';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 interface SupportSectionProps {
@@ -24,6 +25,7 @@ interface SupportSectionProps {
 }
 
 export function SupportSection({ support, onDonate, memorialId, initialFlowerCount = 0 }: SupportSectionProps) {
+    const t = useTranslations('support');
     const [flowerLaid, setFlowerLaid] = useState(false);
     const [flowerCount, setFlowerCount] = useState(initialFlowerCount);
 
@@ -71,13 +73,13 @@ export function SupportSection({ support, onDonate, memorialId, initialFlowerCou
                 </button>
 
                 <h2 className="mt-5 text-2xl tracking-tight">
-                    {flowerLaid ? 'Danke für deine Blume' : 'Virtuelle Blume niederlegen'}
+                    {flowerLaid ? t('flowerLaid') : t('layFlower')}
                 </h2>
                 <p
                     className="mt-1.5 text-xs font-light"
                     style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}
                 >
-                    {flowerCount} {flowerCount === 1 ? 'Blume' : 'Blumen'} niedergelegt
+                    {flowerCount === 1 ? t('flowersOne') : t('flowersMany', { count: flowerCount })}
                 </p>
 
                 {/* Donate CTA */}
