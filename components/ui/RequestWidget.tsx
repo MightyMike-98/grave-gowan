@@ -2,6 +2,7 @@
 
 import { submitVisitorRequest } from '@/app/actions/submitVisitorRequest';
 import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 
@@ -9,11 +10,14 @@ const categories = ['Gallery', 'Highlights', 'Biography', 'Stories', 'Allgemein'
 
 interface RequestWidgetProps {
     memorialId?: string;
+    memorialSlug?: string;
+    isAuthenticated?: boolean;
 }
 
-export function RequestWidget({ memorialId }: RequestWidgetProps) {
+export function RequestWidget({ memorialId, memorialSlug, isAuthenticated = false }: RequestWidgetProps) {
     const t = useTranslations('request');
     const [open, setOpen] = useState(false);
+    const [showAuthHint, setShowAuthHint] = useState(false);
     const [category, setCategory] = useState<string>(categories[0]);
     const [authorName, setAuthorName] = useState('');
     const [message, setMessage] = useState('');
@@ -67,19 +71,51 @@ export function RequestWidget({ memorialId }: RequestWidgetProps) {
         <>
             {/* Floating button — bottom right */}
             {!open && (
-                <motion.button
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 1, type: 'spring', bounce: 0.4 }}
-                    onClick={() => setOpen(true)}
-                    className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105"
-                    style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
-                    title={t('title')}
-                >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </motion.button>
+                <div className="fixed bottom-6 right-6 z-50">
+                    <motion.button
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 1, type: 'spring', bounce: 0.4 }}
+                        onClick={() => {
+                            if (!isAuthenticated) { setShowAuthHint(true); return; }
+                            setOpen(true);
+                        }}
+                        className="flex h-12 w-12 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105"
+                        style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
+                        title={t('title')}
+                    >
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </motion.button>
+
+                    <AnimatePresence>
+                        {showAuthHint && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute bottom-full right-0 mb-2 w-64 rounded-xl p-4 shadow-lg"
+                                style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
+                            >
+                                <p className="text-sm font-light" style={{ color: 'hsl(var(--foreground))' }}>
+                                    <Link href={`/login?next=${encodeURIComponent(`/memorial/${memorialSlug ?? ''}`)}`} className="font-medium underline underline-offset-2">{t('signIn')}</Link>
+                                    {' '}{t('signInHint')}
+                                </p>
+                                <button
+                                    onClick={() => setShowAuthHint(false)}
+                                    className="absolute top-2 right-2 transition-colors"
+                                    style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
+                                >
+                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             )}
 
             {/* Panel — opens bottom-right */}

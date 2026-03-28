@@ -41,7 +41,7 @@ function LoginForm() {
     const handleGoogle = async () => {
         setLoading('google');
         setError(null);
-        const { error } = await signInWithGoogle();
+        const { error } = await signInWithGoogle(next !== '/dashboard' ? next : undefined);
         if (error) {
             setError(error);
             setLoading(null);

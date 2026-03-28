@@ -32,9 +32,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        if (!['editor', 'viewer'].includes(role)) {
+        if (role !== 'editor') {
             return NextResponse.json(
-                { error: 'Role must be "editor" or "viewer".' },
+                { error: 'Role must be "editor".' },
                 { status: 400 },
             );
         }

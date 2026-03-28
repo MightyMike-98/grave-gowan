@@ -30,19 +30,18 @@
   },
   "visit": {
     "heading": "Visit a Memorial",
-    "description": "Enter your email and the Memorial ID you received.",
-    "emailLabel": "Your Email",
-    "emailPlaceholder": "name@example.com",
-    "idLabel": "Memorial ID",
-    "idPlaceholder": "e.g., 7c302e48-4a5b-4a1a-...",
-    "idHelper": "Ask the memorial owner for the ID — it's shown under Team Access in the edit page.",
+    "description": "Enter the link or name of the memorial.",
+    "linkLabel": "Link / Name",
+    "linkPlaceholder": "e.g., sarah-jenkins-1954",
+    "linkHelper": "You can find the link in your invitation or from the creator.",
     "openMemorial": "Open Memorial",
-    "noId": "No ID?",
+    "noLink": "No link?",
     "viewDemo": "View demo memorial",
     "back": "← Back",
-    "errorBothRequired": "Please enter both your email address and the Memorial ID.",
-    "errorInvalidEmail": "Please enter a valid email address.",
-    "errorNotFound": "No memorial found. Please check both the Memorial ID and your email address.",
+    "searchPlaceholder": "Search public memorials...",
+    "privateHint": "Private memorials are only accessible via shared links.",
+    "errorRequired": "Please enter a link or name.",
+    "errorNotFound": "No memorial found. Please check the link.",
     "errorNetwork": "Network error. Please try again."
   },
   "setup": {
@@ -61,6 +60,7 @@
     "public": "Public",
     "private": "Private",
     "creator": "Creator",
+    "savedMemorials": "Saved Memorials",
     "signOut": "Sign out"
   },
   "inbox": {
@@ -144,9 +144,17 @@
     "uploading": "Loading...",
     "add": "Add"
   },
+  "save": {
+    "save": "Save",
+    "saved": "Saved",
+    "signIn": "Sign in",
+    "signInHint": "to save memorials to your collection."
+  },
   "request": {
     "tooltip": "Send a suggestion",
     "title": "Send a suggestion",
+    "signIn": "Sign in",
+    "signInHint": "to send suggestions to the creator.",
     "subtext": "Have an idea or change? Write to the creator.",
     "yourName": "Your name",
     "namePlaceholder": "e.g. Anna M.",
@@ -167,6 +175,8 @@
   "create": {
     "titleCreate": "Create Memorial",
     "titleEdit": "Edit Memorial",
+    "linkLabel": "Link",
+    "copyLink": "Copy",
     "sectionPortrait": "Portrait Photo",
     "fieldName": "Full Name",
     "fieldDob": "Date of Birth",
@@ -199,8 +209,10 @@
     "saveUpdate": "Update Memorial",
     "deleteButton": "Permanently Delete",
     "deleteConfirmLabel": "Type \"{name}\" to confirm:",
-    "showId": "Show ID",
-    "hideId": "Hide ID",
+"visibilityPublic": "Public",
+    "visibilityPrivate": "Private",
+    "visibilityPublicDesc": "Can be found via search.",
+    "visibilityPrivateDesc": "Only accessible via direct link.",
     "sectionTeam": "Team Access",
     "sectionGallery": "Gallery",
     "sectionStories": "Stories",
@@ -208,7 +220,6 @@
     "sectionTimeline": "Timeline",
     "approvedStories": "Approved Stories",
     "pendingStories": "Pending Stories",
-    "roleViewer": "👁 Viewer — can read the memorial",
     "roleEditor": "✏️ Editor — can edit the memorial",
     "removeInvite": "Remove invite",
     "errorNameRequired": "Full Name is required.",
@@ -234,6 +245,7 @@
     "reject": "Reject",
     "addStory": "+ Add story",
     "manageTeam": "Manage Team & Roles",
+    "teamDescription": "Invite people by email to edit this memorial.",
     "dangerZone": "Danger Zone"
   }
 }

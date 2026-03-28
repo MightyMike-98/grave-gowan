@@ -39,9 +39,10 @@ interface MemorialTabsProps {
     memorialSlug?: string;
     initialPhotos?: Photo[];
     isAuthenticated?: boolean;
+    initialSaved?: boolean;
 }
 
-export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, initialPhotos = [], isAuthenticated = false }: MemorialTabsProps) {
+export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, initialPhotos = [], isAuthenticated = false, initialSaved = false }: MemorialTabsProps) {
     const t = useTranslations('tabs');
     const tHero = useTranslations('hero');
     const [activeTab, setActiveTab] = useState<Tab>('Highlights');
@@ -157,6 +158,8 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                         canEdit={canEdit}
                         canWrite={memorialSlug !== 'demo'}
                         memorialId={memorial.id}
+                        memorialSlug={memorialSlug}
+                        isAuthenticated={isAuthenticated}
                         onToggleFavorite={handleToggleStoryFavorite}
                         onDeleteStory={handleDeleteStory}
                         onStoryAdded={(story) => setStories(prev => [story, ...prev])}
@@ -207,7 +210,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
             )}
 
             {/* Hero */}
-            <HeroSection memorial={memorial} flowers={flowers} isAuthenticated={isAuthenticated} candleCount={memorial.candleCount} />
+            <HeroSection memorial={memorial} flowers={flowers} isAuthenticated={isAuthenticated} candleCount={memorial.candleCount} initialSaved={initialSaved} canEdit={canEdit} memorialSlug={memorialSlug} />
 
             {/* Tabs */}
             <TabsNavigation

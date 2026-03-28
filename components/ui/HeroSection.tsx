@@ -9,6 +9,7 @@
  * Kerzen-Widget nutzt motion für Puls-Animation.
  */
 
+import { SaveButton } from '@/components/ui/SaveButton';
 import type { MemorialView } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
@@ -80,11 +81,14 @@ function CandleWidget({ memorialId, initialCount }: { memorialId: string; initia
 /**
  * Rendert den oberen Hero-Bereich einer Gedenkseite.
  */
-export function HeroSection({ memorial, flowers = [], isAuthenticated = false, candleCount = 0 }: {
+export function HeroSection({ memorial, flowers = [], isAuthenticated = false, candleCount = 0, initialSaved = false, canEdit = false, memorialSlug = '' }: {
     memorial: MemorialView;
     flowers?: string[];
     isAuthenticated?: boolean;
     candleCount?: number;
+    initialSaved?: boolean;
+    canEdit?: boolean;
+    memorialSlug?: string;
 }) {
     const t = useTranslations('hero');
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -113,8 +117,8 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
                 />
             </div>
 
-            {/* Back button */}
-            <div className="relative px-6">
+            {/* Back button + Save button */}
+            <div className="relative px-6 flex items-center justify-between">
                 <Link
                     href={isAuthenticated ? '/dashboard' : '/'}
                     className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors"
@@ -125,6 +129,7 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
                 >
                     ← <span className="hidden sm:inline">{isAuthenticated ? t('backToDashboard') : t('backToHome')}</span>
                 </Link>
+                {!canEdit && <SaveButton memorialId={memorial.id} memorialSlug={memorialSlug} isAuthenticated={isAuthenticated} initialSaved={initialSaved} />}
             </div>
 
             {/* Main content */}

@@ -58,39 +58,23 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        // ── Suchpfad B: per Slug oder UUID (Owner/Dashboard) ────────────────
+        // ── Suchpfad B: Namenssuche über öffentliche Memorials ─────────────
         if (q) {
-            // B1. Per Slug
-            const { data: bySlug } = await supabase
+            const { data: publicResults } = await supabase
                 .from('memorials')
-                .select('slug, name, is_public')
-                .eq('slug', q.toLowerCase())
-                .maybeSingle();
+                .select('slug, name, portrait_url')
+                .eq('is_public', true)
+                .ilike('name', `%${q}%`)
+                .limit(10);
 
-            if (bySlug) {
+            if (publicResults && publicResults.length > 0) {
                 return NextResponse.json({
-                    slug: bySlug.slug,
-                    name: bySlug.name,
-                    isPublic: bySlug.is_public,
+                    results: publicResults.map(m => ({
+                        slug: m.slug,
+                        name: m.name,
+                        portraitUrl: m.portrait_url,
+                    })),
                 });
-            }
-
-            // B2. Per UUID
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            if (uuidRegex.test(q)) {
-                const { data: byId } = await supabase
-                    .from('memorials')
-                    .select('slug, name, is_public')
-                    .eq('id', q)
-                    .maybeSingle();
-
-                if (byId) {
-                    return NextResponse.json({
-                        slug: byId.slug,
-                        name: byId.name,
-                        isPublic: byId.is_public,
-                    });
-                }
             }
 
             return NextResponse.json({ error: 'Memorial not found.' }, { status: 404 });

@@ -29,14 +29,17 @@ const APP_URL =
  *
  * @returns Fehler-Objekt wenn etwas schief geht, sonst null.
  */
-export async function signInWithGoogle(): Promise<{ error: string | null }> {
+export async function signInWithGoogle(next?: string): Promise<{ error: string | null }> {
     const supabase = createSupabaseBrowserClient();
+    const redirectTo = next
+        ? `${APP_URL}/auth/callback?next=${encodeURIComponent(next)}`
+        : `${APP_URL}/auth/callback`;
     const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-            redirectTo: `${APP_URL}/auth/callback`,
+            redirectTo,
             queryParams: {
-                prompt: 'select_account',   // Google Account-Auswahl immer anzeigen
+                prompt: 'select_account',
             },
         },
     });

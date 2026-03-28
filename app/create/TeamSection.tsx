@@ -5,28 +5,24 @@ import { useState } from 'react';
 
 interface InviteDraft {
     email: string;
-    role: 'editor' | 'viewer';
+    role: 'editor';
 }
 
 interface TeamSectionProps {
     isEditing: boolean;
-    editId: string | null;
     existingSlug: string;
     invites: InviteDraft[];
     setInvites: (invites: InviteDraft[]) => void;
-    showMemorialId: boolean;
-    setShowMemorialId: (v: boolean) => void;
 }
 
-export function TeamSection({ isEditing, editId, existingSlug, invites, setInvites, showMemorialId, setShowMemorialId }: TeamSectionProps) {
+export function TeamSection({ isEditing, existingSlug, invites, setInvites }: TeamSectionProps) {
     const t = useTranslations('create');
     const [tempEmail, setTempEmail] = useState('');
-    const [tempRole, setTempRole] = useState<'editor' | 'viewer'>('viewer');
 
     const addInvite = () => {
         if (!tempEmail.includes('@')) return;
         if (invites.find(i => i.email === tempEmail)) return;
-        setInvites([...invites, { email: tempEmail, role: tempRole }]);
+        setInvites([...invites, { email: tempEmail, role: 'editor' }]);
         setTempEmail('');
     };
 
@@ -38,27 +34,9 @@ export function TeamSection({ isEditing, editId, existingSlug, invites, setInvit
                     {t('sectionTeam')} <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('sectionOptional')}</span>
                 </h2>
                 <p className="text-sm font-light mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    Invite people by email to view or edit this memorial.
+                    {t('teamDescription')}
                 </p>
             </div>
-
-            {/* Memorial ID */}
-            {isEditing && editId && (
-                <div className="rounded-xl p-5 shadow-sm" style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}>
-                    <p className="text-[11px] font-medium uppercase tracking-[0.15em]" style={{ color: 'hsl(var(--muted-foreground))' }}>Memorial ID</p>
-                    <div className="mt-2 flex items-center justify-between">
-                        <span className="font-mono text-sm font-light">
-                            {showMemorialId ? editId : '••••••••-••••-••••-••••-••••••••••••'}
-                        </span>
-                        <button type="button" onClick={() => setShowMemorialId(!showMemorialId)} className="transition-colors" style={{ color: 'hsl(var(--muted-foreground))' }} title={showMemorialId ? t('hideId') : t('showId')}>
-                            {showMemorialId ? '🔒' : '👁'}
-                        </button>
-                    </div>
-                    <p className="mt-2 text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        Share this ID with invited members so they can visit the memorial.
-                    </p>
-                </div>
-            )}
 
             {isEditing && existingSlug ? (
                 <a
@@ -89,15 +67,7 @@ export function TeamSection({ isEditing, editId, existingSlug, invites, setInvit
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label htmlFor="invite-role" className="block text-sm font-light">Role</label>
-                        <select id="invite-role" value={tempRole} onChange={(e) => setTempRole(e.target.value as 'editor' | 'viewer')} className="field-input">
-                            <option value="viewer">{t('roleViewer')}</option>
-                            <option value="editor">{t('roleEditor')}</option>
-                        </select>
-                    </div>
-
-                    <button
+<button
                         type="button"
                         onClick={addInvite}
                         className="w-full rounded-full py-3 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md"

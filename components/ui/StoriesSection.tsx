@@ -13,6 +13,7 @@
 import { submitVisitorStory } from '@/app/actions/submitVisitorStory';
 import type { Story } from '@/types';
 import { createSupabaseBrowserClient } from '@data/browser-client';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useCallback, useRef, useState } from 'react';
 
@@ -23,6 +24,8 @@ interface StoriesSectionProps {
     canEdit?: boolean;
     canWrite?: boolean;
     memorialId?: string;
+    memorialSlug?: string;
+    isAuthenticated?: boolean;
     onToggleFavorite?: (storyId: string) => void;
     onDeleteStory?: (storyId: string) => void;
     onStoryAdded?: (story: Story) => void;
@@ -38,8 +41,9 @@ function getInitials(name: string): string {
         .toUpperCase();
 }
 
-export function StoriesSection({ stories, canEdit = false, canWrite = true, memorialId, onToggleFavorite, onDeleteStory, onStoryAdded }: StoriesSectionProps) {
+export function StoriesSection({ stories, canEdit = false, canWrite = true, memorialId, memorialSlug, isAuthenticated = false, onToggleFavorite, onDeleteStory, onStoryAdded }: StoriesSectionProps) {
     const t = useTranslations('stories');
+    const tSave = useTranslations('save');
     const [pressingId, setPressingId] = useState<string | null>(null);
     const [confirmId, setConfirmId] = useState<string | null>(null);
     const [showForm, setShowForm] = useState(false);
@@ -209,7 +213,19 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
     const storiesAbove = stories.slice(0, 2);
     const storiesBelow = stories.slice(2);
 
-    const ctaOrForm = !canWrite ? null : submitted ? (
+    const loginUrl = `/login?next=${encodeURIComponent(`/memorial/${memorialSlug ?? ''}`)}`;
+
+    const ctaOrForm = !canWrite ? null : !isAuthenticated && !canEdit ? (
+        <Link
+            href={loginUrl}
+            className="w-full py-3 flex items-center justify-center gap-2 transition-opacity hover:opacity-70"
+        >
+            <span className="text-base">✏️</span>
+            <span className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                {tSave('signIn')} — {t('shareCta')}
+            </span>
+        </Link>
+    ) : submitted ? (
         <div
             className="py-3 text-center space-y-0.5"
         >

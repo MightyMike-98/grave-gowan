@@ -30,19 +30,18 @@
   },
   "visit": {
     "heading": "Gedenkseite besuchen",
-    "description": "Gib deine E-Mail-Adresse und die erhaltene Memorial-ID ein.",
-    "emailLabel": "Deine E-Mail",
-    "emailPlaceholder": "name@beispiel.de",
-    "idLabel": "Memorial-ID",
-    "idPlaceholder": "z. B. 7c302e48-4a5b-4a1a-...",
-    "idHelper": "Frage den Ersteller nach der ID — sie wird unter Teamzugang auf der Bearbeitungsseite angezeigt.",
+    "description": "Gib den Link oder Namen der Gedenkseite ein.",
+    "linkLabel": "Link / Name",
+    "linkPlaceholder": "z. B. sarah-jenkins-1954",
+    "linkHelper": "Du findest den Link in der Einladung oder direkt vom Ersteller.",
     "openMemorial": "Gedenkseite öffnen",
-    "noId": "Keine ID?",
+    "noLink": "Keinen Link?",
     "viewDemo": "Demo-Gedenkseite ansehen",
     "back": "← Zurück",
-    "errorBothRequired": "Bitte gib sowohl deine E-Mail-Adresse als auch die Memorial-ID ein.",
-    "errorInvalidEmail": "Bitte gib eine gültige E-Mail-Adresse ein.",
-    "errorNotFound": "Keine Gedenkseite gefunden. Bitte prüfe Memorial-ID und E-Mail-Adresse.",
+    "searchPlaceholder": "Öffentliche Gedenkseiten suchen...",
+    "privateHint": "Private Gedenkseiten sind nur über geteilte Links erreichbar.",
+    "errorRequired": "Bitte gib einen Link oder Namen ein.",
+    "errorNotFound": "Keine Gedenkseite gefunden. Bitte prüfe den Link.",
     "errorNetwork": "Netzwerkfehler. Bitte versuche es erneut."
   },
   "setup": {
@@ -61,6 +60,7 @@
     "public": "Öffentlich",
     "private": "Privat",
     "creator": "Ersteller",
+    "savedMemorials": "Gespeicherte Gedenkseiten",
     "signOut": "Abmelden"
   },
   "inbox": {
@@ -144,9 +144,17 @@
     "uploading": "Lädt...",
     "add": "Hinzufügen"
   },
+  "save": {
+    "save": "Speichern",
+    "saved": "Gespeichert",
+    "signIn": "Anmelden",
+    "signInHint": "um Gedenkseiten in deiner Sammlung zu speichern."
+  },
   "request": {
     "tooltip": "Vorschlag senden",
     "title": "Vorschlag senden",
+    "signIn": "Anmelden",
+    "signInHint": "um Vorschläge an den Ersteller zu senden.",
     "subtext": "Hast du eine Idee oder Änderung? Schreib dem Ersteller.",
     "yourName": "Dein Name",
     "namePlaceholder": "z. B. Anna M.",
@@ -167,6 +175,8 @@
   "create": {
     "titleCreate": "Gedenkseite erstellen",
     "titleEdit": "Gedenkseite bearbeiten",
+    "linkLabel": "Link",
+    "copyLink": "Kopieren",
     "sectionPortrait": "Portraitfoto",
     "fieldName": "Vollständiger Name",
     "fieldDob": "Geburtsdatum",
@@ -199,8 +209,10 @@
     "saveUpdate": "Gedenkseite speichern",
     "deleteButton": "Dauerhaft löschen",
     "deleteConfirmLabel": "Tippe \"{name}\" zur Bestätigung:",
-    "showId": "ID anzeigen",
-    "hideId": "ID ausblenden",
+"visibilityPublic": "Öffentlich",
+    "visibilityPrivate": "Privat",
+    "visibilityPublicDesc": "Kann über die Suche gefunden werden.",
+    "visibilityPrivateDesc": "Nur über den direkten Link erreichbar.",
     "sectionTeam": "Teamzugang",
     "sectionGallery": "Galerie",
     "sectionStories": "Geschichten",
@@ -208,7 +220,6 @@
     "sectionTimeline": "Lebenslauf",
     "approvedStories": "Freigegebene Geschichten",
     "pendingStories": "Wartende Geschichten",
-    "roleViewer": "👁 Betrachter — kann die Gedenkseite lesen",
     "roleEditor": "✏️ Editor — kann die Gedenkseite bearbeiten",
     "removeInvite": "Einladung entfernen",
     "errorNameRequired": "Vollständiger Name ist erforderlich.",
@@ -234,6 +245,7 @@
     "reject": "Ablehnen",
     "addStory": "+ Geschichte hinzufügen",
     "manageTeam": "Team & Rollen verwalten",
+    "teamDescription": "Lade Personen per E-Mail ein, um diese Gedenkseite zu bearbeiten.",
     "dangerZone": "Gefahrenzone"
   }
 }

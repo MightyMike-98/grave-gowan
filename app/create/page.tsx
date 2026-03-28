@@ -44,6 +44,7 @@ function CreateMemorialForm() {
     const [portraitUrl, setPortraitUrl] = useState('');
     const [userId, setUserId] = useState<string | null>(null);
     const [existingSlug, setExistingSlug] = useState('');
+    const [isPublic, setIsPublic] = useState(false);
 
     const [supportTitle, setSupportTitle] = useState('');
     const [supportUrl, setSupportUrl] = useState('');
@@ -58,16 +59,15 @@ function CreateMemorialForm() {
     const [stories, setStories] = useState<{ id: string; author: string; text: string; date: string; favorite: boolean }[]>([]);
     const [pendingStories, setPendingStories] = useState<{ id: string; author: string; text: string; date: string }[]>([]);
 
-    interface InviteDraft { email: string; role: 'editor' | 'viewer' }
+    interface InviteDraft { email: string; role: 'editor' }
     const [invites, setInvites] = useState<InviteDraft[]>([]);
-
-    const [showMemorialId, setShowMemorialId] = useState(false);
     const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null);
     const isOwnerRole = userRole === 'owner' || userRole === null;
     const isEditorRole = userRole === 'editor';
 
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<string[]>([]);
+    const [copied, setCopied] = useState(false);
 
     // ── Data Loading ──
     const applyMemorialData = (data: Record<string, unknown>) => {
@@ -81,6 +81,7 @@ function CreateMemorialForm() {
         setSupportUrl((data.support_url as string) ?? '');
         setSupportDesc((data.support_desc as string) ?? '');
         setQuote((data.quote as string) ?? '');
+        setIsPublic(!!(data.is_public));
         const tl = data.timeline;
         if (Array.isArray(tl)) {
             setTimelineEvents(tl.map((e: { year: string; title: string; description: string }) => ({
@@ -224,14 +225,14 @@ function CreateMemorialForm() {
             if (isEditing && editId) {
                 const fields = isEditorRole
                     ? { bio: bio.trim(), quote: quote.trim() || undefined, dateOfDeath: dateOfDeath || undefined, timeline: timelineEvents.length > 0 ? timelineEvents : [], supportTitle: supportTitle || undefined, supportUrl: supportUrl || undefined, supportDesc: supportDesc || undefined }
-                    : { name: name.trim(), bio: bio.trim(), quote: quote.trim() || undefined, dateOfBirth: dateOfBirth || undefined, dateOfDeath: dateOfDeath || undefined, portraitUrl: portraitUrl || undefined, timeline: timelineEvents.length > 0 ? timelineEvents : [], supportTitle: supportTitle || undefined, supportUrl: supportUrl || undefined, supportDesc: supportDesc || undefined };
+                    : { name: name.trim(), bio: bio.trim(), quote: quote.trim() || undefined, dateOfBirth: dateOfBirth || undefined, dateOfDeath: dateOfDeath || undefined, portraitUrl: portraitUrl || undefined, isPublic, timeline: timelineEvents.length > 0 ? timelineEvents : [], supportTitle: supportTitle || undefined, supportUrl: supportUrl || undefined, supportDesc: supportDesc || undefined };
                 await repo.update(editId, fields);
                 router.push(`/memorial/${existingSlug}`);
             } else {
                 const memorial = await createMemorial({
                     name: name.trim(), bio: bio.trim(), quote: quote.trim() || undefined,
                     dateOfBirth: dateOfBirth || undefined, dateOfDeath: dateOfDeath || undefined,
-                    portraitUrl: portraitUrl || undefined, ownerId: userId!, slug: '', theme: 'classic', isPublic: false,
+                    portraitUrl: portraitUrl || undefined, ownerId: userId!, slug: '', theme: 'classic', isPublic,
                     timeline: timelineEvents.length > 0 ? timelineEvents : undefined,
                     supportTitle: supportTitle || undefined, supportUrl: supportUrl || undefined, supportDesc: supportDesc || undefined,
                 }, repo);
@@ -299,6 +300,37 @@ function CreateMemorialForm() {
                     <Link href="/dashboard" className="text-sm font-light transition-colors hover:opacity-100" style={{ color: 'hsl(var(--muted-foreground))' }}>← Back</Link>
                 </div>
 
+                {isEditing && existingSlug && (
+                    <div
+                        className="flex items-center gap-3 rounded-xl px-4 py-3"
+                        style={{ backgroundColor: 'hsl(var(--muted) / 0.15)', border: '1px solid hsl(var(--border) / 0.4)' }}
+                    >
+                        <span className="text-xs font-medium uppercase tracking-[0.15em] shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                            {t('linkLabel')}
+                        </span>
+                        <span className="text-sm font-light truncate" style={{ color: 'hsl(var(--foreground))' }}>
+                            {typeof window !== 'undefined' ? `${window.location.origin}/memorial/${existingSlug}` : `/memorial/${existingSlug}`}
+                        </span>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const url = `${window.location.origin}/memorial/${existingSlug}`;
+                                navigator.clipboard.writeText(url);
+                                setCopied(true);
+                                setTimeout(() => setCopied(false), 2000);
+                            }}
+                            className="shrink-0 text-xs font-light px-2 py-1 rounded-md transition-colors"
+                            style={{
+                                color: copied ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
+                                backgroundColor: copied ? 'hsl(var(--foreground))' : 'hsl(var(--muted) / 0.3)',
+                            }}
+                            title={t('copyLink')}
+                        >
+                            {copied ? '✓' : t('copyLink')}
+                        </button>
+                    </div>
+                )}
+
                 {errors.length > 0 && (
                     <div role="alert" className="rounded-xl p-4 space-y-1" style={{ backgroundColor: 'hsl(var(--destructive) / 0.05)', border: '1px solid hsl(var(--destructive) / 0.2)' }}>
                         {errors.map((err, i) => <p key={i} className="text-sm" style={{ color: 'hsl(var(--destructive))' }}>{err}</p>)}
@@ -310,6 +342,39 @@ function CreateMemorialForm() {
                     name={name} setName={setName} dateOfBirth={dateOfBirth} setDateOfBirth={setDateOfBirth}
                     dateOfDeath={dateOfDeath} setDateOfDeath={setDateOfDeath} bio={bio} setBio={setBio} quote={quote} setQuote={setQuote}
                 />
+
+                {/* Visibility Toggle — nur für Owner */}
+                {isOwnerRole && (
+                    <section className="space-y-3">
+                        <div className="flex items-center justify-between rounded-xl p-4" style={{ backgroundColor: 'hsl(var(--muted) / 0.15)', border: '1px solid hsl(var(--border) / 0.4)' }}>
+                            <div>
+                                <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
+                                    {isPublic ? t('visibilityPublic') : t('visibilityPrivate')}
+                                </p>
+                                <p className="text-xs font-light mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                    {isPublic ? t('visibilityPublicDesc') : t('visibilityPrivateDesc')}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsPublic(!isPublic)}
+                                className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200"
+                                style={{ backgroundColor: isPublic ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground) / 0.3)' }}
+                                role="switch"
+                                aria-checked={isPublic}
+                            >
+                                <span
+                                    className="pointer-events-none inline-block h-5 w-5 rounded-full shadow-sm transform transition-transform duration-200"
+                                    style={{
+                                        backgroundColor: 'hsl(var(--background))',
+                                        transform: isPublic ? 'translateX(1.25rem)' : 'translateX(0.125rem)',
+                                        marginTop: '0.125rem',
+                                    }}
+                                />
+                            </button>
+                        </div>
+                    </section>
+                )}
 
                 <SupportEditor
                     supportTitle={supportTitle} setSupportTitle={setSupportTitle}
@@ -333,28 +398,34 @@ function CreateMemorialForm() {
 
                 {isOwnerRole && (
                     <TeamSection
-                        isEditing={isEditing} editId={editId} existingSlug={existingSlug}
+                        isEditing={isEditing} existingSlug={existingSlug}
                         invites={invites} setInvites={setInvites}
-                        showMemorialId={showMemorialId} setShowMemorialId={setShowMemorialId}
                     />
                 )}
-
-                {/* Submit */}
-                <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={loading}
-                    className="w-full rounded-full py-5 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md disabled:opacity-50 flex items-center justify-center"
-                    style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
-                >
-                    {loading ? (
-                        <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-                    ) : isEditing ? t('saveUpdate') : t('saveCreate')}
-                </button>
 
                 {isEditing && editId && isOwnerRole && (
                     <DangerZone editId={editId} name={name} onError={(msg) => setErrors([msg])} />
                 )}
+
+                {/* Spacer for sticky button */}
+                <div className="h-20" />
+            </div>
+
+            {/* Sticky Submit */}
+            <div className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-5 pt-3" style={{ background: 'linear-gradient(to top, hsl(var(--background)) 60%, transparent)' }}>
+                <div className="mx-auto max-w-xl">
+                    <button
+                        type="button"
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="w-full rounded-full py-4 text-xs font-normal uppercase tracking-[0.25em] shadow-lg transition-shadow duration-300 hover:shadow-xl disabled:opacity-50 flex items-center justify-center"
+                        style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
+                    >
+                        {loading ? (
+                            <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                        ) : isEditing ? t('saveUpdate') : t('saveCreate')}
+                    </button>
+                </div>
             </div>
         </main>
     );

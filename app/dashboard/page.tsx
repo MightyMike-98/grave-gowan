@@ -47,7 +47,6 @@ export default async function DashboardPage() {
     try {
         const memberRepo = new SupabaseMemberRepository(supabase);
         sharedMemorials = await getSharedMemorials(user.id, memberRepo, email);
-        console.log('[Dashboard] Shared memorials loaded:', sharedMemorials.length);
     } catch (err) {
         console.error('[Dashboard] Could not load shared memorials:', err);
     }
@@ -157,6 +156,7 @@ export default async function DashboardPage() {
                         </ul>
                     </>
                 )}
+
             </div>
         </main>
     );

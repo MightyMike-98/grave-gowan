@@ -19,7 +19,7 @@ interface MemberActionsProps {
 /** Interaktives Einlade-Formular für den Owner eines Memorials. */
 export function MemberActions({ memorialId, memorialSlug, invitedBy }: MemberActionsProps) {
     const [email, setEmail] = useState('');
-    const [role, setRole] = useState<'editor' | 'viewer'>('viewer');
+    const [role] = useState<'editor'>('editor');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
     const [errorMsg, setErrorMsg] = useState('');
 
@@ -75,20 +75,9 @@ export function MemberActions({ memorialId, memorialSlug, invitedBy }: MemberAct
                 />
             </div>
 
-            <div className="space-y-2">
-                <label htmlFor="invite-role" className="block text-sm text-stone-600">
-                    Role
-                </label>
-                <select
-                    id="invite-role"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as 'editor' | 'viewer')}
-                    className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-300 bg-stone-50"
-                >
-                    <option value="viewer">Viewer — can read the memorial</option>
-                    <option value="editor">Editor — can add content</option>
-                </select>
-            </div>
+            <p className="text-xs font-light text-stone-500">
+                Invited as <span className="font-medium">Editor</span> — can add content
+            </p>
 
             {/* Feedback */}
             {status === 'error' && (

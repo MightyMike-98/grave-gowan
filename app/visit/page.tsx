@@ -2,13 +2,9 @@
  * @file app/visit/page.tsx
  * @description Die "Visit Memorial"-Zugangsseite für Besucher.
  *
- * Nutzer müssen ihre E-Mail-Adresse UND die Memorial-ID eingeben.
- * Beide Felder sind Pflicht — so wird sichergestellt, dass nur eingeladene
- * Personen das Memorial finden können.
- *
- * Ablauf:
- * 1. Memorial per ID/Slug suchen via /api/memorials/find
- * 2. Prüfen ob die eingegebene E-Mail als Member eingeladen ist
+ * Nutzer suchen nach öffentlichen Gedenkseiten oder geben den direkten Link ein.
+ * Private Memorials sind nur über den direkten Link erreichbar.
+ * Live-Suche mit Debounce beim Tippen.
  */
 
 'use client';
@@ -16,163 +12,130 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+interface SearchResult {
+    slug: string;
+    name: string;
+    portraitUrl?: string;
+}
 
 export default function VisitPage() {
     const t = useTranslations('visit');
     const router = useRouter();
 
-    const [memorialId, setMemorialId] = useState('');
-    const [email, setEmail] = useState('');
+    const [query, setQuery] = useState('');
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [results, setResults] = useState<SearchResult[]>([]);
+    const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
 
-    const handleEnter = async () => {
-        const id = memorialId.trim();
-        const e = email.trim().toLowerCase();
+    // Live-Suche mit 300ms Debounce
+    useEffect(() => {
+        const input = query.trim();
 
-        if (!id || !e) {
-            setError(t('errorBothRequired'));
+        if (!input || input.length < 2) {
+            setResults([]);
             return;
         }
 
-        if (!e.includes('@')) {
-            setError(t('errorInvalidEmail'));
-            return;
-        }
+        if (debounceRef.current) clearTimeout(debounceRef.current);
 
-        setError('');
-        setLoading(true);
+        debounceRef.current = setTimeout(async () => {
+            setLoading(true);
+            try {
+                const res = await fetch(`/api/memorials/find?q=${encodeURIComponent(input)}`);
+                const json = await res.json();
 
-        try {
-            const res = await fetch(
-                `/api/memorials/find?email=${encodeURIComponent(e)}&memorialId=${encodeURIComponent(id)}`
-            );
-            const json = await res.json();
-
-            if (res.ok && json.slug) {
-                router.push(`/memorial/${json.slug}?visitor_email=${encodeURIComponent(e)}`);
-                return;
+                if (res.ok && json.results) {
+                    setResults(json.results);
+                } else {
+                    setResults([]);
+                }
+            } catch {
+                setResults([]);
             }
+            setLoading(false);
+        }, 300);
 
-            setError(json.error ?? t('errorNotFound'));
-        } catch {
-            setError(t('errorNetwork'));
-        }
-
-        setLoading(false);
-    };
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    }, [query]);
 
     return (
         <main className="flex min-h-screen flex-col items-center justify-center px-4">
-            <div className="w-full max-w-md space-y-6 text-center animate-fade-up">
+            <div className="w-full max-w-lg space-y-8 text-center animate-fade-up">
 
-                <h1 className="text-4xl tracking-tight">
-                    {t('heading')}
-                </h1>
-                <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    {t('description')}
-                </p>
-
-                <div className="space-y-5 text-left">
-                    {/* E-Mail */}
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="visitor-email"
-                            className="block text-[11px] font-medium uppercase tracking-[0.15em]"
-                            style={{ color: 'hsl(var(--muted-foreground))' }}
-                        >
-                            {t('emailLabel')}
-                        </label>
-                        <input
-                            id="visitor-email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
-                            placeholder={t('emailPlaceholder')}
-                            className="field-input"
-                        />
-                    </div>
-
-                    {/* Memorial-ID */}
-                    <div className="space-y-2">
-                        <label
-                            htmlFor="memorial-id"
-                            className="block text-[11px] font-medium uppercase tracking-[0.15em]"
-                            style={{ color: 'hsl(var(--muted-foreground))' }}
-                        >
-                            {t('idLabel')}
-                        </label>
-                        <input
-                            id="memorial-id"
-                            type="text"
-                            value={memorialId}
-                            onChange={(e) => setMemorialId(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleEnter()}
-                            placeholder={t('idPlaceholder')}
-                            autoCapitalize="none"
-                            autoCorrect="off"
-                            className="field-input font-mono"
-                        />
-                        <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            {t('idHelper')}
-                        </p>
-                    </div>
-
-                    {/* Fehleranzeige */}
-                    {error && (
-                        <p role="alert" className="text-sm rounded-lg px-4 py-3"
-                            style={{
-                                color: 'hsl(var(--destructive))',
-                                backgroundColor: 'hsl(var(--destructive) / 0.05)',
-                                border: '1px solid hsl(var(--destructive) / 0.2)',
-                            }}
-                        >
-                            {error}
-                        </p>
-                    )}
-
-                    {/* Enter-Button */}
-                    <button
-                        onClick={handleEnter}
-                        disabled={loading}
-                        className="w-full rounded-full py-4 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md disabled:opacity-50 flex items-center justify-center"
-                        style={{
-                            backgroundColor: 'hsl(var(--primary))',
-                            color: 'hsl(var(--primary-foreground))',
-                        }}
-                    >
-                        {loading ? (
-                            <span className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-                        ) : (
-                            t('openMemorial')
-                        )}
-                    </button>
-
-                    {/* Demo-Link */}
-                    <p className="text-center text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        {t('noId')}{' '}
-                        <button
-                            type="button"
-                            onClick={() => router.push('/memorial/demo')}
-                            className="underline underline-offset-4 transition-colors hover:opacity-100"
-                            style={{ color: 'hsl(var(--foreground) / 0.7)' }}
-                        >
-                            {t('viewDemo')}
-                        </button>
-                    </p>
-                                                <div className="w-full max-w-md space-y-6 text-center animate-fade-up">
-
-                                    <Link
+                <Link
                     href="/"
                     className="text-sm font-light transition-colors hover:opacity-100"
                     style={{ color: 'hsl(var(--muted-foreground))' }}
                 >
                     {t('back')}
                 </Link>
+
+                <h1 className="text-5xl tracking-tight">
+                    {t('heading')}
+                </h1>
+
+                {/* Search input */}
+                <div
+                    className="flex items-center gap-3 rounded-2xl px-5 py-4 shadow-sm"
+                    style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.3)' }}
+                >
+                    {loading ? (
+                        <span className="shrink-0 h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }} />
+                    ) : (
+                        <svg className="shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                        </svg>
+                    )}
+                    <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder={t('searchPlaceholder')}
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        autoFocus
+                        className="w-full bg-transparent text-base font-light outline-none placeholder:font-light"
+                        style={{ color: 'hsl(var(--foreground))' }}
+                    />
                 </div>
-                </div>
+
+                {/* Search results grid */}
+                {results.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 text-left">
+                        {results.map((r) => (
+                            <button
+                                key={r.slug}
+                                type="button"
+                                onClick={() => router.push(`/memorial/${r.slug}`)}
+                                className="flex flex-col items-center justify-center gap-2 rounded-2xl px-4 py-6 shadow-sm transition-all duration-200 hover:shadow-md hover:scale-[1.02]"
+                                style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.3)' }}
+                            >
+                                {r.portraitUrl ? (
+                                    <img src={r.portraitUrl} alt={r.name} className="w-10 h-10 rounded-full object-cover" />
+                                ) : (
+                                    <span className="w-10 h-10 rounded-full flex items-center justify-center text-lg" style={{ backgroundColor: 'hsl(var(--muted) / 0.3)' }}>
+                                        🕊
+                                    </span>
+                                )}
+                                <span className="text-sm font-light text-center" style={{ color: 'hsl(var(--foreground))' }}>{r.name}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* No results hint (only when actively searching) */}
+                {query.trim().length >= 2 && !loading && results.length === 0 && (
+                    <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}>
+                        {t('errorNotFound')}
+                    </p>
+                )}
+
+                {/* Hint */}
+                <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    {t('privateHint')}
+                </p>
             </div>
         </main>
     );

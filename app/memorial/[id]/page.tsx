@@ -80,14 +80,15 @@ async function loadMemorialWithRole(slug: string): Promise<{
     role: UserRole;
     photos: Photo[];
     isAuthenticated: boolean;
+    isSaved: boolean;
 }> {
-    if (slug === 'demo') return { memorial: DUMMY_MEMORIAL, role: 'anonymous', photos: DUMMY_MEMORIAL.photos, isAuthenticated: false };
+    if (slug === 'demo') return { memorial: DUMMY_MEMORIAL, role: 'anonymous', photos: DUMMY_MEMORIAL.photos, isAuthenticated: false, isSaved: false };
 
     try {
         const supabase = await createSupabaseServerClient();
         const repo = new SupabaseMemorialRepository(supabase);
         const domain = await getMemorialBySlug(slug, repo);
-        if (!domain) return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false };
+        if (!domain) return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false };
 
         // Galerie-Fotos laden
         let photos: Photo[] = [];
@@ -128,6 +129,7 @@ async function loadMemorialWithRole(slug: string): Promise<{
 
         const { data: { user } } = await supabase.auth.getUser();
         let role: UserRole = 'anonymous';
+        let isSaved = false;
 
         if (user) {
             // Eingeloggter User → Rolle aus DB lesen
@@ -138,12 +140,26 @@ async function loadMemorialWithRole(slug: string): Promise<{
             } catch (roleErr) {
                 console.warn('[MemorialPage] Could not load member role:', roleErr);
             }
+
+            // Check if saved (viewer in memorial_members)
+            if (role === 'anonymous') {
+                try {
+                    const { data: viewerRow } = await supabase
+                        .from('memorial_members')
+                        .select('id')
+                        .eq('user_id', user.id)
+                        .eq('memorial_id', domain.id)
+                        .eq('role', 'viewer')
+                        .maybeSingle();
+                    isSaved = !!viewerRow;
+                } catch { /* ignore */ }
+            }
         }
 
-        return { memorial: toMemorialView(domain, stories), role, photos, isAuthenticated: !!user };
+        return { memorial: toMemorialView(domain, stories), role, photos, isAuthenticated: !!user, isSaved };
     } catch (err) {
         console.error('[MemorialPage] Supabase error:', err);
-        return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false };
+        return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false };
     }
 }
 
@@ -172,7 +188,7 @@ export async function generateMetadata({ params }: MemorialPageProps): Promise<M
  */
 export default async function MemorialPage({ params }: MemorialPageProps) {
     const { id } = await params;
-    const { memorial, role, photos, isAuthenticated } = await loadMemorialWithRole(id);
+    const { memorial, role, photos, isAuthenticated, isSaved } = await loadMemorialWithRole(id);
 
     if (!memorial) notFound();
 
@@ -180,7 +196,7 @@ export default async function MemorialPage({ params }: MemorialPageProps) {
 
     return (
         <div className="min-h-screen relative pb-20">
-            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} initialPhotos={photos} isAuthenticated={isAuthenticated} />
+            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} initialPhotos={photos} isAuthenticated={isAuthenticated} initialSaved={isSaved} />
 
             <footer className="pb-10 pt-10 flex flex-col items-center gap-2">
                 <p className="text-xs uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>Created by Family</p>
@@ -189,7 +205,7 @@ export default async function MemorialPage({ params }: MemorialPageProps) {
                 </Link>
             </footer>
 
-            {!canEdit && memorial.id !== 'demo' && <RequestWidget memorialId={memorial.id} />}
+            {!canEdit && memorial.id !== 'demo' && <RequestWidget memorialId={memorial.id} memorialSlug={id} isAuthenticated={isAuthenticated} />}
         </div>
     );
 }
