@@ -1,9 +1,12 @@
 /**
  * @file types/index.ts
- * @description Zentrale TypeScript-Typdefinitionen für das gesamte Projekt.
- * Alle Datenstrukturen, die in der App vorkommen – von einem einzelnen Erinnerungsbeitrag
- * bis hin zum vollständigen Memorial-Objekt – sind hier typisiert.
- * Das stellt sicher, dass überall in der App die gleichen Datenfelder verwendet werden.
+ * @description UI-View-Model-Typen für die Darstellungsschicht.
+ *
+ * Diese Typen beschreiben die Datenstruktur, wie sie von den UI-Komponenten
+ * konsumiert wird — mit zusammengesetzten Feldern (stories[], photos[], dates-String).
+ *
+ * Für die Domain-/Persistenz-Typen siehe @core/types/index.ts
+ * (Memorial, Memory, GalleryPhoto, Member).
  */
 
 /** Eine einzelne Erinnerungsgeschichte, die ein Hinterbliebener verfasst hat. */
@@ -83,11 +86,14 @@ export interface Suggestion {
 }
 
 /**
- * Das vollständige Memorial-Objekt.
- * Enthält alle Informationen einer Gedenkseite – von den Basisdaten
- * bis hin zu Stories, Fotos und der Spenden-Sektion.
+ * UI-View-Model einer Gedenkseite.
+ * Enthält alle bereits aufbereiteten Daten für die Darstellung —
+ * inklusive Stories, Fotos und der Spenden-Sektion.
+ *
+ * Nicht zu verwechseln mit dem Domain-Typ `Memorial` aus @core/types,
+ * der die Persistenz-Felder (slug, ownerId, isPublic, …) abbildet.
  */
-export interface Memorial {
+export interface MemorialView {
     id: string;
     /** Vollständiger Name der verstorbenen Person. */
     name: string;

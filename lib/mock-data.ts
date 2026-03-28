@@ -8,14 +8,14 @@
  * @see /app/memorial/[id]/page.tsx – hier wird DUMMY_MEMORIAL aktuell geladen.
  */
 
-import type { Memorial } from '@/types';
+import type { MemorialView } from '@/types';
 
 /**
  * Vollständiges Beispiel-Memorial für "Sarah Jenkins".
  * Dieses Objekt wird auf der Demo-Route `/memorial/demo` angezeigt
  * und dient als Vorlage für die spätere Datenbankstruktur.
  */
-export const DUMMY_MEMORIAL: Memorial = {
+export const DUMMY_MEMORIAL: MemorialView = {
     id: 'demo',
     name: 'Sarah Jenkins',
     dates: '1954 – 2024',

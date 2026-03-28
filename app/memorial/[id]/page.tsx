@@ -17,7 +17,7 @@
 import { MemorialTabs } from '@/components/ui/MemorialTabs';
 import { RequestWidget } from '@/components/ui/RequestWidget';
 import { DUMMY_MEMORIAL } from '@/lib/mock-data';
-import type { Memorial as UIMemorial, Photo } from '@/types';
+import type { MemorialView, Photo } from '@/types';
 import type { Memorial as DomainMemorial } from '@core/types/index';
 import { getGalleryPhotos } from '@core/use-cases/getGalleryPhotos';
 import { getMemorialBySlug } from '@core/use-cases/getMemorialBySlug';
@@ -41,7 +41,7 @@ type UserRole = 'owner' | 'editor' | 'viewer' | 'anonymous';
  * Mappt ein Domain-Memorial (aus der DB) auf das UI-Memorial-Format.
  * Füllt fehlende Felder (stories, photos, timeline) mit leeren Arrays.
  */
-function toUIMemorial(d: DomainMemorial, stories: UIMemorial['stories'] = []): UIMemorial {
+function toMemorialView(d: DomainMemorial, stories: MemorialView['stories'] = []): MemorialView {
     return {
         id: d.id,
         name: d.name,
@@ -76,7 +76,7 @@ function toUIMemorial(d: DomainMemorial, stories: UIMemorial['stories'] = []): U
  * Lädt das Memorial und die Rolle des aktuell eingeloggten Users.
  */
 async function loadMemorialWithRole(slug: string): Promise<{
-    memorial: UIMemorial | null;
+    memorial: MemorialView | null;
     role: UserRole;
     photos: Photo[];
     isAuthenticated: boolean;
@@ -105,7 +105,7 @@ async function loadMemorialWithRole(slug: string): Promise<{
         }
 
         // Stories laden
-        let stories: UIMemorial['stories'] = [];
+        let stories: MemorialView['stories'] = [];
         try {
             const { data: dbStories } = await supabase
                 .from('memorial_stories')
@@ -140,7 +140,7 @@ async function loadMemorialWithRole(slug: string): Promise<{
             }
         }
 
-        return { memorial: toUIMemorial(domain, stories), role, photos, isAuthenticated: !!user };
+        return { memorial: toMemorialView(domain, stories), role, photos, isAuthenticated: !!user };
     } catch (err) {
         console.error('[MemorialPage] Supabase error:', err);
         return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false };

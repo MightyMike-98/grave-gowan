@@ -6,7 +6,7 @@
 
 'use client';
 
-import type { Memorial } from '@/types';
+import type { MemorialView } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -17,7 +17,7 @@ const fadeIn = {
 };
 
 interface HighlightsSectionProps {
-    memorial: Memorial;
+    memorial: MemorialView;
     canEdit?: boolean;
     onTabChange?: (tab: string) => void;
 }

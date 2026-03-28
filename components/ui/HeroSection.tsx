@@ -9,7 +9,7 @@
  * Kerzen-Widget nutzt motion für Puls-Animation.
  */
 
-import type { Memorial } from '@/types';
+import type { MemorialView } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -81,7 +81,7 @@ function CandleWidget({ memorialId, initialCount }: { memorialId: string; initia
  * Rendert den oberen Hero-Bereich einer Gedenkseite.
  */
 export function HeroSection({ memorial, flowers = [], isAuthenticated = false, candleCount = 0 }: {
-    memorial: Memorial;
+    memorial: MemorialView;
     flowers?: string[];
     isAuthenticated?: boolean;
     candleCount?: number;

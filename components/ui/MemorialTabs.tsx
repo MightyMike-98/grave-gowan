@@ -16,7 +16,7 @@ import { StoriesSection } from '@/components/ui/StoriesSection';
 import { SupportSection } from '@/components/ui/SupportSection';
 import { TabsNavigation } from '@/components/ui/TabsNavigation';
 import { TimelineSection } from '@/components/ui/TimelineSection';
-import type { Memorial, Photo, Story } from '@/types';
+import type { MemorialView, Photo, Story } from '@/types';
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
@@ -34,7 +34,7 @@ const fadeIn = {
 };
 
 interface MemorialTabsProps {
-    memorial: Memorial;
+    memorial: MemorialView;
     userRole?: UserRole;
     memorialSlug?: string;
     initialPhotos?: Photo[];

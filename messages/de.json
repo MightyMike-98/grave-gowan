@@ -135,6 +135,11 @@
     "editHint": "Markiere Favoriten mit ⭐ für die Highlights. Gedrückt halten zum Löschen."
   },
   "gallery": {
+    "heading": "Galerie",
+    "noPhotos": "Noch keine Fotos.",
+    "deleteConfirm": "Foto entfernen?",
+    "deleteYes": "Entfernen",
+    "deleteCancel": "Abbrechen",
     "editHint": "Markiere Favoriten mit ⭐ für die Highlights. Gedrückt halten zum Löschen.",
     "uploading": "Lädt...",
     "add": "Hinzufügen"

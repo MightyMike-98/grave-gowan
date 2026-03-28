@@ -135,6 +135,11 @@
     "editHint": "Mark favourites with ⭐ for Highlights. Long-press to delete."
   },
   "gallery": {
+    "heading": "Gallery",
+    "noPhotos": "No photos yet.",
+    "deleteConfirm": "Remove photo?",
+    "deleteYes": "Remove",
+    "deleteCancel": "Cancel",
     "editHint": "Mark favourites with ⭐ for Highlights. Long-press to delete.",
     "uploading": "Loading...",
     "add": "Add"
