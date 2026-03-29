@@ -13,9 +13,10 @@
 import { submitVisitorStory } from '@/app/actions/submitVisitorStory';
 import type { Story } from '@/types';
 import { createSupabaseBrowserClient } from '@data/browser-client';
+import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const LONG_PRESS_MS = 700;
 
@@ -26,6 +27,7 @@ interface StoriesSectionProps {
     memorialId?: string;
     memorialSlug?: string;
     isAuthenticated?: boolean;
+    userName?: string | null;
     onToggleFavorite?: (storyId: string) => void;
     onDeleteStory?: (storyId: string) => void;
     onStoryAdded?: (story: Story) => void;
@@ -41,17 +43,30 @@ function getInitials(name: string): string {
         .toUpperCase();
 }
 
-export function StoriesSection({ stories, canEdit = false, canWrite = true, memorialId, memorialSlug, isAuthenticated = false, onToggleFavorite, onDeleteStory, onStoryAdded }: StoriesSectionProps) {
+export function StoriesSection({ stories, canEdit = false, canWrite = true, memorialId, memorialSlug, isAuthenticated = false, userName, onToggleFavorite, onDeleteStory, onStoryAdded }: StoriesSectionProps) {
     const t = useTranslations('stories');
     const tSave = useTranslations('save');
     const [pressingId, setPressingId] = useState<string | null>(null);
     const [confirmId, setConfirmId] = useState<string | null>(null);
     const [showForm, setShowForm] = useState(false);
-    const [authorName, setAuthorName] = useState('');
+    const [showAuthHint, setShowAuthHint] = useState(false);
     const [storyText, setStoryText] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const authHintRef = useRef<HTMLDivElement>(null);
+
+    // Close auth hint on outside click
+    useEffect(() => {
+        if (!showAuthHint) return;
+        const handler = (e: MouseEvent) => {
+            if (authHintRef.current && !authHintRef.current.contains(e.target as Node)) {
+                setShowAuthHint(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [showAuthHint]);
 
     const startPress = useCallback((storyId: string) => {
         if (!canEdit || confirmId) return;
@@ -69,7 +84,7 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
     }, []);
 
     const handleSubmitStory = async () => {
-        const author = authorName.trim();
+        const author = userName?.trim();
         const text = storyText.trim();
         if (!author || !text || !memorialId) return;
 
@@ -106,7 +121,6 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                 setSubmitted(true);
             }
 
-            setAuthorName('');
             setStoryText('');
             setShowForm(false);
         } catch (err) {
@@ -216,15 +230,43 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
     const loginUrl = `/login?next=${encodeURIComponent(`/memorial/${memorialSlug ?? ''}`)}`;
 
     const ctaOrForm = !canWrite ? null : !isAuthenticated && !canEdit ? (
-        <Link
-            href={loginUrl}
-            className="w-full py-3 flex items-center justify-center gap-2 transition-opacity hover:opacity-70"
-        >
-            <span className="text-base">✏️</span>
-            <span className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                {tSave('signIn')} — {t('shareCta')}
-            </span>
-        </Link>
+        <div className="relative" ref={authHintRef}>
+            <button
+                onClick={() => setShowAuthHint(true)}
+                className="w-full py-3 flex items-center justify-center gap-2 transition-opacity hover:opacity-70"
+            >
+                <span className="text-base">✏️</span>
+                <span className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    {t('shareCta')}
+                </span>
+            </button>
+            <AnimatePresence>
+                {showAuthHint && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 rounded-xl p-4 shadow-lg z-50"
+                        style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
+                    >
+                        <p className="text-sm font-light text-center" style={{ color: 'hsl(var(--foreground))' }}>
+                            <Link href={loginUrl} className="font-medium underline underline-offset-2">{tSave('signIn')}</Link>
+                            {' '}{tSave('signInHint')}
+                        </p>
+                        <button
+                            onClick={() => setShowAuthHint(false)}
+                            className="absolute top-2 right-2 transition-colors"
+                            style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
+                        >
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     ) : submitted ? (
         <div
             className="py-3 text-center space-y-0.5"
@@ -264,7 +306,7 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                     )}
                 </div>
                 <button
-                    onClick={() => { setShowForm(false); setAuthorName(''); setStoryText(''); }}
+                    onClick={() => { setShowForm(false); setStoryText(''); }}
                     className="transition-colors hover:opacity-70"
                     style={{ color: 'hsl(var(--muted-foreground))' }}
                 >
@@ -272,24 +314,6 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
-            </div>
-
-            <div className="space-y-1">
-                <label className="text-xs font-medium" style={{ color: 'hsl(var(--foreground))' }}>
-                    {t('namePlaceholder')}
-                </label>
-                <input
-                    type="text"
-                    placeholder={t('namePlaceholder')}
-                    value={authorName}
-                    onChange={(e) => setAuthorName(e.target.value)}
-                    className="w-full rounded-lg border px-3 py-2 text-xs font-light outline-none transition-colors focus:ring-1"
-                    style={{
-                        borderColor: 'hsl(var(--border) / 0.4)',
-                        backgroundColor: 'hsl(var(--muted) / 0.15)',
-                        color: 'hsl(var(--foreground))',
-                    }}
-                />
             </div>
 
             <div className="space-y-1">
@@ -321,7 +345,7 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                 ) : <span />}
                 <button
                     onClick={handleSubmitStory}
-                    disabled={submitting || !authorName.trim() || !storyText.trim()}
+                    disabled={submitting || !storyText.trim()}
                     className="shrink-0 rounded-full px-4 py-1.5 text-[11px] font-light tracking-wider transition-all disabled:opacity-40"
                     style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
                 >

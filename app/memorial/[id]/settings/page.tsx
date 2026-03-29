@@ -39,8 +39,9 @@ export default async function SettingsPage({ params }: SettingsPageProps) {
     const userRole = await memberRepo.getUserRole(memorial.id, user.id);
     if (userRole !== 'owner') redirect(`/memorial/${slug}`);
 
-    // Alle Members laden
-    const members: Member[] = await memberRepo.findByMemorialId(memorial.id);
+    // Alle Members laden (Viewer ausblenden — nur Owner & Editors anzeigen)
+    const allMembers: Member[] = await memberRepo.findByMemorialId(memorial.id);
+    const members = allMembers.filter(m => m.role !== 'viewer');
 
     return (
         <main className="min-h-screen bg-stone-100">

@@ -23,8 +23,8 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useCallback, useMemo, useState } from 'react';
 
-const TABS = ['Highlights', 'About', 'Timeline', 'Gallery', 'Stories', 'Support'] as const;
-type Tab = (typeof TABS)[number];
+const ALL_TABS = ['Highlights', 'About', 'Timeline', 'Gallery', 'Stories', 'Support'] as const;
+type Tab = (typeof ALL_TABS)[number];
 type UserRole = 'owner' | 'editor' | 'viewer' | 'anonymous';
 
 const fadeIn = {
@@ -40,11 +40,16 @@ interface MemorialTabsProps {
     initialPhotos?: Photo[];
     isAuthenticated?: boolean;
     initialSaved?: boolean;
+    userName?: string | null;
 }
 
-export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, initialPhotos = [], isAuthenticated = false, initialSaved = false }: MemorialTabsProps) {
+export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, initialPhotos = [], isAuthenticated = false, initialSaved = false, userName }: MemorialTabsProps) {
     const t = useTranslations('tabs');
     const tHero = useTranslations('hero');
+
+    const hasSupport = !!(memorial.support && memorial.support.links.length > 0);
+    const tabs = hasSupport ? ALL_TABS : ALL_TABS.filter(tab => tab !== 'Support');
+
     const [activeTab, setActiveTab] = useState<Tab>('Highlights');
     const [flowers, setFlowers] = useState<string[]>([]);
     const [photos, setPhotos] = useState<Photo[]>(initialPhotos);
@@ -145,6 +150,8 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                         photos={photos}
                         canEdit={canEdit}
                         memorialId={memorial.id}
+                        memorialSlug={memorialSlug}
+                        isPremium={false}
                         favoriteIds={favoriteIds}
                         onToggleFavorite={handleToggleFavorite}
                         onPhotoUploaded={handlePhotoUploaded}
@@ -160,6 +167,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                         memorialId={memorial.id}
                         memorialSlug={memorialSlug}
                         isAuthenticated={isAuthenticated}
+                        userName={userName}
                         onToggleFavorite={handleToggleStoryFavorite}
                         onDeleteStory={handleDeleteStory}
                         onStoryAdded={(story) => setStories(prev => [story, ...prev])}
@@ -214,10 +222,10 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
 
             {/* Tabs */}
             <TabsNavigation
-                tabs={[...TABS]}
+                tabs={[...tabs]}
                 activeTab={activeTab}
                 onTabChange={(tab) => setActiveTab(tab as Tab)}
-                tabLabels={TABS.map(tabLabel)}
+                tabLabels={tabs.map(tabLabel)}
             />
 
             {/* Content — AnimatePresence mode="wait" for smooth exit→enter */}

@@ -22,6 +22,7 @@ import { Suspense, useCallback, useEffect, useState } from 'react';
 
 import { CoreInfoSection } from './CoreInfoSection';
 import { DangerZone } from './DangerZone';
+import { EditorLeaveZone } from './EditorLeaveZone';
 import { GalleryEditor } from './GalleryEditor';
 import { StoriesEditor } from './StoriesEditor';
 import { SupportEditor } from './SupportEditor';
@@ -387,6 +388,7 @@ function CreateMemorialForm() {
 
                 <GalleryEditor
                     photos={galleryPhotos} uploading={galleryUploading}
+                    memorialId={editId ?? undefined}
                     onUpload={handleGalleryUpload} onToggleFavorite={handleToggleGalleryFavorite} onDelete={handleDeletePhoto}
                 />
 
@@ -405,6 +407,10 @@ function CreateMemorialForm() {
 
                 {isEditing && editId && isOwnerRole && (
                     <DangerZone editId={editId} name={name} onError={(msg) => setErrors([msg])} />
+                )}
+
+                {isEditing && editId && isEditorRole && (
+                    <EditorLeaveZone memorialId={editId} />
                 )}
 
                 {/* Spacer for sticky button */}

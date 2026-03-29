@@ -2,12 +2,14 @@
 
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 
-export default function SetupPage() {
+function SetupForm() {
     const t = useTranslations('setup');
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const next = searchParams.get('next') ?? '/dashboard';
     const [name, setName] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export default function SetupPage() {
             return;
         }
 
-        router.push('/dashboard');
+        router.push(next);
     };
 
     return (
@@ -94,5 +96,17 @@ export default function SetupPage() {
                 </div>
             </div>
         </main>
+    );
+}
+
+export default function SetupPage() {
+    return (
+        <Suspense fallback={
+            <main className="min-h-screen flex items-center justify-center">
+                <span className="animate-spin w-8 h-8 border-2 border-t-transparent rounded-full" style={{ borderColor: 'hsl(var(--muted-foreground))', borderTopColor: 'transparent' }} />
+            </main>
+        }>
+            <SetupForm />
+        </Suspense>
     );
 }

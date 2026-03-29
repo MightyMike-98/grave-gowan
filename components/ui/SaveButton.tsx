@@ -41,7 +41,6 @@ export function SaveButton({ memorialId, memorialSlug, isAuthenticated, initialS
         const params = new URLSearchParams(window.location.search);
         if (params.get('save') === '1') {
             doSave();
-            // URL aufräumen
             const clean = window.location.pathname;
             window.history.replaceState({}, '', clean);
         }
@@ -72,20 +71,29 @@ export function SaveButton({ memorialId, memorialSlug, isAuthenticated, initialS
 
     return (
         <div className="relative" ref={tooltipRef}>
-            <button
+            <motion.button
                 onClick={handleClick}
                 disabled={saving}
-                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-all duration-200 hover:shadow-md disabled:opacity-50"
+                whileTap={{ scale: 0.92 }}
+                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors duration-300 hover:shadow-md disabled:opacity-50"
                 style={{
                     backgroundColor: 'hsl(var(--foreground) / 0.05)',
                     color: saved ? 'hsl(var(--foreground))' : 'hsl(var(--foreground) / 0.6)',
                 }}
             >
-                <svg className="h-4 w-4" fill={saved ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <motion.svg
+                    className="h-4 w-4"
+                    fill={saved ? 'currentColor' : 'none'}
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                    animate={saved ? { scale: [1, 1.25, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-                </svg>
+                </motion.svg>
                 {saved ? t('saved') : t('save')}
-            </button>
+            </motion.button>
 
             <AnimatePresence>
                 {showTooltip && (
@@ -93,7 +101,7 @@ export function SaveButton({ memorialId, memorialSlug, isAuthenticated, initialS
                         initial={{ opacity: 0, y: -4, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -4, scale: 0.95 }}
-                        transition={{ duration: 0.15 }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
                         className="absolute right-0 top-full mt-2 w-64 rounded-xl p-4 shadow-lg z-50"
                         style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
                     >

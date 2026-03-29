@@ -208,19 +208,6 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
                 {/* Candle Widget */}
                 <CandleWidget memorialId={memorial.id} initialCount={candleCount} />
 
-                {/* Flower row (legacy support) */}
-                {flowers.length > 0 && (
-                    <div className="mt-2 flex items-center gap-1.5 flex-wrap justify-center opacity-90">
-                        {flowers.slice(-7).map((flower, i) => (
-                            <span key={i} className="text-xl">{flower}</span>
-                        ))}
-                        {flowers.length > 7 && (
-                            <span className="text-sm ml-1 self-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                +{flowers.length - 7}
-                            </span>
-                        )}
-                    </div>
-                )}
             </motion.div>
 
             {/* Lightbox — AnimatePresence + soft scale (exactly like gentle-code-mover) */}

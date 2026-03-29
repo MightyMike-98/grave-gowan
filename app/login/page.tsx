@@ -62,7 +62,7 @@ function LoginForm() {
         setError(null);
 
         if (mode === 'signup') {
-            const { error } = await signUpWithEmail(email, password);
+            const { error } = await signUpWithEmail(email, password, next !== '/dashboard' ? next : undefined);
             setLoading(null);
             if (error) {
                 setError(error);
@@ -75,7 +75,9 @@ function LoginForm() {
             if (error) {
                 setError(error);
             } else {
-                window.location.href = needsSetup ? '/setup' : next;
+                window.location.href = needsSetup
+                    ? (next !== '/dashboard' ? `/setup?next=${encodeURIComponent(next)}` : '/setup')
+                    : next;
             }
         }
     };

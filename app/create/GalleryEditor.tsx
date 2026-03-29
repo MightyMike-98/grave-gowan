@@ -1,8 +1,11 @@
 'use client';
 
+import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useCallback, useRef, useState } from 'react';
 
+const FREE_PHOTO_LIMIT = 10;
 const LONG_PRESS_MS = 700;
 
 interface GalleryPhoto {
@@ -14,16 +17,23 @@ interface GalleryPhoto {
 interface GalleryEditorProps {
     photos: GalleryPhoto[];
     uploading: boolean;
+    isPremium?: boolean;
+    memorialId?: string;
     onUpload: (file: File) => void;
     onToggleFavorite: (photoId: string) => void;
     onDelete: (photoId: string) => void;
 }
 
-export function GalleryEditor({ photos, uploading, onUpload, onToggleFavorite, onDelete }: GalleryEditorProps) {
+export function GalleryEditor({ photos, uploading, isPremium = false, memorialId, onUpload, onToggleFavorite, onDelete }: GalleryEditorProps) {
     const t = useTranslations('create');
+    const tPay = useTranslations('paywall');
     const [pressingId, setPressingId] = useState<string | null>(null);
     const [confirmId, setConfirmId] = useState<string | null>(null);
+    const [showPaywall, setShowPaywall] = useState<'photo' | 'video' | null>(null);
     const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const atLimit = !isPremium && photos.length >= FREE_PHOTO_LIMIT;
 
     const startPress = useCallback((photoId: string) => {
         if (confirmId) return;
@@ -43,6 +53,34 @@ export function GalleryEditor({ photos, uploading, onUpload, onToggleFavorite, o
     const confirmDelete = (photoId: string) => {
         setConfirmId(null);
         onDelete(photoId);
+    };
+
+    const handleUploadClick = () => {
+        if (atLimit) {
+            setShowPaywall('photo');
+            return;
+        }
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (file.type.startsWith('video/') && !isPremium) {
+            setShowPaywall('video');
+            e.target.value = '';
+            return;
+        }
+
+        if (!file.type.startsWith('video/') && !isPremium && photos.length >= FREE_PHOTO_LIMIT) {
+            setShowPaywall('photo');
+            e.target.value = '';
+            return;
+        }
+
+        onUpload(file);
+        e.target.value = '';
     };
 
     return (
@@ -67,7 +105,6 @@ export function GalleryEditor({ photos, uploading, onUpload, onToggleFavorite, o
                     >
                         <img src={photo.url} alt="" className="h-full w-full object-cover" loading="lazy" />
 
-                        {/* Long-press progress overlay */}
                         {pressingId === photo.id && (
                             <div
                                 className="absolute inset-0 z-20 pointer-events-none"
@@ -78,7 +115,6 @@ export function GalleryEditor({ photos, uploading, onUpload, onToggleFavorite, o
                             />
                         )}
 
-                        {/* Delete confirmation overlay */}
                         {confirmId === photo.id && (
                             <div
                                 className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2.5 backdrop-blur-md"
@@ -110,7 +146,6 @@ export function GalleryEditor({ photos, uploading, onUpload, onToggleFavorite, o
                             </div>
                         )}
 
-                        {/* Favorite toggle */}
                         {!confirmId && (
                             <button
                                 type="button"
@@ -127,9 +162,12 @@ export function GalleryEditor({ photos, uploading, onUpload, onToggleFavorite, o
                 ))}
 
                 {/* Upload button */}
-                <label
+                <button
+                    type="button"
                     className="aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer hover:bg-foreground/5"
                     style={{ borderColor: 'hsl(var(--border) / 0.4)', backgroundColor: 'hsl(var(--muted) / 0.1)' }}
+                    onClick={handleUploadClick}
+                    disabled={uploading}
                 >
                     {uploading ? (
                         <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }} />
@@ -141,18 +179,79 @@ export function GalleryEditor({ photos, uploading, onUpload, onToggleFavorite, o
                     <span className="text-[10px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>
                         {uploading ? t('loading') : t('addButton')}
                     </span>
-                    <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/gif"
-                        className="hidden"
-                        onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) onUpload(file);
-                            e.target.value = '';
-                        }}
-                    />
-                </label>
+                    {!isPremium && (
+                        <span className="text-[9px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>
+                            {photos.length}/{FREE_PHOTO_LIMIT}
+                        </span>
+                    )}
+                </button>
+
+                {/* Hidden file input — images + videos */}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm"
+                    className="hidden"
+                    onChange={handleFileChange}
+                />
             </div>
+
+            {/* Paywall Overlay */}
+            <AnimatePresence>
+                {showPaywall && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+                        style={{ backgroundColor: 'hsl(var(--background) / 0.7)' }}
+                        onClick={() => setShowPaywall(null)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                            className="w-full max-w-sm rounded-2xl p-8 shadow-xl text-center space-y-4"
+                            style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div
+                                className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
+                                style={{ backgroundColor: 'hsl(var(--primary) / 0.1)' }}
+                            >
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--primary))' }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+                                </svg>
+                            </div>
+
+                            <h3 className="text-lg font-medium tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
+                                {showPaywall === 'video' ? tPay('videoUpload') : tPay('photoLimit')}
+                            </h3>
+                            <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                {tPay('upgradeHint')}
+                            </p>
+
+                            <div className="flex flex-col gap-2 pt-2">
+                                <Link
+                                    href={`/pricing${memorialId ? `?memorial=${memorialId}` : ''}`}
+                                    className="w-full rounded-full py-3 text-xs font-normal uppercase tracking-[0.2em] text-center shadow-sm transition-shadow duration-300 hover:shadow-md"
+                                    style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
+                                >
+                                    {tPay('upgradeCta')}
+                                </Link>
+                                <button
+                                    onClick={() => setShowPaywall(null)}
+                                    className="text-xs font-light transition-colors"
+                                    style={{ color: 'hsl(var(--muted-foreground))' }}
+                                >
+                                    {t('storyCancel')}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </section>
     );
 }

@@ -1,14 +1,8 @@
 /**
  * @file components/ui/SupportSection.tsx
- * @description Spenden- und Blumen-Bereich der Gedenkseite.
+ * @description Spenden-Bereich der Gedenkseite.
  *
- * Matches gentle-code-mover's SupportTab:
- * - Interactive flower-laying button (click once to place flower)
- * - Pulse animation when flower is laid
- * - Simple single donate CTA button
- * - Clean, centered layout
- *
- * Benötigt 'use client' da useState und onClick-Handler im Browser laufen.
+ * Blume leuchtet auf wenn der Spendenlink geklickt wird.
  */
 
 'use client';
@@ -29,26 +23,27 @@ export function SupportSection({ support, onDonate, memorialId, initialFlowerCou
     const [flowerLaid, setFlowerLaid] = useState(false);
     const [flowerCount, setFlowerCount] = useState(initialFlowerCount);
 
-    const layFlower = async () => {
-        if (flowerLaid) return;
-        setFlowerCount((c) => c + 1);
-        setFlowerLaid(true);
-        onDonate?.();
-        if (memorialId) {
-            const { createSupabaseBrowserClient } = await import('@data/browser-client');
-            const supabase = createSupabaseBrowserClient();
-            await supabase.rpc('increment_flower', { p_memorial_id: memorialId });
+    const handleDonateClick = async () => {
+        if (!flowerLaid) {
+            setFlowerCount((c) => c + 1);
+            setFlowerLaid(true);
+            onDonate?.();
+            if (memorialId) {
+                const { createSupabaseBrowserClient } = await import('@data/browser-client');
+                const supabase = createSupabaseBrowserClient();
+                await supabase.rpc('increment_flower', { p_memorial_id: memorialId });
+            }
         }
     };
+
+    if (!support || support.links.length === 0) return null;
 
     return (
         <section aria-label="Support & Legacy" className="py-12">
             <div className="mx-auto flex max-w-md flex-col items-center text-center">
-                {/* Flower button — matches gentle-code-mover's SupportTab */}
-                <button
-                    onClick={layFlower}
-                    disabled={flowerLaid}
-                    className="group relative flex h-20 w-20 items-center justify-center rounded-full transition-all duration-500"
+                {/* Flower indicator — lights up when donate is clicked */}
+                <div
+                    className="relative flex h-20 w-20 items-center justify-center rounded-full transition-all duration-500"
                     style={{
                         backgroundColor: flowerLaid
                             ? 'rgba(244,63,94,0.08)'
@@ -70,7 +65,7 @@ export function SupportSection({ support, onDonate, memorialId, initialFlowerCou
                             style={{ backgroundColor: 'rgba(244,63,94,0.08)' }}
                         />
                     )}
-                </button>
+                </div>
 
                 <h2 className="mt-5 text-2xl tracking-tight">
                     {flowerLaid ? t('flowerLaid') : t('layFlower')}
@@ -82,32 +77,31 @@ export function SupportSection({ support, onDonate, memorialId, initialFlowerCou
                     {flowerCount === 1 ? t('flowersOne') : t('flowersMany', { count: flowerCount })}
                 </p>
 
-                {/* Donate CTA */}
-                {support && support.links.length > 0 && (
-                    <div className="mt-10 w-full space-y-3">
-                        {support.links.map((link, i) => (
-                            <a
-                                key={i}
-                                href={link.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block w-full rounded-full py-5 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md text-center"
-                                style={{
-                                    backgroundColor: 'hsl(var(--primary))',
-                                    color: 'hsl(var(--primary-foreground))',
-                                }}
-                            >
-                                Spenden – {link.title}
-                            </a>
-                        ))}
-                        <p
-                            className="mt-3 text-[11px] font-light"
-                            style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
+                {/* Donate CTA — clicking also triggers flower */}
+                <div className="mt-10 w-full space-y-3">
+                    {support.links.map((link, i) => (
+                        <a
+                            key={i}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={handleDonateClick}
+                            className="block w-full rounded-full py-5 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-shadow duration-300 hover:shadow-md text-center"
+                            style={{
+                                backgroundColor: 'hsl(var(--primary))',
+                                color: 'hsl(var(--primary-foreground))',
+                            }}
                         >
-                            Sichere In-App Spende
-                        </p>
-                    </div>
-                )}
+                            Spenden – {link.title}
+                        </a>
+                    ))}
+                    <p
+                        className="mt-3 text-[11px] font-light"
+                        style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
+                    >
+                        {support.description}
+                    </p>
+                </div>
             </div>
         </section>
     );

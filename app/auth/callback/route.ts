@@ -43,7 +43,10 @@ export async function GET(request: NextRequest) {
             // Setup noch nicht abgeschlossen → Setup-Seite zuerst (gilt für alle Auth-Methoden)
             const setupComplete = data.user?.user_metadata?.setup_complete;
             if (!setupComplete) {
-                return NextResponse.redirect(`${origin}/setup`);
+                const setupUrl = next !== '/dashboard'
+                    ? `${origin}/setup?next=${encodeURIComponent(next)}`
+                    : `${origin}/setup`;
+                return NextResponse.redirect(setupUrl);
             }
             // Erfolg: Weiterleitung zur Ziel-URL
             return NextResponse.redirect(`${origin}${next}`);

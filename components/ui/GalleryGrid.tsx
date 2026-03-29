@@ -2,15 +2,20 @@
 
 /**
  * @file components/ui/GalleryGrid.tsx
- * @description Masonry-Layout Galerie mit Lightbox, Upload und Favoriten-Toggle.
+ * @description Masonry-Layout Galerie mit Lightbox, Upload, Favoriten-Toggle und Paywall.
+ *
+ * Free: 10 Bilder, keine Videos.
+ * Premium (pro Memorial): unbegrenzte Bilder + Videos.
  */
 
 import type { Photo } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useCallback, useRef, useState } from 'react';
 
+const FREE_PHOTO_LIMIT = 10;
 const LONG_PRESS_MS = 700;
 
 const fadeIn = {
@@ -26,25 +31,28 @@ interface GalleryGridProps {
     photos: Photo[];
     canEdit?: boolean;
     memorialId?: string;
-    /** IDs der als Favorit markierten Fotos. */
+    memorialSlug?: string;
+    isPremium?: boolean;
     favoriteIds?: string[];
-    /** Callback wenn ein Foto favorisiert/entfavorisiert wird. */
     onToggleFavorite?: (photoId: string) => void;
-    /** Callback wenn ein neues Foto hochgeladen wurde. */
     onPhotoUploaded?: (photo: Photo) => void;
-    /** Callback wenn ein Foto gelöscht wurde. */
     onDeletePhoto?: (photoId: string) => void;
 }
 
-export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds = [], onToggleFavorite, onPhotoUploaded, onDeletePhoto }: GalleryGridProps) {
+export function GalleryGrid({ photos, canEdit = false, memorialId, memorialSlug, isPremium = false, favoriteIds = [], onToggleFavorite, onPhotoUploaded, onDeletePhoto }: GalleryGridProps) {
     const t = useTranslations('gallery');
+    const tPay = useTranslations('paywall');
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
     const [uploading, setUploading] = useState(false);
     const [pressingId, setPressingId] = useState<string | null>(null);
     const [confirmId, setConfirmId] = useState<string | null>(null);
+    const [showPaywall, setShowPaywall] = useState<'photo' | 'video' | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const longPressTriggered = useRef(false);
+
+    const atLimit = !isPremium && photos.length >= FREE_PHOTO_LIMIT;
+    const pricingUrl = memorialId ? `/pricing?memorial=${memorialId}` : '/pricing';
 
     const startPress = useCallback((photoId: string) => {
         if (!canEdit || confirmId) return;
@@ -63,9 +71,33 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
         setPressingId(null);
     }, []);
 
+    const handleUploadClick = () => {
+        if (atLimit) {
+            setShowPaywall('photo');
+            return;
+        }
+        fileInputRef.current?.click();
+    };
+
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !memorialId) return;
+
+        // Video → Paywall (nur Premium)
+        if (file.type.startsWith('video/')) {
+            if (!isPremium) {
+                setShowPaywall('video');
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                return;
+            }
+        }
+
+        // Photo limit check
+        if (!isPremium && !file.type.startsWith('video/') && photos.length >= FREE_PHOTO_LIMIT) {
+            setShowPaywall('photo');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
 
         setUploading(true);
         try {
@@ -96,7 +128,6 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
 
     return (
         <>
-            {/* Long-press animation keyframe */}
             <style>{`@keyframes longpress-fill { from { opacity: 0; } to { opacity: 1; } }`}</style>
 
             <motion.section
@@ -142,7 +173,6 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
                                         className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                                         sizes="(max-width: 768px) 50vw, 33vw"
                                     />
-                                    {/* Hover gradient overlay */}
                                     <div
                                         className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                                         style={{ background: 'linear-gradient(to top, hsl(var(--foreground) / 0.4), transparent, transparent)' }}
@@ -154,7 +184,6 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
                                         {photo.caption}
                                     </p>
 
-                                    {/* Long-press progress overlay */}
                                     {canEdit && pressingId === photo.id && (
                                         <div
                                             className="absolute inset-0 z-20 pointer-events-none"
@@ -165,7 +194,6 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
                                         />
                                     )}
 
-                                    {/* Delete confirmation overlay */}
                                     {canEdit && confirmId === photo.id && (
                                         <div
                                             className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 backdrop-blur-md"
@@ -196,7 +224,6 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
                                         </div>
                                     )}
 
-                                    {/* Favorite toggle — nur für Owner/Editor sichtbar */}
                                     {canEdit && !confirmId && (
                                         <button
                                             onClick={(e) => {
@@ -213,7 +240,6 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
                                         </button>
                                     )}
 
-                                    {/* Favorite indicator (immer sichtbar wenn markiert) */}
                                     {isFavorite && !canEdit && (
                                         <div
                                             className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full"
@@ -230,37 +256,104 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, favoriteIds =
 
                         {/* Upload-Button */}
                         {canEdit && (
-                            <motion.button
-                                variants={fadeIn}
-                                className="aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors hover:bg-foreground/5"
-                                style={{ borderColor: 'hsl(var(--border) / 0.4)', backgroundColor: 'hsl(var(--muted) / 0.1)' }}
-                                onClick={() => fileInputRef.current?.click()}
+                            <motion.div variants={fadeIn} className="break-inside-avoid pt-1">
+                            <button
+                                className="w-full flex items-center justify-center gap-2 rounded-xl py-3 px-4 transition-all duration-200 hover:shadow-md"
+                                style={{
+                                    backgroundColor: 'hsl(var(--card))',
+                                    border: '1px solid hsl(var(--border) / 0.5)',
+                                    color: 'hsl(var(--muted-foreground))',
+                                }}
+                                onClick={handleUploadClick}
                                 disabled={uploading}
                             >
                                 {uploading ? (
-                                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }} />
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                                 ) : (
-                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                     </svg>
                                 )}
-                                <span className="text-[10px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>
+                                <span className="text-xs font-light">
                                     {uploading ? t('uploading') : t('add')}
                                 </span>
-                            </motion.button>
+                                {!isPremium && (
+                                    <span className="text-[10px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>
+                                        {photos.length}/{FREE_PHOTO_LIMIT}
+                                    </span>
+                                )}
+                            </button>
+                            </motion.div>
                         )}
                     </div>
                 )}
 
-                {/* Hidden file input */}
+                {/* Hidden file input — accepts images + videos */}
                 <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm"
                     className="hidden"
                     onChange={handleUpload}
                 />
             </motion.section>
+
+            {/* Paywall Overlay */}
+            <AnimatePresence>
+                {showPaywall && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+                        style={{ backgroundColor: 'hsl(var(--background) / 0.7)' }}
+                        onClick={() => setShowPaywall(null)}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                            className="w-full max-w-sm rounded-2xl p-8 shadow-xl text-center space-y-4"
+                            style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div
+                                className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
+                                style={{ backgroundColor: 'hsl(var(--primary) / 0.1)' }}
+                            >
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--primary))' }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+                                </svg>
+                            </div>
+
+                            <h3 className="text-lg font-medium tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
+                                {showPaywall === 'video' ? tPay('videoUpload') : tPay('photoLimit')}
+                            </h3>
+                            <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                {tPay('upgradeHint')}
+                            </p>
+
+                            <div className="flex flex-col gap-2 pt-2">
+                                <Link
+                                    href={pricingUrl}
+                                    className="w-full rounded-full py-3 text-xs font-normal uppercase tracking-[0.2em] text-center shadow-sm transition-shadow duration-300 hover:shadow-md"
+                                    style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
+                                >
+                                    {tPay('upgradeCta')}
+                                </Link>
+                                <button
+                                    onClick={() => setShowPaywall(null)}
+                                    className="text-xs font-light transition-colors"
+                                    style={{ color: 'hsl(var(--muted-foreground))' }}
+                                >
+                                    {t('deleteCancel')}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Lightbox */}
             <AnimatePresence>

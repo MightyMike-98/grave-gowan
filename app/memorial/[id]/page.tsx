@@ -81,8 +81,9 @@ async function loadMemorialWithRole(slug: string): Promise<{
     photos: Photo[];
     isAuthenticated: boolean;
     isSaved: boolean;
+    userName: string | null;
 }> {
-    if (slug === 'demo') return { memorial: DUMMY_MEMORIAL, role: 'anonymous', photos: DUMMY_MEMORIAL.photos, isAuthenticated: false, isSaved: false };
+    if (slug === 'demo') return { memorial: DUMMY_MEMORIAL, role: 'anonymous', photos: DUMMY_MEMORIAL.photos, isAuthenticated: false, isSaved: false, userName: null };
 
     try {
         const supabase = await createSupabaseServerClient();
@@ -130,36 +131,33 @@ async function loadMemorialWithRole(slug: string): Promise<{
         const { data: { user } } = await supabase.auth.getUser();
         let role: UserRole = 'anonymous';
         let isSaved = false;
+        const userName = (user?.user_metadata?.full_name as string) ?? null;
 
         if (user) {
-            // Eingeloggter User → Rolle aus DB lesen
-            try {
-                const memberRepo = new SupabaseMemberRepository(supabase);
-                const dbRole = await memberRepo.getUserRole(domain.id, user.id);
-                role = dbRole ?? 'anonymous';
-            } catch (roleErr) {
-                console.warn('[MemorialPage] Could not load member role:', roleErr);
-            }
-
-            // Check if saved (viewer in memorial_members)
-            if (role === 'anonymous') {
+            // Owner direkt über memorials.owner_id erkennen (zuverlässiger als memorial_members)
+            if (domain.ownerId === user.id) {
+                role = 'owner';
+            } else {
+                // Eingeloggter User → Rolle aus memorial_members lesen
                 try {
-                    const { data: viewerRow } = await supabase
-                        .from('memorial_members')
-                        .select('id')
-                        .eq('user_id', user.id)
-                        .eq('memorial_id', domain.id)
-                        .eq('role', 'viewer')
-                        .maybeSingle();
-                    isSaved = !!viewerRow;
-                } catch { /* ignore */ }
+                    const memberRepo = new SupabaseMemberRepository(supabase);
+                    const dbRole = await memberRepo.getUserRole(domain.id, user.id);
+                    role = dbRole ?? 'anonymous';
+                } catch (roleErr) {
+                    console.warn('[MemorialPage] Could not load member role:', roleErr);
+                }
+
+                // Viewer-Rolle = Memorial ist gespeichert
+                if (role === 'viewer') {
+                    isSaved = true;
+                }
             }
         }
 
-        return { memorial: toMemorialView(domain, stories), role, photos, isAuthenticated: !!user, isSaved };
+        return { memorial: toMemorialView(domain, stories), role, photos, isAuthenticated: !!user, isSaved, userName };
     } catch (err) {
         console.error('[MemorialPage] Supabase error:', err);
-        return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false };
+        return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false, userName: null };
     }
 }
 
@@ -188,7 +186,7 @@ export async function generateMetadata({ params }: MemorialPageProps): Promise<M
  */
 export default async function MemorialPage({ params }: MemorialPageProps) {
     const { id } = await params;
-    const { memorial, role, photos, isAuthenticated, isSaved } = await loadMemorialWithRole(id);
+    const { memorial, role, photos, isAuthenticated, isSaved, userName } = await loadMemorialWithRole(id);
 
     if (!memorial) notFound();
 
@@ -196,7 +194,7 @@ export default async function MemorialPage({ params }: MemorialPageProps) {
 
     return (
         <div className="min-h-screen relative pb-20">
-            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} initialPhotos={photos} isAuthenticated={isAuthenticated} initialSaved={isSaved} />
+            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} initialPhotos={photos} isAuthenticated={isAuthenticated} initialSaved={isSaved} userName={userName} />
 
             <footer className="pb-10 pt-10 flex flex-col items-center gap-2">
                 <p className="text-xs uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>Created by Family</p>
@@ -205,7 +203,7 @@ export default async function MemorialPage({ params }: MemorialPageProps) {
                 </Link>
             </footer>
 
-            {!canEdit && memorial.id !== 'demo' && <RequestWidget memorialId={memorial.id} memorialSlug={id} isAuthenticated={isAuthenticated} />}
+            {!canEdit && memorial.id !== 'demo' && <RequestWidget memorialId={memorial.id} memorialSlug={id} isAuthenticated={isAuthenticated} userName={userName} />}
         </div>
     );
 }

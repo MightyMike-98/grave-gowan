@@ -54,7 +54,7 @@ export async function signInWithGoogle(next?: string): Promise<{ error: string |
  * @param password - Das gewählte Passwort (min. 6 Zeichen).
  * @returns Fehler-Objekt oder null bei Erfolg.
  */
-export async function signUpWithEmail(email: string, password: string): Promise<{ error: string | null }> {
+export async function signUpWithEmail(email: string, password: string, next?: string): Promise<{ error: string | null }> {
     if (!email || !email.includes('@')) {
         return { error: 'Please enter a valid email address.' };
     }
@@ -63,11 +63,14 @@ export async function signUpWithEmail(email: string, password: string): Promise<
     }
 
     const supabase = createSupabaseBrowserClient();
+    const redirectTo = next
+        ? `${APP_URL}/auth/callback?next=${encodeURIComponent(next)}`
+        : `${APP_URL}/auth/callback`;
     const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
         options: {
-            emailRedirectTo: `${APP_URL}/auth/callback`,
+            emailRedirectTo: redirectTo,
         },
     });
     if (error) return { error: error.message };

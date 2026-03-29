@@ -12,14 +12,14 @@ interface RequestWidgetProps {
     memorialId?: string;
     memorialSlug?: string;
     isAuthenticated?: boolean;
+    userName?: string | null;
 }
 
-export function RequestWidget({ memorialId, memorialSlug, isAuthenticated = false }: RequestWidgetProps) {
+export function RequestWidget({ memorialId, memorialSlug, isAuthenticated = false, userName }: RequestWidgetProps) {
     const t = useTranslations('request');
     const [open, setOpen] = useState(false);
     const [showAuthHint, setShowAuthHint] = useState(false);
     const [category, setCategory] = useState<string>(categories[0]);
-    const [authorName, setAuthorName] = useState('');
     const [message, setMessage] = useState('');
     const [image, setImage] = useState<File | null>(null);
     const [sending, setSending] = useState(false);
@@ -27,13 +27,13 @@ export function RequestWidget({ memorialId, memorialSlug, isAuthenticated = fals
     const fileRef = useRef<HTMLInputElement>(null);
 
     const handleSend = async () => {
-        if (!message.trim() || !authorName.trim() || !memorialId) return;
+        if (!message.trim() || !userName || !memorialId) return;
 
         setSending(true);
         try {
             const result = await submitVisitorRequest(
                 memorialId,
-                authorName.trim(),
+                userName,
                 category,
                 message.trim(),
                 image ?? undefined,
@@ -48,7 +48,6 @@ export function RequestWidget({ memorialId, memorialSlug, isAuthenticated = fals
                 setSent(false);
                 setOpen(false);
                 setMessage('');
-                setAuthorName('');
                 setImage(null);
                 setCategory(categories[0]);
             }, 2000);
@@ -62,7 +61,6 @@ export function RequestWidget({ memorialId, memorialSlug, isAuthenticated = fals
     const reset = () => {
         setOpen(false);
         setMessage('');
-        setAuthorName('');
         setImage(null);
         setCategory(categories[0]);
     };
@@ -143,7 +141,9 @@ export function RequestWidget({ memorialId, memorialSlug, isAuthenticated = fals
                         >
                             {sent ? (
                                 <div className="flex flex-col items-center justify-center py-10 px-6 text-center space-y-2">
-                                    <span className="text-3xl">✅</span>
+                                    <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--foreground) / 0.5)' }}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                    </svg>
                                     <h3 className="text-base tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>{t('sent')}</h3>
                                     <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
                                         {t('sentSubtext')}
@@ -168,25 +168,6 @@ export function RequestWidget({ memorialId, memorialSlug, isAuthenticated = fals
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                             </svg>
                                         </button>
-                                    </div>
-
-                                    {/* Author name */}
-                                    <div className="space-y-1.5">
-                                        <label className="text-[11px] font-medium uppercase tracking-[0.1em]" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                            {t('yourName')}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={authorName}
-                                            onChange={(e) => setAuthorName(e.target.value)}
-                                            placeholder={t('namePlaceholder')}
-                                            className="w-full rounded-lg border px-3 py-2 text-xs font-light focus:outline-none focus:ring-1"
-                                            style={{
-                                                backgroundColor: 'hsl(var(--muted) / 0.15)',
-                                                borderColor: 'hsl(var(--border) / 0.4)',
-                                                color: 'hsl(var(--foreground))',
-                                            }}
-                                        />
                                     </div>
 
                                     {/* Category pills */}
@@ -265,7 +246,7 @@ export function RequestWidget({ memorialId, memorialSlug, isAuthenticated = fals
                                     {/* Send */}
                                     <button
                                         onClick={handleSend}
-                                        disabled={sending || !message.trim() || !authorName.trim()}
+                                        disabled={sending || !message.trim()}
                                         className="w-full flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-light tracking-wider transition-colors disabled:opacity-40"
                                         style={{
                                             backgroundColor: 'hsl(var(--foreground))',
