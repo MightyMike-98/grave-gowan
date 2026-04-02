@@ -10,11 +10,11 @@ import type { Memorial, Memory } from './index';
 
 /** Felder, die beim Erstellen eines neuen Memorials angegeben werden müssen/können. */
 export type CreateMemorialInput = Pick<Memorial, 'name' | 'ownerId' | 'slug' | 'theme' | 'isPublic'> &
-    Partial<Pick<Memorial, 'bio' | 'quote' | 'coverUrl' | 'portraitUrl' | 'dateOfBirth' | 'dateOfDeath' | 'timeline' | 'supportTitle' | 'supportUrl' | 'supportDesc'>>;
+    Partial<Pick<Memorial, 'bio' | 'quote' | 'coverUrl' | 'portraitUrl' | 'dateOfBirth' | 'dateOfDeath' | 'timeline' | 'supportTitle' | 'supportUrl' | 'supportDesc' | 'country'>>;
 
 /** Felder, die beim Aktualisieren eines Memorials geändert werden können. Alle optional. */
 export type UpdateMemorialInput = Partial<
-    Pick<Memorial, 'name' | 'slug' | 'bio' | 'quote' | 'coverUrl' | 'portraitUrl' | 'dateOfBirth' | 'dateOfDeath' | 'theme' | 'isPublic' | 'timeline' | 'supportTitle' | 'supportUrl' | 'supportDesc'>
+    Pick<Memorial, 'name' | 'slug' | 'bio' | 'quote' | 'coverUrl' | 'portraitUrl' | 'dateOfBirth' | 'dateOfDeath' | 'theme' | 'isPublic' | 'timeline' | 'supportTitle' | 'supportUrl' | 'supportDesc' | 'country'>
 >;
 
 /** Felder, die beim Erstellen einer Erinnerung angegeben werden müssen/können. */
@@ -31,4 +31,6 @@ export interface CreateGalleryPhotoInput {
     url: string;
     /** Optionale Bildunterschrift. */
     caption?: string;
+    /** Dateigröße in Bytes. */
+    fileSize?: number;
 }

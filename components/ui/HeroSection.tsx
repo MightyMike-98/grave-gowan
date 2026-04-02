@@ -14,6 +14,7 @@ import type { MemorialView } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Flame } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
@@ -50,14 +51,15 @@ function CandleWidget({ memorialId, initialCount }: { memorialId: string; initia
                     boxShadow: lit ? '0 0 30px 8px rgba(251,191,36,0.25)' : 'none',
                 }}
             >
-                <span
-                    className="text-2xl transition-all duration-500"
-                    style={{
-                        filter: lit ? 'drop-shadow(0 0 8px rgba(251,191,36,0.6))' : 'none',
-                    }}
-                >
-                    {lit ? '🔥' : '🕯️'}
-                </span>
+                <Flame
+                    className={`h-7 w-7 transition-all duration-500 ${
+                        lit
+                            ? 'text-amber-500 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                            : 'text-muted-foreground/40 group-hover:text-muted-foreground'
+                    }`}
+                    strokeWidth={1.5}
+                    fill={lit ? 'currentColor' : 'none'}
+                />
                 {lit && (
                     <motion.div
                         initial={{ scale: 0, opacity: 0 }}
@@ -183,6 +185,17 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
                 <p className="mt-2 text-lg font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     {memorial.dates}
                 </p>
+
+                {/* Country */}
+                {memorial.country && (
+                    <p className="mt-1.5 flex items-center gap-1 text-xs font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.7)' }}>
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                        </svg>
+                        {memorial.country}
+                    </p>
+                )}
 
                 {/* "In Loving Memory" */}
                 <p className="mt-1 text-[11px] font-light uppercase tracking-[0.35em]" style={{ color: 'hsl(var(--muted-foreground) / 0.7)' }}>

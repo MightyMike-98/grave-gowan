@@ -115,6 +115,8 @@ export interface MemorialView {
     facts: string[];
     timeline: TimelineEvent[];
     support?: SupportSection;
+    /** Herkunftsland der verstorbenen Person. */
+    country?: string;
     candleCount: number;
     flowerCount: number;
 }

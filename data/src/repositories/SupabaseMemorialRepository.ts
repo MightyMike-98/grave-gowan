@@ -37,6 +37,7 @@ function mapRow(row: any): Memorial {
         supportTitle: row.support_title ?? undefined,
         supportUrl: row.support_url ?? undefined,
         supportDesc: row.support_desc ?? undefined,
+        country: row.country ?? undefined,
         candleCount: row.candle_count ?? 0,
         flowerCount: row.flower_count ?? 0,
         createdAt: row.created_at,
@@ -111,6 +112,7 @@ export class SupabaseMemorialRepository implements MemorialRepository {
                 support_title: input.supportTitle ?? null,
                 support_url: input.supportUrl ?? null,
                 support_desc: input.supportDesc ?? null,
+                country: input.country ?? null,
             })
             .select()
             .single();
@@ -136,6 +138,7 @@ export class SupabaseMemorialRepository implements MemorialRepository {
                 ...(input.supportTitle !== undefined && { support_title: input.supportTitle }),
                 ...(input.supportUrl !== undefined && { support_url: input.supportUrl }),
                 ...(input.supportDesc !== undefined && { support_desc: input.supportDesc }),
+                ...(input.country !== undefined && { country: input.country }),
             })
             .eq('id', id)
             .select()

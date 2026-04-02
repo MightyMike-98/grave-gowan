@@ -137,8 +137,10 @@
   "gallery": {
     "heading": "Gallery",
     "noPhotos": "No photos yet.",
-    "deleteConfirm": "Remove photo?",
-    "deleteYes": "Remove",
+    "edit": "Edit",
+    "done": "Done",
+    "deleteConfirm": "Delete photo?",
+    "deleteYes": "Delete",
     "deleteCancel": "Cancel",
     "editHint": "Mark favourites with ⭐ for Highlights. Long-press to delete.",
     "uploading": "Loading...",
@@ -183,6 +185,7 @@
     "fieldDod": "Date of Death",
     "fieldBio": "Biography",
     "fieldQuote": "Quote",
+    "fieldCountry": "Country of origin",
     "fieldCauseTitle": "Cause Title",
     "fieldCauseUrl": "Donation URL",
     "fieldCauseDesc": "Short Description",
@@ -192,6 +195,7 @@
     "placeholderName": "e.g., Sarah Jenkins",
     "placeholderBio": "Share a brief memory...",
     "placeholderQuote": "e.g., In the end, it's not the years in your life that count...",
+    "placeholderCountry": "e.g., USA",
     "placeholderCauseTitle": "e.g., Cancer Research",
     "placeholderCauseUrl": "https://...",
     "placeholderCauseDesc": "Why is this cause important?",
@@ -286,6 +290,7 @@
   },
   "paywall": {
     "photoLimit": "You've reached the 10 photo limit.",
+    "sizeLimit": "You've reached the 30 MB storage limit.",
     "videoUpload": "Videos are a premium feature.",
     "upgradeHint": "Upgrade to Premium for unlimited photos, videos and more.",
     "upgradeCta": "Unlock Premium"

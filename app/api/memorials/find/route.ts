@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         if (q) {
             const { data: publicResults } = await supabase
                 .from('memorials')
-                .select('slug, name, portrait_url, date_of_birth, date_of_death')
+                .select('slug, name, portrait_url, date_of_birth, date_of_death, country')
                 .eq('is_public', true)
                 .ilike('name', `%${q}%`)
                 .limit(10);
@@ -75,6 +75,7 @@ export async function GET(request: NextRequest) {
                         portraitUrl: m.portrait_url,
                         dateOfBirth: m.date_of_birth,
                         dateOfDeath: m.date_of_death,
+                        country: m.country,
                     })),
                 });
             }

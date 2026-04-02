@@ -42,6 +42,7 @@ function CreateMemorialForm() {
     const [dateOfDeath, setDateOfDeath] = useState('');
     const [bio, setBio] = useState('');
     const [quote, setQuote] = useState('');
+    const [country, setCountry] = useState('');
     const [portraitUrl, setPortraitUrl] = useState('');
     const [userId, setUserId] = useState<string | null>(null);
     const [existingSlug, setExistingSlug] = useState('');
@@ -54,8 +55,9 @@ function CreateMemorialForm() {
 
     const [timelineEvents, setTimelineEvents] = useState<TimelineEventDraft[]>([]);
 
-    const [galleryPhotos, setGalleryPhotos] = useState<{ id: string; url: string; favorite: boolean }[]>([]);
+    const [galleryPhotos, setGalleryPhotos] = useState<{ id: string; url: string; favorite: boolean; size?: number }[]>([]);
     const [galleryUploading, setGalleryUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     const [stories, setStories] = useState<{ id: string; author: string; text: string; date: string; favorite: boolean }[]>([]);
     const [pendingStories, setPendingStories] = useState<{ id: string; author: string; text: string; date: string }[]>([]);
@@ -82,6 +84,7 @@ function CreateMemorialForm() {
         setSupportUrl((data.support_url as string) ?? '');
         setSupportDesc((data.support_desc as string) ?? '');
         setQuote((data.quote as string) ?? '');
+        setCountry((data.country as string) ?? '');
         setIsPublic(!!(data.is_public));
         const tl = data.timeline;
         if (Array.isArray(tl)) {
@@ -107,7 +110,7 @@ function CreateMemorialForm() {
 
             supabase.from('gallery_photos').select('*').eq('memorial_id', editId).order('sort_order', { ascending: true }).order('created_at', { ascending: false })
                 .then(({ data: photos }) => {
-                    if (photos) setGalleryPhotos(photos.map((p: { id: string; url: string; is_favorite: boolean }) => ({ id: p.id, url: p.url, favorite: p.is_favorite ?? false })));
+                    if (photos) setGalleryPhotos(photos.map((p: { id: string; url: string; is_favorite: boolean; file_size?: number }) => ({ id: p.id, url: p.url, favorite: p.is_favorite ?? false, size: p.file_size ?? 0 })));
                 });
 
             supabase.from('memorial_stories').select('*').eq('memorial_id', editId).eq('status', 'approved').order('created_at', { ascending: false })
@@ -130,23 +133,41 @@ function CreateMemorialForm() {
     }, [editId]);
 
     // ── Handlers ──
-    const handleGalleryUpload = async (file: File) => {
+    const handleGalleryUpload = (file: File) => {
         if (!userId) return;
         setGalleryUploading(true);
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            if (editId) formData.append('memorialId', editId);
-            const res = await fetch('/api/photos/upload', { method: 'POST', body: formData });
-            const data = await res.json();
-            if (!res.ok) { console.error('[Create/Gallery] Upload error:', data.error); return; }
-            if (editId && data.photo) {
-                setGalleryPhotos(prev => [...prev, { id: data.photo.id, url: data.photo.url, favorite: data.photo.isFavorite ?? false }]);
-            } else if (!editId && data.url) {
-                setGalleryPhotos(prev => [...prev, { id: `temp_${Date.now()}`, url: data.url, favorite: false }]);
-            }
-        } catch (err) { console.error('[Create/Gallery] Upload failed:', err); }
-        finally { setGalleryUploading(false); }
+        setUploadProgress(0);
+
+        const formData = new FormData();
+        formData.append('file', file);
+        if (editId) formData.append('memorialId', editId);
+
+        const xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+        });
+        xhr.addEventListener('load', () => {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    if (editId && data.photo) {
+                        setGalleryPhotos(prev => [...prev, { id: data.photo.id, url: data.photo.url, favorite: data.photo.isFavorite ?? false, size: file.size }]);
+                    } else if (!editId && data.url) {
+                        setGalleryPhotos(prev => [...prev, { id: `temp_${Date.now()}`, url: data.url, favorite: false, size: file.size }]);
+                    }
+                } else {
+                    console.error('[Create/Gallery] Upload error:', data.error);
+                }
+            } catch (err) { console.error('[Create/Gallery] Parse error:', err); }
+            finally { setGalleryUploading(false); setUploadProgress(0); }
+        });
+        xhr.addEventListener('error', () => {
+            console.error('[Create/Gallery] Upload failed');
+            setGalleryUploading(false);
+            setUploadProgress(0);
+        });
+        xhr.open('POST', '/api/photos/upload');
+        xhr.send(formData);
     };
 
     const handleToggleGalleryFavorite = async (photoId: string) => {
@@ -226,7 +247,7 @@ function CreateMemorialForm() {
             if (isEditing && editId) {
                 const fields = isEditorRole
                     ? { bio: bio.trim(), quote: quote.trim() || undefined, dateOfDeath: dateOfDeath || undefined, timeline: timelineEvents.length > 0 ? timelineEvents : [], supportTitle: supportTitle || undefined, supportUrl: supportUrl || undefined, supportDesc: supportDesc || undefined }
-                    : { name: name.trim(), bio: bio.trim(), quote: quote.trim() || undefined, dateOfBirth: dateOfBirth || undefined, dateOfDeath: dateOfDeath || undefined, portraitUrl: portraitUrl || undefined, isPublic, timeline: timelineEvents.length > 0 ? timelineEvents : [], supportTitle: supportTitle || undefined, supportUrl: supportUrl || undefined, supportDesc: supportDesc || undefined };
+                    : { name: name.trim(), bio: bio.trim(), quote: quote.trim() || undefined, dateOfBirth: dateOfBirth || undefined, dateOfDeath: dateOfDeath || undefined, portraitUrl: portraitUrl || undefined, isPublic, timeline: timelineEvents.length > 0 ? timelineEvents : [], supportTitle: supportTitle || undefined, supportUrl: supportUrl || undefined, supportDesc: supportDesc || undefined, country: country.trim() || undefined };
                 await repo.update(editId, fields);
                 router.push(`/memorial/${existingSlug}`);
             } else {
@@ -236,6 +257,7 @@ function CreateMemorialForm() {
                     portraitUrl: portraitUrl || undefined, ownerId: userId!, slug: '', theme: 'classic', isPublic,
                     timeline: timelineEvents.length > 0 ? timelineEvents : undefined,
                     supportTitle: supportTitle || undefined, supportUrl: supportUrl || undefined, supportDesc: supportDesc || undefined,
+                    country: country.trim() || undefined,
                 }, repo);
 
                 const supabase = createSupabaseBrowserClient();
@@ -342,6 +364,7 @@ function CreateMemorialForm() {
                     isOwnerRole={isOwnerRole} isEditorRole={isEditorRole} isEditing={isEditing}
                     name={name} setName={setName} dateOfBirth={dateOfBirth} setDateOfBirth={setDateOfBirth}
                     dateOfDeath={dateOfDeath} setDateOfDeath={setDateOfDeath} bio={bio} setBio={setBio} quote={quote} setQuote={setQuote}
+                    country={country} setCountry={setCountry}
                 />
 
                 {/* Visibility Toggle — nur für Owner */}
@@ -387,7 +410,7 @@ function CreateMemorialForm() {
                 <TimelineEditor events={timelineEvents} onChange={setTimelineEvents} />
 
                 <GalleryEditor
-                    photos={galleryPhotos} uploading={galleryUploading}
+                    photos={galleryPhotos} uploading={galleryUploading} uploadProgress={uploadProgress}
                     memorialId={editId ?? undefined}
                     onUpload={handleGalleryUpload} onToggleFavorite={handleToggleGalleryFavorite} onDelete={handleDeletePhoto}
                 />

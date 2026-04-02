@@ -17,6 +17,8 @@ interface CoreInfoSectionProps {
     setBio: (v: string) => void;
     quote: string;
     setQuote: (v: string) => void;
+    country: string;
+    setCountry: (v: string) => void;
 }
 
 /** Formatiert ein ISO-Datum (YYYY-MM-DD) als DD.MM.YYYY */
@@ -29,7 +31,7 @@ function formatDate(iso: string) {
 
 export function CoreInfoSection({
     isOwnerRole, isEditorRole, isEditing,
-    name, setName, dateOfBirth, setDateOfBirth, dateOfDeath, setDateOfDeath, bio, setBio, quote, setQuote,
+    name, setName, dateOfBirth, setDateOfBirth, dateOfDeath, setDateOfDeath, bio, setBio, quote, setQuote, country, setCountry,
 }: CoreInfoSectionProps) {
     const t = useTranslations('create');
 
@@ -85,6 +87,17 @@ export function CoreInfoSection({
                     <input id="field-quote" type="text" value={quote} onChange={(e) => setQuote(e.target.value)} placeholder={t('placeholderQuote')} className="field-input italic" />
                 </FormField>
             )}
+
+            {/* Country — nur Owner */}
+            {isOwnerRole ? (
+                <FormField label={t('fieldCountry')} icon={isEditing ? 'edit' : undefined}>
+                    <input id="field-country" type="text" value={country} onChange={(e) => setCountry(e.target.value)} placeholder={t('placeholderCountry')} className="field-input" />
+                </FormField>
+            ) : isEditorRole && country ? (
+                <FormField label={t('fieldCountry')} icon="lock">
+                    <input type="text" value={country} disabled className="field-input opacity-70 bg-muted/20 cursor-not-allowed" />
+                </FormField>
+            ) : null}
         </section>
     );
 }

@@ -22,8 +22,11 @@ import { NextRequest, NextResponse } from 'next/server';
 /** Erlaubte Bild-Typen (MIME). */
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
-/** Maximale Dateigröße: 5 MB */
+/** Maximale Dateigröße pro Bild: 5 MB */
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+
+/** Maximale Gesamtgröße aller Fotos pro Memorial (Free Plan): 30 MB */
+const FREE_TOTAL_SIZE_BYTES = 30 * 1024 * 1024;
 
 /** Name des Supabase Storage Buckets. */
 const BUCKET = 'memorial-images';
@@ -65,6 +68,21 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Serverseitige Gesamtgröße-Prüfung (Free Plan: 30 MB)
+        if (memorialId) {
+            const { data: sizeData } = await supabase
+                .from('gallery_photos')
+                .select('file_size')
+                .eq('memorial_id', memorialId);
+            const totalUsed = (sizeData ?? []).reduce((sum: number, r: { file_size: number }) => sum + (r.file_size ?? 0), 0);
+            if (totalUsed + file.size > FREE_TOTAL_SIZE_BYTES) {
+                return NextResponse.json(
+                    { error: 'Speicherlimit von 30 MB erreicht. Upgrade auf Premium.' },
+                    { status: 400 },
+                );
+            }
+        }
+
         // Bild in Supabase Storage hochladen (mit Server-Client)
         const ext = file.name.split('.').pop() ?? 'jpg';
         const path = `${user.id}/gallery/${Date.now()}.${ext}`;
@@ -91,7 +109,7 @@ export async function POST(request: NextRequest) {
         // Datensatz in DB anlegen (via Use Case + Repository)
         const photoRepo = new SupabasePhotoRepository(supabase);
         const photo = await addGalleryPhoto(
-            { memorialId, uploadedBy: user.id, url, caption: caption ?? undefined },
+            { memorialId, uploadedBy: user.id, url, caption: caption ?? undefined, fileSize: file.size },
             photoRepo,
         );
 

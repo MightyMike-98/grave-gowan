@@ -78,6 +78,7 @@ export class SupabasePhotoRepository implements PhotoRepository {
                 uploaded_by: input.uploadedBy,
                 url: input.url,
                 caption: input.caption ?? null,
+                file_size: input.fileSize ?? 0,
             })
             .select()
             .single();

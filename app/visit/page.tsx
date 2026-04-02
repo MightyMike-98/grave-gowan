@@ -22,17 +22,9 @@ interface SearchResult {
     portraitUrl?: string;
     dateOfBirth?: string;
     dateOfDeath?: string;
+    country?: string;
 }
 
-const fadeIn = {
-    hidden: { opacity: 0, y: 12 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } },
-    exit: { opacity: 0, y: -8, transition: { duration: 0.2 } },
-};
-
-const stagger = {
-    visible: { transition: { staggerChildren: 0.08 } },
-};
 
 function formatDates(birth?: string, death?: string): string | null {
     const b = birth ? new Date(birth).getFullYear() : null;
@@ -132,56 +124,68 @@ export default function VisitPage() {
                     {results.length > 0 && (
                         <motion.div
                             key="results"
-                            initial="hidden"
-                            animate="visible"
-                            exit="exit"
-                            variants={stagger}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{ duration: 0.3 }}
                             className="space-y-2 text-left"
                         >
-                            {results.map((r) => {
+                            {results.map((r, i) => {
                                 const dates = formatDates(r.dateOfBirth, r.dateOfDeath);
                                 return (
-                                    <motion.button
+                                    <motion.div
                                         key={r.slug}
-                                        variants={fadeIn}
-                                        type="button"
-                                        onClick={() => router.push(`/memorial/${r.slug}`)}
-                                        className="flex w-full items-center gap-4 rounded-xl px-4 py-3.5 shadow-sm transition-all duration-200 hover:shadow-md"
-                                        style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.3)' }}
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.07, duration: 0.35, ease: 'easeOut' }}
                                     >
-                                        {/* Portrait */}
-                                        {r.portraitUrl ? (
-                                            <div className="relative h-11 w-11 shrink-0 rounded-full overflow-hidden shadow-sm">
-                                                <Image src={r.portraitUrl} alt={r.name} fill className="object-cover" sizes="44px" />
-                                            </div>
-                                        ) : (
-                                            <div
-                                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full shadow-sm"
-                                                style={{ backgroundColor: 'hsl(var(--muted) / 0.4)' }}
-                                            >
-                                                <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                                    {r.name.charAt(0)}
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {/* Name + Dates */}
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>
-                                                {r.name}
-                                            </p>
-                                            {dates && (
-                                                <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                                    {dates}
-                                                </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => router.push(`/memorial/${r.slug}`)}
+                                            className="group flex w-full items-center gap-4 rounded-2xl border px-5 py-4 shadow-sm transition-all duration-300 hover:shadow-md"
+                                            style={{
+                                                backgroundColor: 'hsl(var(--card))',
+                                                borderColor: 'hsl(var(--border) / 0.4)',
+                                            }}
+                                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'hsl(var(--border) / 0.8)'; }}
+                                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'hsl(var(--border) / 0.4)'; }}
+                                        >
+                                            {/* Portrait with hover zoom */}
+                                            {r.portraitUrl ? (
+                                                <div className="relative h-10 w-10 shrink-0 rounded-full overflow-hidden transition-transform duration-300 group-hover:scale-110" style={{ backgroundColor: 'hsl(var(--muted))' }}>
+                                                    <Image src={r.portraitUrl} alt={r.name} fill className="object-cover" sizes="40px" />
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-transform duration-300 group-hover:scale-110"
+                                                    style={{ backgroundColor: 'hsl(var(--muted))' }}
+                                                >
+                                                    <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                                        {r.name.charAt(0)}
+                                                    </span>
+                                                </div>
                                             )}
-                                        </div>
 
-                                        {/* Arrow */}
-                                        <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--muted-foreground) / 0.3)' }}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                                        </svg>
-                                    </motion.button>
+                                            {/* Name + Dates */}
+                                            <div className="flex-1 min-w-0 text-left">
+                                                <p className="text-sm font-medium truncate" style={{ color: 'hsl(var(--foreground))' }}>
+                                                    {r.name}
+                                                </p>
+                                                {dates && (
+                                                    <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                                        {dates}
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* Country */}
+                                            {r.country && (
+                                                <span className="text-[11px] font-light shrink-0" style={{ color: 'hsl(var(--muted-foreground) / 0.7)' }}>
+                                                    {r.country}
+                                                </span>
+                                            )}
+                                        </button>
+                                    </motion.div>
                                 );
                             })}
                         </motion.div>

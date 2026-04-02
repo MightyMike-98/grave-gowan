@@ -137,8 +137,10 @@
   "gallery": {
     "heading": "Galerie",
     "noPhotos": "Noch keine Fotos.",
-    "deleteConfirm": "Foto entfernen?",
-    "deleteYes": "Entfernen",
+    "edit": "Bearbeiten",
+    "done": "Fertig",
+    "deleteConfirm": "Bild löschen?",
+    "deleteYes": "Löschen",
     "deleteCancel": "Abbrechen",
     "editHint": "Markiere Favoriten mit ⭐ für die Highlights. Gedrückt halten zum Löschen.",
     "uploading": "Lädt...",
@@ -183,6 +185,7 @@
     "fieldDod": "Sterbedatum",
     "fieldBio": "Biografie",
     "fieldQuote": "Zitat",
+    "fieldCountry": "Herkunftsland",
     "fieldCauseTitle": "Spendenorganisation",
     "fieldCauseUrl": "Spenden-URL",
     "fieldCauseDesc": "Kurze Beschreibung",
@@ -192,6 +195,7 @@
     "placeholderName": "z. B. Sarah Jenkins",
     "placeholderBio": "Eine kurze Erinnerung...",
     "placeholderQuote": "z. B. Am Ende zählen nicht die Jahre in deinem Leben...",
+    "placeholderCountry": "z. B. Deutschland",
     "placeholderCauseTitle": "z. B. Krebsforschung",
     "placeholderCauseUrl": "https://...",
     "placeholderCauseDesc": "Warum ist diese Sache wichtig?",
@@ -286,6 +290,7 @@
   },
   "paywall": {
     "photoLimit": "Du hast das Limit von 10 Fotos erreicht.",
+    "sizeLimit": "Du hast das Speicherlimit von 30 MB erreicht.",
     "videoUpload": "Videos sind ein Premium-Feature.",
     "upgradeHint": "Upgrade auf Premium für unbegrenzte Fotos, Videos und mehr.",
     "upgradeCta": "Premium freischalten"

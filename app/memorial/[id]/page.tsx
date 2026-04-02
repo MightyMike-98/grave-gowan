@@ -67,6 +67,7 @@ function toMemorialView(d: DomainMemorial, stories: MemorialView['stories'] = []
             description: d.supportDesc ?? '',
             links: [{ title: d.supportTitle, url: d.supportUrl ?? '' }]
         } : undefined,
+        country: d.country,
         candleCount: d.candleCount ?? 0,
         flowerCount: d.flowerCount ?? 0,
     };
