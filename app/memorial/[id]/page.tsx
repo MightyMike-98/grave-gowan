@@ -90,7 +90,7 @@ async function loadMemorialWithRole(slug: string): Promise<{
         const supabase = await createSupabaseServerClient();
         const repo = new SupabaseMemorialRepository(supabase);
         const domain = await getMemorialBySlug(slug, repo);
-        if (!domain) return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false };
+        if (!domain) return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false, userName: null };
 
         // Galerie-Fotos laden
         let photos: Photo[] = [];
