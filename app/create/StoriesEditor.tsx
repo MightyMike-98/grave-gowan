@@ -67,7 +67,7 @@ export function StoriesEditor({ stories, pendingStories, onAddStory, onApprove, 
             <div className="mb-8 h-px" style={{ backgroundColor: 'hsl(var(--border) / 0.4)' }} />
             <style>{`@keyframes longpress-fill { from { opacity: 0; } to { opacity: 1; } }`}</style>
             <h2 className="text-xl tracking-tight">
-                {t('sectionStories')} <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>({t('storiesGuestbook')})</span>
+                {t('storiesGuestbook')}
             </h2>
             <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 {t('storiesDescription')}

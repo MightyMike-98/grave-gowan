@@ -361,7 +361,7 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
 
             <div>
                 <h2 className="text-xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
-                    Stories <span className="text-base font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>({t('guestbook')})</span>
+                    {t('guestbook')}
                 </h2>
                 {canEdit && (
                     <p className="text-sm font-light mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>

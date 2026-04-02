@@ -41,9 +41,14 @@ export function SupportSection({ support, onDonate, memorialId, initialFlowerCou
     return (
         <section aria-label="Support & Legacy" className="py-12">
             <div className="mx-auto flex max-w-md flex-col items-center text-center">
-                {/* Flower indicator — lights up when donate is clicked */}
-                <div
-                    className="relative flex h-20 w-20 items-center justify-center rounded-full transition-all duration-500"
+                {/* Flower indicator — clicks open donate link + trigger flower */}
+                <button
+                    type="button"
+                    onClick={() => {
+                        handleDonateClick();
+                        if (support?.links[0]?.url) window.open(support.links[0].url, '_blank', 'noopener,noreferrer');
+                    }}
+                    className="relative flex h-20 w-20 items-center justify-center rounded-full transition-all duration-500 cursor-pointer"
                     style={{
                         backgroundColor: flowerLaid
                             ? 'rgba(244,63,94,0.08)'
@@ -65,7 +70,7 @@ export function SupportSection({ support, onDonate, memorialId, initialFlowerCou
                             style={{ backgroundColor: 'rgba(244,63,94,0.08)' }}
                         />
                     )}
-                </div>
+                </button>
 
                 <h2 className="mt-5 text-2xl tracking-tight">
                     {flowerLaid ? t('flowerLaid') : t('layFlower')}
@@ -92,7 +97,7 @@ export function SupportSection({ support, onDonate, memorialId, initialFlowerCou
                                 color: 'hsl(var(--primary-foreground))',
                             }}
                         >
-                            Spenden – {link.title}
+                            {t('donate', { org: link.title })}
                         </a>
                     ))}
                     <p

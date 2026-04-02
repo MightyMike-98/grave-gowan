@@ -131,7 +131,7 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
                 >
                     ← <span className="hidden sm:inline">{isAuthenticated ? t('backToDashboard') : t('backToHome')}</span>
                 </Link>
-                {!canEdit && <SaveButton memorialId={memorial.id} memorialSlug={memorialSlug} isAuthenticated={isAuthenticated} initialSaved={initialSaved} />}
+                {!canEdit && memorial.id !== 'demo' && <SaveButton memorialId={memorial.id} memorialSlug={memorialSlug} isAuthenticated={isAuthenticated} initialSaved={initialSaved} />}
             </div>
 
             {/* Main content */}
@@ -248,7 +248,7 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.3 }}
-                            className="relative w-full max-w-2xl aspect-square sm:aspect-auto sm:h-[80vh] rounded-2xl overflow-hidden shadow-2xl"
+                            className="relative w-full max-w-5xl h-[85vh] rounded-2xl overflow-hidden shadow-2xl"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <Image

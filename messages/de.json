@@ -38,7 +38,7 @@
     "noLink": "Keinen Link?",
     "viewDemo": "Demo-Gedenkseite ansehen",
     "back": "← Zurück",
-    "searchPlaceholder": "Öffentliche Gedenkseiten suchen...",
+    "searchPlaceholder": "Öffentliche Gedenkseiten durchsuchen...",
     "privateHint": "Private Gedenkseiten sind nur über geteilte Links erreichbar.",
     "errorRequired": "Bitte gib einen Link oder Namen ein.",
     "errorNotFound": "Keine Gedenkseite gefunden. Bitte prüfe den Link.",
@@ -91,7 +91,7 @@
   },
   "tabs": {
     "highlights": "Highlights",
-    "about": "Über",
+    "about": "Leben",
     "timeline": "Chronik",
     "gallery": "Galerie",
     "stories": "Geschichten",
@@ -294,5 +294,27 @@
     "videoUpload": "Videos sind ein Premium-Feature.",
     "upgradeHint": "Upgrade auf Premium für unbegrenzte Fotos, Videos und mehr.",
     "upgradeCta": "Premium freischalten"
+  },
+  "demo": {
+    "bio": "Sarah war eine liebevolle Mutter, Großmutter und Biologin, die ihr Leben dem Schutz von Feuchtgebieten widmete. Ihre Sanftheit und Weisheit berührten jeden, dem sie begegnete.",
+    "quote": "Die Natur hat keine Eile, und doch wird alles vollendet.",
+    "story1Author": "Emily (Tochter)",
+    "story1Date": "24. Jan. 2024",
+    "story1Text": "Mama liebte den Regen. Sie sagte immer, die Erde holt dabei tief Luft.",
+    "story2Author": "Mark T.",
+    "story2Date": "22. Jan. 2024",
+    "story2Text": "Ich habe 20 Jahre mit Sarah zusammengearbeitet. Ihre Geduld war unvergleichlich.",
+    "photo1Caption": "Spaziergang im Olympic National Park, 1985",
+    "photo2Caption": "Ihr Lieblingsblick ins Tal",
+    "timeline1Title": "Geboren",
+    "timeline1Desc": "Geboren in Portland, Oregon, als Tochter von Robert und Mary Williams.",
+    "timeline2Title": "Universitätsabschluss",
+    "timeline2Desc": "Abschluss in Biologie an der Universität von Washington.",
+    "timeline3Title": "Heirat mit David",
+    "timeline3Desc": "Lernte David auf einer Forschungskonferenz kennen. Zwei Jahre später die Hochzeit.",
+    "timeline4Title": "Wichtige Forschungsarbeit veröffentlicht",
+    "timeline4Desc": "Ihre Arbeit über lokale Feuchtgebiete wurde im Nature-Magazin vorgestellt.",
+    "supportDesc": "Sarah widmete ihr Leben dem Naturschutz. Anstelle von Blumen bittet die Familie um Spenden für ihre Lieblingsorganisationen.",
+    "donateButton": "Spenden – {title}"
   }
 }

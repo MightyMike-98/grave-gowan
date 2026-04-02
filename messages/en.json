@@ -91,7 +91,7 @@
   },
   "tabs": {
     "highlights": "Highlights",
-    "about": "About",
+    "about": "Life",
     "timeline": "Timeline",
     "gallery": "Gallery",
     "stories": "Stories",
@@ -294,5 +294,27 @@
     "videoUpload": "Videos are a premium feature.",
     "upgradeHint": "Upgrade to Premium for unlimited photos, videos and more.",
     "upgradeCta": "Unlock Premium"
+  },
+  "demo": {
+    "bio": "Sarah was a loving mother, grandmother, and biological researcher who dedicated her life to preserving wetland ecosystems. Her gentleness and wisdom touched everyone she met.",
+    "quote": "Nature does not hurry, yet everything is accomplished.",
+    "story1Author": "Emily (daughter)",
+    "story1Date": "Jan 24, 2024",
+    "story1Text": "Mom always loved the rain. She used to say it was the earth taking a deep breath.",
+    "story2Author": "Mark T.",
+    "story2Date": "Jan 22, 2024",
+    "story2Text": "I worked with Sarah for 20 years. Her patience was unmatched.",
+    "photo1Caption": "Walking in the Olympic National Park, 1985",
+    "photo2Caption": "Her favorite view of the valley",
+    "timeline1Title": "Born",
+    "timeline1Desc": "Born in Portland, Oregon to Robert and Mary Williams.",
+    "timeline2Title": "Graduated University",
+    "timeline2Desc": "Earned degree in Biology from University of Washington.",
+    "timeline3Title": "Married David",
+    "timeline3Desc": "Met David at a research conference. Married two years later.",
+    "timeline4Title": "Published Key Research",
+    "timeline4Desc": "Her work on local wetlands was featured in Nature magazine.",
+    "supportDesc": "Sarah dedicated her life to conservation. In lieu of flowers, the family suggests supporting her favorite causes.",
+    "donateButton": "Donate – {title}"
   }
 }

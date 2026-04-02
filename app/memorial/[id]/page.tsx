@@ -16,7 +16,6 @@
 
 import { MemorialTabs } from '@/components/ui/MemorialTabs';
 import { RequestWidget } from '@/components/ui/RequestWidget';
-import { DUMMY_MEMORIAL } from '@/lib/mock-data';
 import type { MemorialView, Photo } from '@/types';
 import type { Memorial as DomainMemorial } from '@core/types/index';
 import { getGalleryPhotos } from '@core/use-cases/getGalleryPhotos';
@@ -26,6 +25,7 @@ import { SupabaseMemorialRepository } from '@data/repositories/SupabaseMemorialR
 import { SupabasePhotoRepository } from '@data/repositories/SupabasePhotoRepository';
 import { createSupabaseServerClient } from '@data/server-client';
 import type { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -84,7 +84,7 @@ async function loadMemorialWithRole(slug: string): Promise<{
     isSaved: boolean;
     userName: string | null;
 }> {
-    if (slug === 'demo') return { memorial: DUMMY_MEMORIAL, role: 'anonymous', photos: DUMMY_MEMORIAL.photos, isAuthenticated: false, isSaved: false, userName: null };
+    if (slug === 'demo') return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false, userName: null };
 
     try {
         const supabase = await createSupabaseServerClient();
@@ -187,7 +187,48 @@ export async function generateMetadata({ params }: MemorialPageProps): Promise<M
  */
 export default async function MemorialPage({ params }: MemorialPageProps) {
     const { id } = await params;
-    const { memorial, role, photos, isAuthenticated, isSaved, userName } = await loadMemorialWithRole(id);
+    let { memorial, role, photos, isAuthenticated, isSaved, userName } = await loadMemorialWithRole(id);
+
+    if (id === 'demo') {
+        const td = await getTranslations('demo');
+        const demoPhotos: Photo[] = [
+            { id: '1', url: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800&auto=format&fit=crop', caption: td('photo1Caption'), isFavorite: true },
+            { id: '2', url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop', caption: td('photo2Caption'), isFavorite: true },
+            { id: '3', url: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&auto=format&fit=crop' },
+        ];
+        memorial = {
+            id: 'demo',
+            name: 'Sarah Jenkins',
+            dates: '1954 – 2024',
+            bio: td('bio'),
+            quote: td('quote'),
+            coverUrl: 'https://images.unsplash.com/photo-1444930694458-ca65243f7d1a?q=80&w=2066&auto=format&fit=crop',
+            portraitUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=688&auto=format&fit=crop',
+            theme: 'nature',
+            stories: [
+                { id: '1', author: td('story1Author'), date: td('story1Date'), text: td('story1Text'), isFavorite: true },
+                { id: '2', author: td('story2Author'), date: td('story2Date'), text: td('story2Text') },
+            ],
+            photos: demoPhotos,
+            facts: [],
+            timeline: [
+                { id: '1', year: '1954', title: td('timeline1Title'), description: td('timeline1Desc') },
+                { id: '2', year: '1976', title: td('timeline2Title'), description: td('timeline2Desc') },
+                { id: '3', year: '1980', title: td('timeline3Title'), description: td('timeline3Desc') },
+                { id: '4', year: '2010', title: td('timeline4Title'), description: td('timeline4Desc') },
+            ],
+            support: {
+                description: td('supportDesc'),
+                links: [
+                    { title: 'The Nature Conservancy', url: 'https://www.nature.org' },
+                    { title: 'World Wildlife Fund', url: 'https://www.worldwildlife.org' },
+                ],
+            },
+            candleCount: 24,
+            flowerCount: 17,
+        };
+        photos = demoPhotos;
+    }
 
     if (!memorial) notFound();
 
