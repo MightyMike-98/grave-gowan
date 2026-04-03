@@ -75,12 +75,14 @@ export function SupportSection({ support, onDonate, memorialId, initialFlowerCou
                 <h2 className="mt-5 text-2xl tracking-tight">
                     {flowerLaid ? t('flowerLaid') : t('layFlower')}
                 </h2>
-                <p
-                    className="mt-1.5 text-xs font-light"
-                    style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}
-                >
-                    {flowerCount === 1 ? t('flowersOne') : t('flowersMany', { count: flowerCount })}
-                </p>
+                {flowerCount > 0 && (
+                    <p
+                        className="mt-1.5 text-xs font-light"
+                        style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}
+                    >
+                        {flowerCount === 1 ? t('flowersOne') : t('flowersMany', { count: flowerCount })}
+                    </p>
+                )}
 
                 {/* Donate CTA — clicking also triggers flower */}
                 <div className="mt-10 w-full space-y-3">

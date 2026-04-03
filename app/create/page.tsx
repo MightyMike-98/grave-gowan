@@ -132,6 +132,17 @@ function CreateMemorialForm() {
         }
     }, [editId]);
 
+    // Scroll to hash anchor (e.g. #stories from inbox notification)
+    useEffect(() => {
+        if (window.location.hash) {
+            const timer = setTimeout(() => {
+                const el = document.querySelector(window.location.hash);
+                el?.scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
     // ── Handlers ──
     const handleGalleryUpload = (file: File) => {
         if (!userId) return;
@@ -271,7 +282,7 @@ function CreateMemorialForm() {
                 }
                 if (stories.length > 0) {
                     await Promise.allSettled(stories.map((story) =>
-                        supabase.from('memorial_stories').insert({ memorial_id: memorial.id, author: story.author, text: story.text, is_favorite: story.favorite })
+                        supabase.from('memorial_stories').insert({ memorial_id: memorial.id, author: story.author, text: story.text, is_favorite: story.favorite, status: 'approved' })
                     ));
                 }
                 if (invites.length > 0) {

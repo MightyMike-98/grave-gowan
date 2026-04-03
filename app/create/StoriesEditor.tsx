@@ -63,7 +63,7 @@ export function StoriesEditor({ stories, pendingStories, onAddStory, onApprove, 
     };
 
     return (
-        <section className="pt-12 space-y-5">
+        <section id="stories" className="pt-12 space-y-5">
             <div className="mb-8 h-px" style={{ backgroundColor: 'hsl(var(--border) / 0.4)' }} />
             <style>{`@keyframes longpress-fill { from { opacity: 0; } to { opacity: 1; } }`}</style>
             <h2 className="text-xl tracking-tight">

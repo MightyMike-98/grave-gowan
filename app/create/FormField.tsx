@@ -12,9 +12,6 @@ export function FormField({ label, icon, children }: { label: string; icon?: 'lo
                 {icon === 'lock' && (
                     <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }} title="Only the owner can edit this field">🔒</span>
                 )}
-                {icon === 'edit' && (
-                    <span className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }} title="You can edit this field">✏️</span>
-                )}
             </label>
             {children}
         </div>

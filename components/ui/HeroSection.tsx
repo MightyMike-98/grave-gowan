@@ -73,9 +73,11 @@ function CandleWidget({ memorialId, initialCount }: { memorialId: string; initia
             <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
                 {lit ? t('candleLit') : t('lightCandle')}
             </p>
-            <p className="text-[11px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}>
-                {count === 1 ? t('candlesOne') : t('candlesMany', { count })}
-            </p>
+            {count > 0 && (
+                <p className="text-[11px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}>
+                    {count === 1 ? t('candlesOne') : t('candlesMany', { count })}
+                </p>
+            )}
         </motion.div>
     );
 }

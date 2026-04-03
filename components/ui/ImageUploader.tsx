@@ -1,78 +1,144 @@
 /**
  * @file components/ui/ImageUploader.tsx
- * @description Wiederverwendbare Bild-Upload-Komponente.
+ * @description Wiederverwendbare Bild-Upload-Komponente mit Crop-Dialog.
  *
  * Zeigt:
  * - Vorschau des aktuell ausgewählten/hochgeladenen Bildes
  * - Klick-/Drag-Zone zum Auswählen einer Datei
+ * - Instagram-ähnlicher Crop-Dialog (Zoom + Pan)
  * - Lade-Spinner während des Uploads
  * - Fehlermeldung bei ungültiger Datei oder Upload-Fehler
- *
- * ARCHITEKTUR: Diese Komponente kennt keinen Supabase-Code direkt.
- * Der Upload wird über die `onUpload`-Callback-Prop nach außen delegiert,
- * die vom Create-Formular mit der `uploadMemorialImage`-Funktion belegt wird.
  */
 
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Cropper from 'react-easy-crop';
+import type { Area } from 'react-easy-crop';
 
 /** Props der ImageUploader-Komponente. */
 interface ImageUploaderProps {
-    /** Aktuell gespeicherte Bild-URL (aus Supabase Storage oder leer). */
     currentUrl?: string;
-    /** Beschriftung über dem Upload-Bereich, z. B. "Cover Photo". */
     label: string;
-    /** Callback nach erfolgreichem Upload — übergibt die neue öffentliche URL. */
     onUpload: (file: File) => Promise<void>;
-    /** Optionaler Hinweistext unterhalb der Upload-Zone. */
     hint?: string;
+    /** Aspect ratio for cropping. Default 1 (square, like profile pics). */
+    cropAspect?: number;
+    /** Shape of the crop area. Default 'round' for profile pics. */
+    cropShape?: 'rect' | 'round';
 }
 
 /**
- * Bild-Upload-Komponente mit Vorschau, Drag-and-Drop-Optik und Fehlerhandling.
+ * Creates a cropped image file from the source image and crop area.
  */
-export function ImageUploader({ currentUrl, label, onUpload, hint }: ImageUploaderProps) {
+async function getCroppedImage(imageSrc: string, cropArea: Area): Promise<File> {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new window.Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = imageSrc;
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = cropArea.width;
+    canvas.height = cropArea.height;
+    const ctx = canvas.getContext('2d')!;
+
+    ctx.drawImage(
+        image,
+        cropArea.x,
+        cropArea.y,
+        cropArea.width,
+        cropArea.height,
+        0,
+        0,
+        cropArea.width,
+        cropArea.height,
+    );
+
+    return new Promise<File>((resolve, reject) => {
+        canvas.toBlob(
+            (blob) => {
+                if (!blob) return reject(new Error('Canvas is empty'));
+                resolve(new File([blob], 'portrait.jpg', { type: 'image/jpeg' }));
+            },
+            'image/jpeg',
+            0.92,
+        );
+    });
+}
+
+export function ImageUploader({
+    currentUrl,
+    label,
+    onUpload,
+    hint,
+    cropAspect = 1,
+    cropShape = 'round',
+}: ImageUploaderProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(currentUrl ?? null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Synchronisiere prop-Änderungen (z.B. beim asynchronen Laden im Edit-Modus) in den State
+    // Crop state
+    const [cropSrc, setCropSrc] = useState<string | null>(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+
     useEffect(() => {
         if (currentUrl !== undefined) {
             setPreviewUrl(currentUrl);
         }
     }, [currentUrl]);
 
-    /**
-     * Verarbeitet die ausgewählte Datei:
-     * 1. Erstellt lokale Vorschau sofort (ohne auf Server zu warten)
-     * 2. Ruft den Upload-Callback auf
-     * 3. Zeigt Fehler wenn der Upload fehlschlägt
-     */
-    const handleFile = async (file: File) => {
+    const onCropComplete = useCallback((_: Area, croppedPixels: Area) => {
+        setCroppedAreaPixels(croppedPixels);
+    }, []);
+
+    const handleFile = (file: File) => {
         setError(null);
-
-        // Sofortige lokale Vorschau
         const objectUrl = URL.createObjectURL(file);
-        setPreviewUrl(objectUrl);
+        // Open crop dialog instead of uploading directly
+        setCropSrc(objectUrl);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+    };
 
-        setUploading(true);
+    const handleCropConfirm = async () => {
+        if (!cropSrc || !croppedAreaPixels) return;
+
         try {
-            await onUpload(file);
+            const croppedFile = await getCroppedImage(cropSrc, croppedAreaPixels);
+            URL.revokeObjectURL(cropSrc);
+            setCropSrc(null);
+
+            const objectUrl = URL.createObjectURL(croppedFile);
+            setPreviewUrl(objectUrl);
+
+            setUploading(true);
+            await onUpload(croppedFile);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Upload failed.');
-            setPreviewUrl(currentUrl ?? null); // Vorschau zurücksetzen
+            setPreviewUrl(currentUrl ?? null);
         } finally {
             setUploading(false);
         }
     };
 
+    const handleCropCancel = () => {
+        if (cropSrc) URL.revokeObjectURL(cropSrc);
+        setCropSrc(null);
+    };
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) handleFile(file);
+        // Reset input so re-selecting the same file works
+        e.target.value = '';
     };
 
     return (
@@ -88,7 +154,6 @@ export function ImageUploader({ currentUrl, label, onUpload, hint }: ImageUpload
                 style={{ minHeight: '140px' }}
             >
                 {previewUrl ? (
-                    /* Bild-Vorschau */
                     <>
                         <Image
                             src={previewUrl}
@@ -96,15 +161,13 @@ export function ImageUploader({ currentUrl, label, onUpload, hint }: ImageUpload
                             fill
                             className="object-cover"
                             sizes="(max-width: 768px) 100vw, 500px"
-                            unoptimized={previewUrl.startsWith('blob:')} // lokale Vorschau nicht optimieren
+                            unoptimized={previewUrl.startsWith('blob:')}
                         />
-                        {/* Hover-Overlay zum Ändern */}
                         <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
                             <span className="text-white text-sm font-medium">Change photo</span>
                         </div>
                     </>
                 ) : (
-                    /* Upload-Placeholder */
                     <div className="flex flex-col items-center justify-center py-8 gap-2 text-stone-400">
                         <span className="text-3xl">📷</span>
                         <span className="text-sm">Click to upload</span>
@@ -112,7 +175,6 @@ export function ImageUploader({ currentUrl, label, onUpload, hint }: ImageUpload
                     </div>
                 )}
 
-                {/* Lade-Spinner */}
                 {uploading && (
                     <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
                         <span className="w-8 h-8 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" />
@@ -120,7 +182,6 @@ export function ImageUploader({ currentUrl, label, onUpload, hint }: ImageUpload
                 )}
             </button>
 
-            {/* Verstecktes File-Input */}
             <input
                 ref={inputRef}
                 type="file"
@@ -129,15 +190,66 @@ export function ImageUploader({ currentUrl, label, onUpload, hint }: ImageUpload
                 className="hidden"
             />
 
-            {/* Fehlermeldung */}
             {error && (
                 <p role="alert" className="text-xs text-red-600 bg-red-50 rounded px-3 py-2">
                     {error}
                 </p>
             )}
 
-            {/* Optionaler Hinweis */}
             {hint && <p className="text-xs text-stone-400">{hint}</p>}
+
+            {/* ── Crop Dialog (Instagram-style) ── */}
+            {cropSrc && (
+                <div className="fixed inset-0 z-[100] flex flex-col bg-black/90">
+                    {/* Crop area */}
+                    <div className="relative flex-1">
+                        <Cropper
+                            image={cropSrc}
+                            crop={crop}
+                            zoom={zoom}
+                            aspect={cropAspect}
+                            cropShape={cropShape}
+                            showGrid={false}
+                            onCropChange={setCrop}
+                            onZoomChange={setZoom}
+                            onCropComplete={onCropComplete}
+                        />
+                    </div>
+
+                    {/* Zoom slider */}
+                    <div className="flex items-center justify-center gap-4 px-6 py-3">
+                        <span className="text-white/60 text-xs">−</span>
+                        <input
+                            type="range"
+                            min={1}
+                            max={3}
+                            step={0.01}
+                            value={zoom}
+                            onChange={(e) => setZoom(Number(e.target.value))}
+                            className="w-48 accent-white"
+                        />
+                        <span className="text-white/60 text-xs">+</span>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex items-center justify-between px-6 py-4 pb-8">
+                        <button
+                            type="button"
+                            onClick={handleCropCancel}
+                            className="px-6 py-2.5 rounded-full text-sm font-medium text-white/80 hover:text-white transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleCropConfirm}
+                            className="px-8 py-2.5 rounded-full text-sm font-semibold bg-white text-black hover:bg-white/90 transition-colors"
+                        >
+                            Apply
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

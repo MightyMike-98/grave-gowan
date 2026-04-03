@@ -325,7 +325,7 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
                                         onClick={() => {
                                             if (msg.id.startsWith('moderation_')) {
                                                 const memId = msg.id.replace('moderation_', '');
-                                                router.push(`/create?id=${memId}`);
+                                                router.push(`/create?id=${memId}#stories`);
                                                 closeInbox();
                                                 return;
                                             }
