@@ -112,8 +112,8 @@
   "support": {
     "layFlower": "Leave a Virtual Flower",
     "flowerLaid": "Thank you for your flower",
-    "flowersOne": "1 flower left",
-    "flowersMany": "{count} flowers left",
+    "flowersOne": "1 flower placed",
+    "flowersMany": "{count} flowers placed",
     "donate": "Donate – {org}",
     "secureInApp": "Secure in-app donation"
   },
@@ -133,7 +133,9 @@
     "deleteYes": "Remove",
     "deleteCancel": "Cancel",
     "guestbook": "Guest Book",
-    "editHint": "Mark favourites with ⭐ for Highlights. Long-press to delete."
+    "editHint": "Mark favourites with ⭐ for Highlights. Long-press to delete.",
+    "signIn": "Sign in",
+    "signInHint": "to share your story."
   },
   "gallery": {
     "heading": "Gallery",

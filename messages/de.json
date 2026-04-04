@@ -133,7 +133,9 @@
     "deleteYes": "Entfernen",
     "deleteCancel": "Abbrechen",
     "guestbook": "Gästebuch",
-    "editHint": "Markiere Favoriten mit ⭐ für die Highlights. Gedrückt halten zum Löschen."
+    "editHint": "Markiere Favoriten mit ⭐ für die Highlights. Gedrückt halten zum Löschen.",
+    "signIn": "Anmelden",
+    "signInHint": "um eine Geschichte zu teilen."
   },
   "gallery": {
     "heading": "Galerie",

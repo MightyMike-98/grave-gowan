@@ -45,7 +45,6 @@ function getInitials(name: string): string {
 
 export function StoriesSection({ stories, canEdit = false, canWrite = true, memorialId, memorialSlug, isAuthenticated = false, userName, onToggleFavorite, onDeleteStory, onStoryAdded }: StoriesSectionProps) {
     const t = useTranslations('stories');
-    const tSave = useTranslations('save');
     const [pressingId, setPressingId] = useState<string | null>(null);
     const [confirmId, setConfirmId] = useState<string | null>(null);
     const [showForm, setShowForm] = useState(false);
@@ -251,8 +250,8 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                         style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
                     >
                         <p className="text-sm font-light text-center" style={{ color: 'hsl(var(--foreground))' }}>
-                            <Link href={loginUrl} className="font-medium underline underline-offset-2">{tSave('signIn')}</Link>
-                            {' '}{tSave('signInHint')}
+                            <Link href={loginUrl} className="font-medium underline underline-offset-2">{t('signIn')}</Link>
+                            {' '}{t('signInHint')}
                         </p>
                         <button
                             onClick={() => setShowAuthHint(false)}
