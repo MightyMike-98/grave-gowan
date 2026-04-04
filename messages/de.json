@@ -61,6 +61,7 @@
     "private": "Privat",
     "creator": "Ersteller",
     "savedMemorials": "Gespeicherte Gedenkseiten",
+    "welcome": "Willkommen, {name}",
     "signOut": "Abmelden",
     "backToHome": "Zur Startseite"
   },

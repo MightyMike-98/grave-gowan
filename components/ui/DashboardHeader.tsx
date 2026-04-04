@@ -133,6 +133,7 @@ function MessageRow({
 
 export function DashboardHeader({ displayName, email, pendingStoryInfos = [], requests = [] }: DashboardHeaderProps) {
     const t = useTranslations('inbox');
+    const tDash = useTranslations('dashboard');
     const router = useRouter();
     const [inboxOpen, setInboxOpen] = useState(false);
     const [readIds, setReadIds] = useState<Set<string>>(new Set());
@@ -227,7 +228,7 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
         <div className="relative z-50">
             <header className="flex items-center justify-between">
                 <h1 className="text-3xl tracking-tight">
-                    Welcome, {displayName.split(' ')[0]}
+                    {tDash('welcome', { name: displayName.split(' ')[0] })}
                 </h1>
                 <div className="flex items-center gap-3">
                     <button

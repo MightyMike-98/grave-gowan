@@ -26,7 +26,6 @@ import { SupabasePhotoRepository } from '@data/repositories/SupabasePhotoReposit
 import { createSupabaseServerClient } from '@data/server-client';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 /** Next.js-Standard-Props für eine dynamische Seiten-Route. */
@@ -191,7 +190,6 @@ export default async function MemorialPage({ params, searchParams }: MemorialPag
     const { from } = await searchParams;
     const fromDashboard = from === 'dashboard';
     let { memorial, role, photos, isAuthenticated, isSaved, userName } = await loadMemorialWithRole(id);
-    const t = await getTranslations('hero');
 
     if (id === 'demo') {
         const td = await getTranslations('demo');
@@ -241,13 +239,6 @@ export default async function MemorialPage({ params, searchParams }: MemorialPag
     return (
         <div className="min-h-screen relative pb-20">
             <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} initialPhotos={photos} isAuthenticated={isAuthenticated} initialSaved={isSaved} userName={userName} fromDashboard={fromDashboard} />
-
-            <footer className="pb-10 pt-10 flex flex-col items-center gap-2">
-                <p className="text-xs uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>Created by Family</p>
-                <Link href="/" className="text-xs transition-colors" style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>
-                    Powered by Cloudyard
-                </Link>
-            </footer>
 
             {memorial.id !== 'demo' && !canEdit && <RequestWidget memorialId={memorial.id} memorialSlug={id} isAuthenticated={isAuthenticated} userName={userName} />}
         </div>

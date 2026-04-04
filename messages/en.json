@@ -61,6 +61,7 @@
     "private": "Private",
     "creator": "Creator",
     "savedMemorials": "Saved Memorials",
+    "welcome": "Welcome, {name}",
     "signOut": "Sign out",
     "backToHome": "Back to Homepage"
   },

@@ -190,7 +190,11 @@ export default async function DashboardPage() {
                             {t('sharedWithMe')}
                         </h2>
                         <ul className="mt-5 space-y-4">
-                            {sharedMemorials.map(({ memorial, role }) => (
+                            {[...sharedMemorials].sort((a, b) => {
+                                if (a.role === 'editor' && b.role !== 'editor') return -1;
+                                if (a.role !== 'editor' && b.role === 'editor') return 1;
+                                return 0;
+                            }).map(({ memorial, role }) => (
                                 <li key={memorial.id}>
                                     <MemorialCard memorial={memorial} role={role} labels={{ edit: t('edit'), view: t('view'), public: t('public'), private: t('private'), creator: t('creator') }} />
                                 </li>
