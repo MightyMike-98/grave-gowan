@@ -32,6 +32,7 @@ import { notFound } from 'next/navigation';
 /** Next.js-Standard-Props für eine dynamische Seiten-Route. */
 interface MemorialPageProps {
     params: Promise<{ id: string }>;
+    searchParams: Promise<{ from?: string }>;
 }
 
 /** Rollentyp für den aktuellen User auf dieser Gedenkseite. */
@@ -185,9 +186,12 @@ export async function generateMetadata({ params }: MemorialPageProps): Promise<M
  * Rendert die vollständige Gedenkseiten-Ansicht.
  * Zeigt 404 wenn kein Memorial gefunden (außer "demo").
  */
-export default async function MemorialPage({ params }: MemorialPageProps) {
+export default async function MemorialPage({ params, searchParams }: MemorialPageProps) {
     const { id } = await params;
+    const { from } = await searchParams;
+    const fromDashboard = from === 'dashboard';
     let { memorial, role, photos, isAuthenticated, isSaved, userName } = await loadMemorialWithRole(id);
+    const t = await getTranslations('hero');
 
     if (id === 'demo') {
         const td = await getTranslations('demo');
@@ -236,7 +240,7 @@ export default async function MemorialPage({ params }: MemorialPageProps) {
 
     return (
         <div className="min-h-screen relative pb-20">
-            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} initialPhotos={photos} isAuthenticated={isAuthenticated} initialSaved={isSaved} userName={userName} />
+            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} initialPhotos={photos} isAuthenticated={isAuthenticated} initialSaved={isSaved} userName={userName} fromDashboard={fromDashboard} />
 
             <footer className="pb-10 pt-10 flex flex-col items-center gap-2">
                 <p className="text-xs uppercase tracking-widest" style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}>Created by Family</p>
@@ -245,7 +249,7 @@ export default async function MemorialPage({ params }: MemorialPageProps) {
                 </Link>
             </footer>
 
-            {!canEdit && memorial.id !== 'demo' && <RequestWidget memorialId={memorial.id} memorialSlug={id} isAuthenticated={isAuthenticated} userName={userName} />}
+            {memorial.id !== 'demo' && !canEdit && <RequestWidget memorialId={memorial.id} memorialSlug={id} isAuthenticated={isAuthenticated} userName={userName} />}
         </div>
     );
 }

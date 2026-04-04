@@ -70,10 +70,12 @@ export class SupabaseMemberRepository implements MemberRepository {
 
     async findMembershipsByUserId(userId: string, email?: string): Promise<MembershipWithMemorial[]> {
         // Suche nach user_id ODER invited_email (für Einladungen wo user_id noch NULL ist)
+        // Nur accepted invites anzeigen
         let query = this.db
             .from('memorial_members')
             .select('role, memorials(*)')
             .in('role', ['editor', 'viewer'])
+            .eq('invite_status', 'accepted')
             .order('joined_at', { ascending: false });
 
         if (email) {
@@ -121,6 +123,7 @@ export class SupabaseMemberRepository implements MemberRepository {
             .select('role')
             .eq('memorial_id', memorialId)
             .eq('user_id', userId)
+            .eq('invite_status', 'accepted')
             .single();
         if (error) {
             // PGRST116: Kein Ergebnis — User ist kein Member

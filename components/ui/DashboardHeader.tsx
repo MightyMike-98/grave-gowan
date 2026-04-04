@@ -225,13 +225,10 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
 
     return (
         <div className="relative z-50">
-            <header className="flex items-start justify-between">
-                <div>
-                    <h1 className="text-3xl tracking-tight">
-                        Welcome, {displayName.split(' ')[0]}
-                    </h1>
-                    <p className="mt-1 text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{email}</p>
-                </div>
+            <header className="flex items-center justify-between">
+                <h1 className="text-3xl tracking-tight">
+                    Welcome, {displayName.split(' ')[0]}
+                </h1>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => {

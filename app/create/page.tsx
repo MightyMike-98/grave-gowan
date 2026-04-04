@@ -15,6 +15,7 @@ import { createMemorial } from '@core/use-cases/createMemorial';
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { SupabaseMemorialRepository } from '@data/repositories/SupabaseMemorialRepository';
 import { uploadMemorialImage } from '@data/storage';
+import { ArrowLeft, Check, Copy, Link as LinkIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -260,6 +261,13 @@ function CreateMemorialForm() {
                     ? { bio: bio.trim(), quote: quote.trim() || undefined, dateOfDeath: dateOfDeath || undefined, timeline: timelineEvents.length > 0 ? timelineEvents : [], supportTitle: supportTitle || undefined, supportUrl: supportUrl || undefined, supportDesc: supportDesc || undefined }
                     : { name: name.trim(), bio: bio.trim(), quote: quote.trim() || undefined, dateOfBirth: dateOfBirth || undefined, dateOfDeath: dateOfDeath || undefined, portraitUrl: portraitUrl || undefined, isPublic, timeline: timelineEvents.length > 0 ? timelineEvents : [], supportTitle: supportTitle || undefined, supportUrl: supportUrl || undefined, supportDesc: supportDesc || undefined, country: country.trim() || undefined };
                 await repo.update(editId, fields);
+                // Send any new invites
+                if (invites.length > 0) {
+                    await Promise.allSettled(invites.map((inv) =>
+                        fetch('/api/members/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: inv.email, role: inv.role, memorialId: editId, invitedBy: userId, memorialSlug: existingSlug }) })
+                    ));
+                    setInvites([]);
+                }
                 router.push(`/memorial/${existingSlug}`);
             } else {
                 const memorial = await createMemorial({
@@ -303,6 +311,14 @@ function CreateMemorialForm() {
     // ── Render ──
     return (
         <main className="min-h-screen px-4 py-10">
+            {/* Back Navigation */}
+            <div className="max-w-xl mx-auto mb-6">
+                <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm font-light transition-colors hover:opacity-100" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+                    <span>{t('back')}</span>
+                </Link>
+            </div>
+
             {/* Portrait */}
             <div className="max-w-xl mx-auto flex justify-center">
                 {isOwnerRole ? (
@@ -329,20 +345,15 @@ function CreateMemorialForm() {
             </div>
 
             <div className="mx-auto max-w-xl pb-20 space-y-10 mt-8">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-3xl tracking-tight">{isEditing ? t('titleEdit') : t('titleCreate')}</h1>
-                    <Link href="/dashboard" className="text-sm font-light transition-colors hover:opacity-100" style={{ color: 'hsl(var(--muted-foreground))' }}>← Back</Link>
-                </div>
+                <h1 className="text-3xl tracking-tight">{isEditing ? t('titleEdit') : t('titleCreate')}</h1>
 
                 {isEditing && existingSlug && (
                     <div
                         className="flex items-center gap-3 rounded-xl px-4 py-3"
-                        style={{ backgroundColor: 'hsl(var(--muted) / 0.15)', border: '1px solid hsl(var(--border) / 0.4)' }}
+                        style={{ border: '1px solid hsl(var(--border) / 0.4)', backgroundColor: 'hsl(var(--card))' }}
                     >
-                        <span className="text-xs font-medium uppercase tracking-[0.15em] shrink-0" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            {t('linkLabel')}
-                        </span>
-                        <span className="text-sm font-light truncate" style={{ color: 'hsl(var(--foreground))' }}>
+                        <LinkIcon className="h-4 w-4 shrink-0" style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }} strokeWidth={1.5} />
+                        <span className="flex-1 text-sm font-light truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
                             {typeof window !== 'undefined' ? `${window.location.origin}/memorial/${existingSlug}` : `/memorial/${existingSlug}`}
                         </span>
                         <button
@@ -353,14 +364,14 @@ function CreateMemorialForm() {
                                 setCopied(true);
                                 setTimeout(() => setCopied(false), 2000);
                             }}
-                            className="shrink-0 text-xs font-light px-2 py-1 rounded-md transition-colors"
-                            style={{
-                                color: copied ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
-                                backgroundColor: copied ? 'hsl(var(--foreground))' : 'hsl(var(--muted) / 0.3)',
-                            }}
-                            title={t('copyLink')}
+                            className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-light transition-all"
+                            style={{ border: '1px solid hsl(var(--border) / 0.4)', color: 'hsl(var(--muted-foreground))' }}
                         >
-                            {copied ? '✓' : t('copyLink')}
+                            {copied ? (
+                                <span className="flex items-center gap-1"><Check className="h-3 w-3" /> {t('copied')}</span>
+                            ) : (
+                                <span className="flex items-center gap-1"><Copy className="h-3 w-3" /> {t('copyLink')}</span>
+                            )}
                         </button>
                     </div>
                 )}
@@ -434,7 +445,7 @@ function CreateMemorialForm() {
 
                 {isOwnerRole && (
                     <TeamSection
-                        isEditing={isEditing} existingSlug={existingSlug}
+                        isEditing={isEditing} existingSlug={existingSlug} editId={editId ?? undefined} userId={userId ?? undefined}
                         invites={invites} setInvites={setInvites}
                     />
                 )}

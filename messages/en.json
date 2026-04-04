@@ -61,7 +61,8 @@
     "private": "Private",
     "creator": "Creator",
     "savedMemorials": "Saved Memorials",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "backToHome": "Back to Homepage"
   },
   "inbox": {
     "title": "Inbox",
@@ -91,7 +92,7 @@
   },
   "tabs": {
     "highlights": "Highlights",
-    "about": "Life",
+    "about": "Biography",
     "timeline": "Timeline",
     "gallery": "Gallery",
     "stories": "Stories",
@@ -106,7 +107,7 @@
     "stories": "Stories"
   },
   "timeline": {
-    "heading": "Life Journey"
+    
   },
   "support": {
     "layFlower": "Leave a Virtual Flower",
@@ -179,6 +180,8 @@
     "titleEdit": "Edit Memorial",
     "linkLabel": "Link",
     "copyLink": "Copy",
+    "copied": "Copied",
+    "back": "Back",
     "sectionPortrait": "Portrait Photo",
     "fieldName": "Full Name",
     "fieldDob": "Date of Birth",

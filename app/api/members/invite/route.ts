@@ -3,17 +3,7 @@
  * @description API Route: Lädt jemanden per E-Mail zu einem Memorial ein.
  *
  * POST /api/members/invite
- * Body: { email, role, memorialId, invitedBy }
- *
- * Ablauf:
- * 1. Prüfen ob der eingeloggte User der Owner ist (RLS macht das automatisch)
- * 2. Prüfen ob die E-Mail bereits einen Supabase-Account hat
- *    - JA → user_id setzen + invited_email speichern
- *    - NEIN → user_id = NULL, nur invited_email setzen (Pending Invite)
- * 3. In memorial_members eintragen
- *
- * So kann man auch Leute einladen, die noch keinen Account haben.
- * Wenn sie sich später registrieren, wird ihr user_id nachgetragen.
+ * Body: { email, role, memorialId, invitedBy, memorialSlug }
  */
 
 import { createSupabaseServerClient } from '@data/server-client';
@@ -24,7 +14,6 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { email, role, memorialId, invitedBy } = body;
 
-        // Pflichtfelder prüfen
         if (!email || !role || !memorialId || !invitedBy) {
             return NextResponse.json(
                 { error: 'Missing required fields: email, role, memorialId, invitedBy.' },
@@ -41,20 +30,18 @@ export async function POST(request: NextRequest) {
 
         const supabase = await createSupabaseServerClient();
 
-        // Auth Check
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
             return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
         }
 
-        // Sicherheitscheck: invitedBy muss der eingeloggte User sein
         if (user.id !== invitedBy) {
-            return NextResponse.json({ error: 'Forbidden: invitedBy does not match authenticated user.' }, { status: 403 });
+            return NextResponse.json({ error: 'Forbidden.' }, { status: 403 });
         }
 
         const cleanEmail = email.trim().toLowerCase();
 
-        // User-ID per E-Mail nachschlagen (RPC-Funktion, braucht keinen Admin-Zugang)
+        // User-ID per E-Mail nachschlagen
         let targetUserId: string | null = null;
         const { data: foundUserId } = await supabase.rpc('get_user_id_by_email', {
             lookup_email: cleanEmail,
@@ -63,19 +50,19 @@ export async function POST(request: NextRequest) {
             targetUserId = foundUserId;
         }
 
-        // In memorial_members eintragen
+        // In memorial_members eintragen (direkt als accepted)
         const { error: insertError } = await supabase
             .from('memorial_members')
             .insert({
                 memorial_id: memorialId,
-                user_id: targetUserId,  // null wenn kein Account existiert
+                user_id: targetUserId,
                 role,
                 invited_by: invitedBy,
                 invited_email: cleanEmail,
+                invite_status: 'accepted',
             });
 
         if (insertError) {
-            // Duplicate check
             if (insertError.message.includes('unique') || insertError.message.includes('duplicate')) {
                 return NextResponse.json(
                     { error: 'This email is already invited to this memorial.' },
@@ -87,7 +74,7 @@ export async function POST(request: NextRequest) {
         }
 
         return NextResponse.json(
-            { success: true, pending: targetUserId === null },
+            { success: true },
             { status: 201 },
         );
     } catch (err: unknown) {

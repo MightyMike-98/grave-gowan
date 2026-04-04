@@ -41,9 +41,10 @@ interface MemorialTabsProps {
     isAuthenticated?: boolean;
     initialSaved?: boolean;
     userName?: string | null;
+    fromDashboard?: boolean;
 }
 
-export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, initialPhotos = [], isAuthenticated = false, initialSaved = false, userName }: MemorialTabsProps) {
+export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, initialPhotos = [], isAuthenticated = false, initialSaved = false, userName, fromDashboard = false }: MemorialTabsProps) {
     const t = useTranslations('tabs');
     const tHero = useTranslations('hero');
 
@@ -218,7 +219,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
             )}
 
             {/* Hero */}
-            <HeroSection memorial={memorial} flowers={flowers} isAuthenticated={isAuthenticated} candleCount={memorial.candleCount} initialSaved={initialSaved} canEdit={canEdit} memorialSlug={memorialSlug} />
+            <HeroSection memorial={memorial} flowers={flowers} isAuthenticated={isAuthenticated} candleCount={memorial.candleCount} initialSaved={initialSaved} canEdit={canEdit} memorialSlug={memorialSlug} fromDashboard={fromDashboard} />
 
             {/* Tabs */}
             <TabsNavigation

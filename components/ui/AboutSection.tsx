@@ -20,7 +20,6 @@ export function AboutSection({ bio }: AboutSectionProps) {
     return (
         <section aria-label="About" className="py-10 space-y-10">
             <div>
-                <h2 className="text-3xl tracking-tight mb-5">Biography</h2>
                 <p
                     className="text-[15px] leading-[1.8] font-light"
                     style={{ color: 'hsl(var(--foreground) / 0.75)' }}

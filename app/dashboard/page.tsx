@@ -9,6 +9,7 @@
  *   Supabase Auth (Session) → getMemorialsByOwner (Use Case) → SupabaseMemorialRepository → DB
  */
 
+import { CopyLinkButton } from './CopyLinkButton';
 import { DashboardHeader } from '@/components/ui/DashboardHeader';
 import type { MembershipWithMemorial } from '@core/repositories/MemberRepository';
 import type { Memorial } from '@core/types/index';
@@ -35,6 +36,41 @@ export default async function DashboardPage() {
     const displayName =
         (user.user_metadata?.full_name as string | undefined) ??
         email.split('@')[0];
+
+    // Backfill: Link pending invites to this user (fallback if DB trigger didn't fire)
+    // First delete orphaned invite rows where user already has a proper membership,
+    // then claim remaining unclaimed rows.
+    if (email) {
+        const cleanEmail = email.toLowerCase();
+
+        // Find unclaimed invite rows for this email
+        const { data: unclaimed } = await supabase
+            .from('memorial_members')
+            .select('id, memorial_id')
+            .eq('invited_email', cleanEmail)
+            .is('user_id', null);
+
+        if (unclaimed && unclaimed.length > 0) {
+            // Check which memorials this user already has a membership for
+            const { data: existing } = await supabase
+                .from('memorial_members')
+                .select('memorial_id')
+                .eq('user_id', user.id);
+
+            const existingMemorialIds = new Set((existing ?? []).map((e: { memorial_id: string }) => e.memorial_id));
+
+            // Delete orphaned duplicates, claim the rest
+            const toDelete = unclaimed.filter(r => existingMemorialIds.has(r.memorial_id));
+            const toClaim = unclaimed.filter(r => !existingMemorialIds.has(r.memorial_id));
+
+            if (toDelete.length > 0) {
+                await supabase.from('memorial_members').delete().in('id', toDelete.map(r => r.id));
+            }
+            if (toClaim.length > 0) {
+                await supabase.from('memorial_members').update({ user_id: user.id }).in('id', toClaim.map(r => r.id));
+            }
+        }
+    }
 
     let memorials: Memorial[] = [];
     let sharedMemorials: MembershipWithMemorial[] = [];
@@ -121,6 +157,12 @@ export default async function DashboardPage() {
     return (
         <main className="min-h-screen px-4 py-16">
             <div className="mx-auto max-w-xl animate-fade-up">
+                <div className="mb-6">
+                    <Link href="/" className="inline-flex items-center gap-1.5 text-sm font-light transition-colors hover:opacity-100" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                        <span>{t('backToHome')}</span>
+                    </Link>
+                </div>
                 <DashboardHeader displayName={displayName} email={email} pendingStoryInfos={pendingStoryInfos} requests={requestInfos} />
 
                 <h2 className="mt-10 text-xl tracking-tight">
@@ -176,12 +218,13 @@ function MemorialCard({ memorial, role, labels }: { memorial: Memorial; role?: '
 
     return (
         <article
-            className="rounded-xl p-6 shadow-sm transition-shadow duration-300 hover:shadow-md"
+            className="relative rounded-xl p-6 shadow-sm transition-shadow duration-300 hover:shadow-md"
             style={{
                 backgroundColor: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border) / 0.4)',
             }}
         >
+            <CopyLinkButton slug={memorial.slug} />
             <div className="flex items-center gap-4">
                 {/* Porträt oder Initialen */}
                 {memorial.portraitUrl ? (
@@ -260,7 +303,7 @@ function MemorialCard({ memorial, role, labels }: { memorial: Memorial; role?: '
                     </Link>
                 )}
                 <Link
-                    href={`/memorial/${memorial.slug}`}
+                    href={`/memorial/${memorial.slug}?from=dashboard`}
                     className="flex-1 text-center py-2.5 rounded-lg font-light text-sm shadow-sm transition-colors"
                     style={{
                         backgroundColor: 'hsl(var(--primary))',

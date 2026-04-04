@@ -85,7 +85,7 @@ function CandleWidget({ memorialId, initialCount }: { memorialId: string; initia
 /**
  * Rendert den oberen Hero-Bereich einer Gedenkseite.
  */
-export function HeroSection({ memorial, flowers = [], isAuthenticated = false, candleCount = 0, initialSaved = false, canEdit = false, memorialSlug = '' }: {
+export function HeroSection({ memorial, flowers = [], isAuthenticated = false, candleCount = 0, initialSaved = false, canEdit = false, memorialSlug = '', fromDashboard = false }: {
     memorial: MemorialView;
     flowers?: string[];
     isAuthenticated?: boolean;
@@ -93,6 +93,7 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
     initialSaved?: boolean;
     canEdit?: boolean;
     memorialSlug?: string;
+    fromDashboard?: boolean;
 }) {
     const t = useTranslations('hero');
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -124,14 +125,14 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
             {/* Back button + Save button */}
             <div className="relative px-6 flex items-center justify-between">
                 <Link
-                    href={isAuthenticated ? '/dashboard' : '/'}
+                    href={fromDashboard ? '/dashboard' : '/'}
                     className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors"
                     style={{
                         backgroundColor: 'hsl(var(--foreground) / 0.05)',
                         color: 'hsl(var(--foreground) / 0.6)',
                     }}
                 >
-                    ← <span className="hidden sm:inline">{isAuthenticated ? t('backToDashboard') : t('backToHome')}</span>
+                    ← <span className="hidden sm:inline">{fromDashboard ? t('backToDashboard') : t('backToHome')}</span>
                 </Link>
                 {!canEdit && memorial.id !== 'demo' && <SaveButton memorialId={memorial.id} memorialSlug={memorialSlug} isAuthenticated={isAuthenticated} initialSaved={initialSaved} />}
             </div>

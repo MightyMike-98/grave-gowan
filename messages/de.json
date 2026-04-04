@@ -61,7 +61,8 @@
     "private": "Privat",
     "creator": "Ersteller",
     "savedMemorials": "Gespeicherte Gedenkseiten",
-    "signOut": "Abmelden"
+    "signOut": "Abmelden",
+    "backToHome": "Zur Startseite"
   },
   "inbox": {
     "title": "Postfach",
@@ -91,7 +92,7 @@
   },
   "tabs": {
     "highlights": "Highlights",
-    "about": "Leben",
+    "about": "Biografie",
     "timeline": "Chronik",
     "gallery": "Galerie",
     "stories": "Geschichten",
@@ -106,7 +107,7 @@
     "stories": "Geschichten"
   },
   "timeline": {
-    "heading": "Lebensweg"
+    
   },
   "support": {
     "layFlower": "Virtuelle Blume niederlegen",
@@ -179,6 +180,8 @@
     "titleEdit": "Gedenkseite bearbeiten",
     "linkLabel": "Link",
     "copyLink": "Kopieren",
+    "copied": "Kopiert",
+    "back": "Zurück",
     "sectionPortrait": "Portraitfoto",
     "fieldName": "Vollständiger Name",
     "fieldDob": "Geburtsdatum",

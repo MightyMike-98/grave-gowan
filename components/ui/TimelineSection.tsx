@@ -17,9 +17,7 @@ interface TimelineSectionProps {
 export function TimelineSection({ events }: TimelineSectionProps) {
     return (
         <section aria-label="Life Journey" className="py-10">
-            <h2 className="text-3xl italic tracking-tight mb-10">Life Journey</h2>
-
-            <div className="mt-8 space-y-0 stagger-children">
+            <div className="space-y-0 stagger-children">
                 {events.map((event, i) => (
                     <div key={event.id} className="relative flex gap-6 pb-10">
                         <div className="flex flex-col items-center">

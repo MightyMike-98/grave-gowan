@@ -359,17 +359,6 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
         <section aria-label="Memories" className="py-10 space-y-5">
             <style>{`@keyframes longpress-fill { from { opacity: 0; } to { opacity: 1; } }`}</style>
 
-            <div>
-                <h2 className="text-xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
-                    {t('guestbook')}
-                </h2>
-                {canEdit && (
-                    <p className="text-sm font-light mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                        {t('editHint')}
-                    </p>
-                )}
-            </div>
-
             <div className="space-y-4">
                 {storiesAbove.map(renderStoryCard)}
             </div>

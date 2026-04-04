@@ -131,8 +131,7 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
                 animate="visible"
                 variants={stagger}
             >
-                <motion.div variants={fadeIn} className="mb-6 flex items-center justify-between">
-                    <h2 className="text-3xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>{t('heading')}</h2>
+                <motion.div variants={fadeIn} className="mb-6 flex items-center justify-end">
                     {canEdit && (
                         <motion.button
                             variants={fadeIn}
@@ -417,16 +416,17 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
                             animate={{ opacity: 1, scale: 1 }}
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.3 }}
-                            className="relative max-h-[85vh] max-w-[90vw] rounded-lg overflow-hidden shadow-2xl"
+                            className="relative h-[75vh] w-[75vw] max-w-3xl"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <Image
                                 src={photos[lightboxIndex].url}
                                 alt={photos[lightboxIndex].caption || 'Gallery photo'}
-                                width={1200}
-                                height={900}
-                                className="max-h-[85vh] w-auto object-contain"
-                                sizes="90vw"
+                                fill
+                                className="object-contain"
+                                sizes="70vw"
+                                quality={100}
+                                unoptimized
                             />
                         </motion.div>
 
