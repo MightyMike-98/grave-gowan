@@ -165,23 +165,48 @@ export default async function DashboardPage() {
                 </div>
                 <DashboardHeader displayName={displayName} email={email} pendingStoryInfos={pendingStoryInfos} requests={requestInfos} />
 
-                <h2 className="mt-10 text-xl tracking-tight">
-                    {t('myMemorials')}
-                </h2>
+                <div className="mt-10 flex items-center justify-between">
+                    <h2 className="text-xl tracking-tight">
+                        {t('myMemorials')}
+                    </h2>
+                    <Link
+                        href="/create"
+                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-light shadow-sm transition-colors"
+                        style={{ border: '1px solid hsl(var(--border) / 0.6)', color: 'hsl(var(--foreground))' }}
+                    >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        {t('new')}
+                    </Link>
+                </div>
 
                 <div className="mt-5 space-y-4">
-                    <ul className="space-y-4">
-                        {memorials.map((memorial) => (
-                            <li key={memorial.id}>
-                                <MemorialCard memorial={memorial} labels={{ edit: t('edit'), view: t('view'), public: t('public'), private: t('private'), creator: t('creator') }} />
-                            </li>
-                        ))}
-                    </ul>
-
-                    <Link href="/create" className="flex items-center justify-center gap-2 py-4 rounded-xl border border-dashed transition-colors" style={{ borderColor: 'hsl(var(--border) / 0.7)', color: 'hsl(var(--muted-foreground))' }}>
-                        <span className="text-lg font-light">+</span>
-                        <span className="text-sm font-light">{t('newMemorial')}</span>
-                    </Link>
+                    {memorials.length === 0 ? (
+                        <Link href="/create" className="group block">
+                            <div
+                                className="flex flex-col items-center justify-center py-20 px-6 text-center rounded-xl border-2 border-dashed shadow-none transition-all duration-300 group-hover:shadow-md"
+                                style={{ borderColor: 'hsl(var(--primary) / 0.3)', backgroundColor: 'hsl(var(--primary) / 0.03)' }}
+                            >
+                                <div
+                                    className="flex h-20 w-20 items-center justify-center rounded-full transition-transform duration-300 group-hover:scale-110"
+                                    style={{ backgroundColor: 'hsl(var(--primary) / 0.1)' }}
+                                >
+                                    <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="hsl(var(--primary))" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                </div>
+                                <h3 className="mt-5 text-xl font-medium">{t('emptyTitle')}</h3>
+                                <p className="mt-2 max-w-xs text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                    {t('emptySubtitle')}
+                                </p>
+                            </div>
+                        </Link>
+                    ) : (
+                        <ul className="space-y-4">
+                            {memorials.map((memorial) => (
+                                <li key={memorial.id}>
+                                    <MemorialCard memorial={memorial} labels={{ edit: t('edit'), view: t('view'), public: t('public'), private: t('private'), creator: t('creator') }} />
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
 
                 {sharedMemorials.length > 0 && (

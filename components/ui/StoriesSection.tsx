@@ -16,9 +16,7 @@ import { createSupabaseBrowserClient } from '@data/browser-client';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useRef, useState } from 'react';
-
-const LONG_PRESS_MS = 700;
+import { useEffect, useRef, useState } from 'react';
 
 interface StoriesSectionProps {
     stories: Story[];
@@ -29,8 +27,8 @@ interface StoriesSectionProps {
     isAuthenticated?: boolean;
     userName?: string | null;
     onToggleFavorite?: (storyId: string) => void;
-    onDeleteStory?: (storyId: string) => void;
     onStoryAdded?: (story: Story) => void;
+    heading?: string;
 }
 
 function getInitials(name: string): string {
@@ -43,16 +41,13 @@ function getInitials(name: string): string {
         .toUpperCase();
 }
 
-export function StoriesSection({ stories, canEdit = false, canWrite = true, memorialId, memorialSlug, isAuthenticated = false, userName, onToggleFavorite, onDeleteStory, onStoryAdded }: StoriesSectionProps) {
+export function StoriesSection({ stories, canEdit = false, canWrite = true, memorialId, memorialSlug, isAuthenticated = false, userName, onToggleFavorite, onStoryAdded, heading }: StoriesSectionProps) {
     const t = useTranslations('stories');
-    const [pressingId, setPressingId] = useState<string | null>(null);
-    const [confirmId, setConfirmId] = useState<string | null>(null);
     const [showForm, setShowForm] = useState(false);
     const [showAuthHint, setShowAuthHint] = useState(false);
     const [storyText, setStoryText] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const authHintRef = useRef<HTMLDivElement>(null);
 
     // Close auth hint on outside click
@@ -66,21 +61,6 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, [showAuthHint]);
-
-    const startPress = useCallback((storyId: string) => {
-        if (!canEdit || confirmId) return;
-        setPressingId(storyId);
-        pressTimer.current = setTimeout(() => {
-            setPressingId(null);
-            setConfirmId(storyId);
-        }, LONG_PRESS_MS);
-    }, [canEdit, confirmId]);
-
-    const cancelPress = useCallback(() => {
-        if (pressTimer.current) clearTimeout(pressTimer.current);
-        pressTimer.current = null;
-        setPressingId(null);
-    }, []);
 
     const handleSubmitStory = async () => {
         const author = userName?.trim();
@@ -132,56 +112,9 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
     const renderStoryCard = (story: Story) => (
         <div
             key={story.id}
-            className="relative rounded-xl border p-5 shadow-sm space-y-4 bg-white dark:bg-card select-none overflow-hidden"
+            className="relative rounded-xl border p-5 shadow-sm space-y-4 bg-white dark:bg-card overflow-hidden"
             style={{ borderColor: 'hsl(var(--border) / 0.4)' }}
-            onPointerDown={() => startPress(story.id)}
-            onPointerUp={cancelPress}
-            onPointerLeave={cancelPress}
-            onContextMenu={canEdit ? (e) => e.preventDefault() : undefined}
         >
-            {canEdit && pressingId === story.id && (
-                <div
-                    className="absolute inset-0 z-10 pointer-events-none rounded-xl"
-                    style={{
-                        backgroundColor: 'hsl(var(--destructive) / 0.15)',
-                        animation: `longpress-fill ${LONG_PRESS_MS}ms ease-in forwards`,
-                    }}
-                />
-            )}
-
-            {canEdit && confirmId === story.id && (
-                <div
-                    className="absolute inset-0 z-30 flex items-center justify-center gap-6 rounded-xl backdrop-blur-md"
-                    style={{ backgroundColor: 'hsl(var(--background) / 0.9)' }}
-                    onPointerDown={(e) => e.stopPropagation()}
-                >
-                    <div className="flex flex-col items-center gap-3">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2} style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                        </svg>
-                        <p className="text-sm font-light tracking-wide" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            {t('deleteConfirm')}
-                        </p>
-                        <div className="flex gap-3 mt-1">
-                            <button
-                                onClick={() => { setConfirmId(null); onDeleteStory?.(story.id); }}
-                                className="rounded-full px-5 py-2 text-xs font-light tracking-wider transition-all"
-                                style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
-                            >
-                                {t('deleteYes')}
-                            </button>
-                            <button
-                                onClick={() => setConfirmId(null)}
-                                className="rounded-full px-5 py-2 text-xs font-light tracking-wider transition-all"
-                                style={{ color: 'hsl(var(--muted-foreground))', border: '1px solid hsl(var(--border) / 0.5)' }}
-                            >
-                                {t('deleteCancel')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                     <div
@@ -202,12 +135,11 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                         </p>
                     </div>
                 </div>
-                {canEdit && !confirmId && (
+                {canEdit && (
                     <button
                         type="button"
                         onClick={() => onToggleFavorite?.(story.id)}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        className="relative z-20 rounded-full p-1 transition-colors hover:bg-foreground/10"
+                        className="rounded-full p-1.5 transition-colors hover:bg-foreground/10"
                         title="Mark as highlight"
                     >
                         <svg className="h-3.5 w-3.5 transition-colors" fill={story.isFavorite ? "hsl(45 93% 55%)" : "none"} viewBox="0 0 24 24" stroke={story.isFavorite ? "hsl(45 93% 55%)" : "hsl(var(--muted-foreground) / 0.3)"} strokeWidth={1.5}>
@@ -228,64 +160,7 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
 
     const loginUrl = `/login?next=${encodeURIComponent(`/memorial/${memorialSlug ?? ''}`)}`;
 
-    const ctaOrForm = !canWrite ? null : !isAuthenticated && !canEdit ? (
-        <div className="relative" ref={authHintRef}>
-            <button
-                onClick={() => setShowAuthHint(true)}
-                className="w-full py-3 flex items-center justify-center gap-2 transition-opacity hover:opacity-70"
-            >
-                <span className="text-base">✏️</span>
-                <span className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    {t('shareCta')}
-                </span>
-            </button>
-            <AnimatePresence>
-                {showAuthHint && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -4, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -4, scale: 0.95 }}
-                        transition={{ duration: 0.2, ease: 'easeOut' }}
-                        className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 rounded-xl p-4 shadow-lg z-50"
-                        style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
-                    >
-                        <p className="text-sm font-light text-center" style={{ color: 'hsl(var(--foreground))' }}>
-                            <Link href={loginUrl} className="font-medium underline underline-offset-2">{t('signIn')}</Link>
-                            {' '}{t('signInHint')}
-                        </p>
-                        <button
-                            onClick={() => setShowAuthHint(false)}
-                            className="absolute top-2 right-2 transition-colors"
-                            style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
-                        >
-                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    ) : submitted ? (
-        <div
-            className="py-3 text-center space-y-0.5"
-        >
-            <p className="text-sm font-light" style={{ color: 'hsl(var(--foreground))' }}>{t('thankYou')}</p>
-            <p className="text-xs font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                {t('pendingNotice')}
-            </p>
-        </div>
-    ) : !showForm ? (
-        <button
-            onClick={() => setShowForm(true)}
-            className="w-full py-3 flex items-center justify-center gap-2 transition-opacity hover:opacity-70"
-        >
-            <span className="text-base">✏️</span>
-            <span className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                {t('shareCta')}
-            </span>
-        </button>
-    ) : (
+    const ctaOrForm = !showForm ? null : (
         <div
             className="rounded-2xl p-4 space-y-3 shadow-sm"
             style={{
@@ -358,12 +233,67 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
         <section aria-label="Memories" className="py-10 space-y-5">
             <style>{`@keyframes longpress-fill { from { opacity: 0; } to { opacity: 1; } }`}</style>
 
+            {heading && (
+                <div className="flex items-center justify-between mb-5">
+                    <h2 className="text-3xl tracking-tight">
+                        {heading}
+                    </h2>
+                    {canWrite && !showForm && !submitted && (
+                        <div className="relative" ref={authHintRef}>
+                            <button
+                                onClick={() => {
+                                    if (!isAuthenticated && !canEdit) {
+                                        setShowAuthHint(true);
+                                    } else {
+                                        setShowForm(true);
+                                    }
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-light shadow-sm transition-colors"
+                                style={{ border: '1px solid hsl(var(--border) / 0.6)', color: 'hsl(var(--foreground))' }}
+                            >
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                                {t('shareCta')}
+                            </button>
+                            <AnimatePresence>
+                                {showAuthHint && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                                        className="absolute right-0 top-full mt-2 w-64 rounded-xl p-4 shadow-lg z-50"
+                                        style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
+                                    >
+                                        <p className="text-sm font-light text-center" style={{ color: 'hsl(var(--foreground))' }}>
+                                            <Link href={loginUrl} className="font-medium underline underline-offset-2">{t('signIn')}</Link>
+                                            {' '}{t('signInHint')}
+                                        </p>
+                                        <button
+                                            onClick={() => setShowAuthHint(false)}
+                                            className="absolute top-2 right-2 transition-colors"
+                                            style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
+                                        >
+                                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
+                    {submitted && (
+                        <span className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('thankYou')}</span>
+                    )}
+                </div>
+            )}
+
+            {/* Form inline when open */}
+            {showForm && ctaOrForm}
+
             <div className="space-y-4">
                 {storiesAbove.map(renderStoryCard)}
             </div>
-
-            {/* CTA / Form — always visible after 2nd story */}
-            {ctaOrForm}
 
             {storiesBelow.length > 0 && (
                 <div className="space-y-4">

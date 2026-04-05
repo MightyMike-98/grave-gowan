@@ -41,9 +41,10 @@ interface GalleryGridProps {
     onToggleFavorite?: (photoId: string) => void;
     onPhotoUploaded?: (photo: Photo) => void;
     onDeletePhoto?: (photoId: string) => void;
+    heading?: string;
 }
 
-export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = false, favoriteIds = [], onToggleFavorite, onPhotoUploaded, onDeletePhoto }: GalleryGridProps) {
+export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = false, favoriteIds = [], onToggleFavorite, onPhotoUploaded, onDeletePhoto, heading }: GalleryGridProps) {
     const t = useTranslations('gallery');
     const tPay = useTranslations('paywall');
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -131,7 +132,9 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
                 animate="visible"
                 variants={stagger}
             >
-                <motion.div variants={fadeIn} className="mb-6 flex items-center justify-end">
+                <motion.div variants={fadeIn} className="mb-6 flex items-center justify-between">
+                    {heading && <h2 className="text-3xl tracking-tight mb-5">{heading}</h2>}
+                    <div className="flex items-center justify-end">
                     {canEdit && (
                         <motion.button
                             variants={fadeIn}
@@ -145,6 +148,7 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
                             {editMode ? t('done') : t('edit')}
                         </motion.button>
                     )}
+                    </div>
                 </motion.div>
 
                 {photos.length === 0 && !canEdit ? (

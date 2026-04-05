@@ -142,9 +142,9 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
     const renderTabContent = () => {
         switch (activeTab) {
             case 'About':
-                return <AboutSection bio={memorial.bio} />;
+                return <AboutSection bio={memorial.bio} heading={tabLabel('About')} />;
             case 'Timeline':
-                return <TimelineSection events={memorial.timeline} />;
+                return <TimelineSection events={memorial.timeline} heading={tabLabel('Timeline')} />;
             case 'Gallery':
                 return (
                     <GalleryGrid
@@ -157,6 +157,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                         onToggleFavorite={handleToggleFavorite}
                         onPhotoUploaded={handlePhotoUploaded}
                         onDeletePhoto={handleDeletePhoto}
+                        heading={tabLabel('Gallery')}
                     />
                 );
             case 'Stories':
@@ -170,8 +171,8 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                         isAuthenticated={isAuthenticated}
                         userName={userName}
                         onToggleFavorite={handleToggleStoryFavorite}
-                        onDeleteStory={handleDeleteStory}
                         onStoryAdded={(story) => setStories(prev => [story, ...prev])}
+                        heading={tabLabel('Stories')}
                     />
                 );
             case 'Highlights':

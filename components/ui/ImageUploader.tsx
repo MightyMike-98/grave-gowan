@@ -12,7 +12,6 @@
 
 'use client';
 
-import { ImagePlus } from 'lucide-react';
 import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Cropper from 'react-easy-crop';
@@ -169,10 +168,10 @@ export function ImageUploader({
                         </div>
                     </>
                 ) : (
-                    <div className="flex flex-col items-center justify-center py-8 gap-2 text-stone-400">
-                        <ImagePlus className="w-8 h-8 stroke-[1.2]" />
-                        <span className="text-sm">Click to upload</span>
-                        <span className="text-xs">JPG, PNG, WebP · max 5 MB</span>
+                    <div className="flex items-center justify-center h-full text-stone-300">
+                        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
                     </div>
                 )}
 

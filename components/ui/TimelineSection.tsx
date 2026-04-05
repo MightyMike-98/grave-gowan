@@ -12,11 +12,13 @@ import type { TimelineEvent } from '@/types';
 
 interface TimelineSectionProps {
     events: TimelineEvent[];
+    heading?: string;
 }
 
-export function TimelineSection({ events }: TimelineSectionProps) {
+export function TimelineSection({ events, heading }: TimelineSectionProps) {
     return (
         <section aria-label="Life Journey" className="py-10">
+            {heading && <h2 className="text-3xl tracking-tight mb-5">{heading}</h2>}
             <div className="space-y-0 stagger-children">
                 {events.map((event, i) => (
                     <div key={event.id} className="relative flex gap-6 pb-10">

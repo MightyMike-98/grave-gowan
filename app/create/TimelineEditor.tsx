@@ -1,7 +1,7 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import { Check, ChevronDown, ChevronUp, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Check, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
@@ -23,9 +23,12 @@ export function TimelineEditor({ events, onChange }: TimelineEditorProps) {
     const [editEvent, setEditEvent] = useState<TimelineEventDraft>({ year: '', title: '', description: '' });
     const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
 
+    const sortByYear = (list: TimelineEventDraft[]) =>
+        [...list].sort((a, b) => parseInt(a.year) - parseInt(b.year));
+
     const addEvent = () => {
         if (!newEvent.year || !newEvent.title) return;
-        onChange([...events, newEvent]);
+        onChange(sortByYear([...events, newEvent]));
         setNewEvent({ year: '', title: '', description: '' });
     };
 
@@ -44,19 +47,9 @@ export function TimelineEditor({ events, onChange }: TimelineEditorProps) {
         if (editingIndex !== null && editEvent.year && editEvent.title) {
             const updated = [...events];
             updated[editingIndex] = editEvent;
-            onChange(updated);
+            onChange(sortByYear(updated));
             setEditingIndex(null);
         }
-    };
-
-    const moveEvent = (index: number, direction: 'up' | 'down') => {
-        const newIndex = direction === 'up' ? index - 1 : index + 1;
-        if (newIndex < 0 || newIndex >= events.length) return;
-        const updated = [...events];
-        [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
-        onChange(updated);
-        if (editingIndex === index) setEditingIndex(newIndex);
-        else if (editingIndex === newIndex) setEditingIndex(index);
     };
 
     return (
@@ -205,28 +198,6 @@ export function TimelineEditor({ events, onChange }: TimelineEditorProps) {
                                 ) : (
                                     /* ── Display Mode ── */
                                     <div className="flex items-start gap-3">
-                                        {/* Reorder arrows */}
-                                        <div className="flex flex-col gap-0.5 pt-0.5">
-                                            <button
-                                                type="button"
-                                                onClick={() => moveEvent(i, 'up')}
-                                                disabled={i === 0}
-                                                className="rounded p-0.5 transition-colors disabled:opacity-20"
-                                                style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
-                                            >
-                                                <ChevronUp className="h-3.5 w-3.5" />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => moveEvent(i, 'down')}
-                                                disabled={i === events.length - 1}
-                                                className="rounded p-0.5 transition-colors disabled:opacity-20"
-                                                style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
-                                            >
-                                                <ChevronDown className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
-
                                         <span className="text-sm font-medium pt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>{event.year}</span>
                                         <div className="flex-1 pt-1">
                                             <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>{event.title}</p>

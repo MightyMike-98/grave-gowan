@@ -15,6 +15,7 @@ import { createMemorial } from '@core/use-cases/createMemorial';
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { SupabaseMemorialRepository } from '@data/repositories/SupabaseMemorialRepository';
 import { uploadMemorialImage } from '@data/storage';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, Check, Copy, Link as LinkIcon } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
@@ -47,7 +48,8 @@ function CreateMemorialForm() {
     const [portraitUrl, setPortraitUrl] = useState('');
     const [userId, setUserId] = useState<string | null>(null);
     const [existingSlug, setExistingSlug] = useState('');
-    const [isPublic, setIsPublic] = useState(false);
+    const [isPublic, setIsPublic] = useState(true);
+    const [visibilityPopup, setVisibilityPopup] = useState<'private' | 'public' | null>(null);
 
     const [supportTitle, setSupportTitle] = useState('');
     const [supportUrl, setSupportUrl] = useState('');
@@ -395,30 +397,95 @@ function CreateMemorialForm() {
                         <div className="flex items-center justify-between rounded-xl p-4" style={{ backgroundColor: 'hsl(var(--muted) / 0.15)', border: '1px solid hsl(var(--border) / 0.4)' }}>
                             <div>
                                 <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
-                                    {isPublic ? t('visibilityPublic') : t('visibilityPrivate')}
+                                    {t('visibilityPrivate')}
                                 </p>
                                 <p className="text-xs font-light mt-0.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                    {isPublic ? t('visibilityPublicDesc') : t('visibilityPrivateDesc')}
+                                    {t('visibilityPrivateDesc')}
                                 </p>
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setIsPublic(!isPublic)}
+                                onClick={() => setVisibilityPopup(isPublic ? 'private' : 'public')}
                                 className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200"
-                                style={{ backgroundColor: isPublic ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground) / 0.3)' }}
+                                style={{ backgroundColor: !isPublic ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground) / 0.3)' }}
                                 role="switch"
-                                aria-checked={isPublic}
+                                aria-checked={!isPublic}
                             >
                                 <span
                                     className="pointer-events-none inline-block h-5 w-5 rounded-full shadow-sm transform transition-transform duration-200"
                                     style={{
                                         backgroundColor: 'hsl(var(--background))',
-                                        transform: isPublic ? 'translateX(1.25rem)' : 'translateX(0.125rem)',
+                                        transform: !isPublic ? 'translateX(1.25rem)' : 'translateX(0.125rem)',
                                         marginTop: '0.125rem',
                                     }}
                                 />
                             </button>
                         </div>
+
+                        {/* Visibility confirmation popup */}
+                        <AnimatePresence>
+                            {visibilityPopup && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+                                    style={{ backgroundColor: 'hsl(var(--background) / 0.7)' }}
+                                    onClick={() => setVisibilityPopup(null)}
+                                >
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: 30, scale: 0.95 }}
+                                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                                        className="w-full max-w-sm rounded-2xl p-8 shadow-xl text-center space-y-4"
+                                        style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
+                                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                    >
+                                        <div
+                                            className="mx-auto flex h-14 w-14 items-center justify-center rounded-full"
+                                            style={{ backgroundColor: 'hsl(var(--primary) / 0.1)' }}
+                                        >
+                                            {visibilityPopup === 'private' ? (
+                                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--primary))' }}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                                </svg>
+                                            ) : (
+                                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: 'hsl(var(--primary))' }}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12.75 3.03v.568c0 .334.148.65.405.864l1.068.89c.442.369.535 1.01.216 1.49l-.51.766a2.25 2.25 0 0 1-1.161.886l-.143.048a1.107 1.107 0 0 0-.57 1.664c.369.555.169 1.307-.427 1.605L9 13.125l.423 1.059a.956.956 0 0 1-1.652.928l-.679-.906a1.125 1.125 0 0 0-1.906.172L4.5 15.75l-.612.153M12.75 3.031a9 9 0 0 1 6.69 14.036m0 0-.177-.529A2.25 2.25 0 0 0 17.128 15H16.5l-.324-.324a1.453 1.453 0 0 0-2.328.377l-.036.073a1.586 1.586 0 0 1-.982.816l-.99.282c-.55.157-.894.702-.8 1.267l.073.438c.08.474.49.821.97.821.846 0 1.598.542 1.865 1.345l.215.643m5.276-3.67a9.012 9.012 0 0 1-5.276 3.67m0 0a9 9 0 0 1-10.275-4.835M15.75 9c0 .896-.393 1.7-1.016 2.25" />
+                                                </svg>
+                                            )}
+                                        </div>
+
+                                        <h3 className="text-lg font-medium tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
+                                            {visibilityPopup === 'private' ? t('privateConfirmTitle') : t('publicConfirmTitle')}
+                                        </h3>
+                                        <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                            {visibilityPopup === 'private' ? t('privateConfirmDesc') : t('publicConfirmDesc')}
+                                        </p>
+
+                                        <div className="flex flex-col gap-2 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => { setIsPublic(visibilityPopup === 'public'); setVisibilityPopup(null); }}
+                                                className="w-full rounded-full py-3 text-xs font-normal uppercase tracking-[0.2em] text-center shadow-sm transition-shadow duration-300 hover:shadow-md"
+                                                style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
+                                            >
+                                                {visibilityPopup === 'private' ? t('privateConfirmYes') : t('publicConfirmYes')}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setVisibilityPopup(null)}
+                                                className="text-xs font-light transition-colors"
+                                                style={{ color: 'hsl(var(--muted-foreground))' }}
+                                            >
+                                                {t('cancelButton')}
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </section>
                 )}
 
