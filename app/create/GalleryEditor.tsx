@@ -134,7 +134,7 @@ export function GalleryEditor({ photos, uploading, uploadProgress = 0, isPremium
                                         className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 backdrop-blur-sm"
                                         style={{ backgroundColor: 'hsl(var(--background) / 0.9)' }}
                                     >
-                                        <p className="text-xs font-medium" style={{ color: 'hsl(var(--foreground))' }}>{t('storyRemoveConfirm')}</p>
+                                        <p className="text-xs font-medium" style={{ color: 'hsl(var(--foreground))' }}>{t('photoRemoveConfirm')}</p>
                                         <div className="flex gap-2">
                                             <button
                                                 type="button"
@@ -142,7 +142,7 @@ export function GalleryEditor({ photos, uploading, uploadProgress = 0, isPremium
                                                 className="rounded-full px-3 py-1 text-[10px] font-light transition-colors"
                                                 style={{ backgroundColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))' }}
                                             >
-                                                {t('storyRemove')}
+                                                {t('photoRemove')}
                                             </button>
                                             <button
                                                 type="button"
@@ -150,7 +150,7 @@ export function GalleryEditor({ photos, uploading, uploadProgress = 0, isPremium
                                                 className="rounded-full px-3 py-1 text-[10px] font-light transition-colors"
                                                 style={{ border: '1px solid hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}
                                             >
-                                                {t('storyCancel')}
+                                                {t('photoCancel')}
                                             </button>
                                         </div>
                                     </motion.div>

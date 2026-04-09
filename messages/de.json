@@ -97,10 +97,10 @@
   "tabs": {
     "highlights": "Highlights",
     "about": "Biografie",
-    "timeline": "Chronik",
+    "timeline": "Lebensweg",
     "gallery": "Galerie",
     "stories": "Geschichten",
-    "support": "Unterstützen"
+    "support": "Spenden"
   },
   "highlights": {
     "memories": "Erinnerungen",
@@ -242,7 +242,7 @@
     "sectionTimeline": "Lebenslauf",
     "approvedStories": "Freigegebene Geschichten",
     "pendingStories": "Wartende Geschichten",
-    "roleEditor": "✏️ Editor — kann die Memorial bearbeiten",
+    "roleEditor": "Editor — kann die Memorial bearbeiten",
     "removeInvite": "Einladung entfernen",
     "errorNameRequired": "Vollständiger Name ist erforderlich.",
     "errorBioRequired": "Biografie ist erforderlich.",
@@ -253,6 +253,9 @@
     "storyRemoveConfirm": "Geschichte entfernen?",
     "storyRemove": "Entfernen",
     "storyCancel": "Abbrechen",
+    "photoRemoveConfirm": "Bild löschen?",
+    "photoRemove": "Löschen",
+    "photoCancel": "Abbrechen",
     "sectionCoreInfo": "Kerninformationen",
     "sectionDonations": "Spenden & Unterstützung",
     "sectionOptional": "(Optional)",

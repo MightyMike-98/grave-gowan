@@ -213,8 +213,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                             color: 'hsl(var(--primary-foreground))',
                         }}
                     >
-                        <span>✏️</span>
-                        <span>{tHero('editMemorial')}</span>
+                        {tHero('editMemorial')}
                     </Link>
                 </div>
             )}

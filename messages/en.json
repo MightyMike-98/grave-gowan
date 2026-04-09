@@ -100,7 +100,7 @@
     "timeline": "Timeline",
     "gallery": "Gallery",
     "stories": "Stories",
-    "support": "Support"
+    "support": "Donate"
   },
   "highlights": {
     "memories": "Memories",
@@ -242,7 +242,7 @@
     "sectionTimeline": "Timeline",
     "approvedStories": "Approved Stories",
     "pendingStories": "Pending Stories",
-    "roleEditor": "✏️ Editor — can edit the memorial",
+    "roleEditor": "Editor — can edit the memorial",
     "removeInvite": "Remove invite",
     "errorNameRequired": "Full Name is required.",
     "errorBioRequired": "Biography is required.",
@@ -253,6 +253,9 @@
     "storyRemoveConfirm": "Remove story?",
     "storyRemove": "Remove",
     "storyCancel": "Cancel",
+    "photoRemoveConfirm": "Delete photo?",
+    "photoRemove": "Delete",
+    "photoCancel": "Cancel",
     "sectionCoreInfo": "Core Information",
     "sectionDonations": "Donations & Support",
     "sectionOptional": "(Optional)",

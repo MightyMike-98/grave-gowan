@@ -248,7 +248,7 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                                         setShowForm(true);
                                     }
                                 }}
-                                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-light shadow-sm transition-colors"
+                                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-light shadow-sm transition-colors whitespace-nowrap"
                                 style={{ border: '1px solid hsl(var(--border) / 0.6)', color: 'hsl(var(--foreground))' }}
                             >
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
