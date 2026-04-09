@@ -70,7 +70,7 @@ export function SupportEditor({
             </FormField>
 
             <FormField label={t('fieldCauseDesc')}>
-                <textarea id="field-support-desc" value={supportDesc} onChange={(e) => setSupportDesc(e.target.value)} placeholder={t('placeholderCauseDesc')} rows={2} className="field-input resize-none" />
+                <textarea id="field-support-desc" value={supportDesc} onChange={(e) => setSupportDesc(e.target.value)} placeholder={t('placeholderCauseDesc')} rows={4} className="field-input !h-auto resize-none" />
             </FormField>
         </section>
     );

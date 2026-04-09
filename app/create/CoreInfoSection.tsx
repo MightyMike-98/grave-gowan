@@ -73,7 +73,7 @@ export function CoreInfoSection({
                 </FormField>
             ) : (
                 <FormField label={t('fieldBio')} icon={isEditing ? 'edit' : undefined}>
-                    <textarea id="field-bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t('placeholderBio')} rows={5} className="field-input !h-auto min-h-[150px] resize-y" />
+                    <textarea id="field-bio" value={bio} onChange={(e) => setBio(e.target.value)} placeholder={t('placeholderBio')} rows={5} className="field-input !h-auto min-h-[150px] resize-none" />
                 </FormField>
             )}
 

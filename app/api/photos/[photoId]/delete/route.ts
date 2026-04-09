@@ -31,9 +31,24 @@ export async function POST(
             return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
         }
 
-        // Foto löschen (via Use Case + Repository)
+        // Foto-URL aus DB holen, um Storage-Datei zu löschen
+        const { data: photo } = await supabase
+            .from('gallery_photos')
+            .select('url')
+            .eq('id', photoId)
+            .single();
+
+        // DB-Eintrag löschen (via Use Case + Repository)
         const photoRepo = new SupabasePhotoRepository(supabase);
         await deleteGalleryPhoto(photoId, photoRepo);
+
+        // Storage-Datei löschen
+        if (photo?.url) {
+            const match = photo.url.split('/memorial-images/');
+            if (match[1]) {
+                await supabase.storage.from('memorial-images').remove([match[1]]);
+            }
+        }
 
         return NextResponse.json({ success: true });
     } catch (err: unknown) {
