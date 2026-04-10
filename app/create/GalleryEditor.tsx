@@ -2,7 +2,6 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { Star, Trash2 } from 'lucide-react';
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 
@@ -38,13 +37,23 @@ export function GalleryEditor({ photos, uploading, uploadProgress = 0, isPremium
     const atLimit = !isPremium && photos.length >= FREE_PHOTO_LIMIT;
     const atSizeLimit = !isPremium && totalBytes >= FREE_SIZE_LIMIT_BYTES;
 
+    const trackLead = (triggerType: string) => {
+        fetch('/api/premium-lead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ triggerType, memorialId }),
+        }).catch(() => {});
+    };
+
     const handleUploadClick = () => {
         if (atSizeLimit) {
             setShowPaywall('size');
+            trackLead('size_limit');
             return;
         }
         if (atLimit) {
             setShowPaywall('photo');
+            trackLead('photo_limit');
             return;
         }
         fileInputRef.current?.click();
@@ -56,18 +65,21 @@ export function GalleryEditor({ photos, uploading, uploadProgress = 0, isPremium
 
         if (file.type.startsWith('video/') && !isPremium) {
             setShowPaywall('video');
+            trackLead('video_upload');
             e.target.value = '';
             return;
         }
 
         if (!file.type.startsWith('video/') && !isPremium && photos.length >= FREE_PHOTO_LIMIT) {
             setShowPaywall('photo');
+            trackLead('photo_limit');
             e.target.value = '';
             return;
         }
 
         if (!file.type.startsWith('video/') && !isPremium && (totalBytes + file.size) > FREE_SIZE_LIMIT_BYTES) {
             setShowPaywall('size');
+            trackLead('size_limit');
             e.target.value = '';
             return;
         }
@@ -254,23 +266,16 @@ export function GalleryEditor({ photos, uploading, uploadProgress = 0, isPremium
                                 {showPaywall === 'video' ? tPay('videoUpload') : showPaywall === 'size' ? tPay('sizeLimit') : tPay('photoLimit')}
                             </h3>
                             <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                {tPay('upgradeHint')}
+                                {tPay('comingSoon')}
                             </p>
 
                             <div className="flex flex-col gap-2 pt-2">
-                                <Link
-                                    href={`/pricing${memorialId ? `?memorial=${memorialId}` : ''}`}
+                                <button
+                                    onClick={() => setShowPaywall(null)}
                                     className="w-full rounded-full py-3 text-xs font-normal uppercase tracking-[0.2em] text-center shadow-sm transition-shadow duration-300 hover:shadow-md"
                                     style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
                                 >
-                                    {tPay('upgradeCta')}
-                                </Link>
-                                <button
-                                    onClick={() => setShowPaywall(null)}
-                                    className="text-xs font-light transition-colors"
-                                    style={{ color: 'hsl(var(--muted-foreground))' }}
-                                >
-                                    {t('storyCancel')}
+                                    {tPay('notifyMe')}
                                 </button>
                             </div>
                         </motion.div>

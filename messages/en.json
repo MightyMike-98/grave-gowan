@@ -313,7 +313,9 @@
     "photoLimit": "You've reached the 10 photo limit.",
     "sizeLimit": "You've reached the 30 MB storage limit.",
     "videoUpload": "Videos are a premium feature.",
-    "upgradeHint": "Upgrade to Premium for unlimited photos, videos and more.",
+    "comingSoon": "Premium is coming soon with unlimited photos, videos and more.",
+    "notifyMe": "Notify me when it's available",
+    "notified": "We'll let you know!",
     "upgradeCta": "Unlock Premium"
   },
   "demo": {

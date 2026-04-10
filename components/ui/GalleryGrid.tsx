@@ -15,7 +15,6 @@
 import type { Photo } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Star, Trash2 } from 'lucide-react';
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
@@ -56,11 +55,19 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const atLimit = !isPremium && photos.length >= FREE_PHOTO_LIMIT;
-    const pricingUrl = memorialId ? `/pricing?memorial=${memorialId}` : '/pricing';
+
+    const trackLead = (triggerType: string) => {
+        fetch('/api/premium-lead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ triggerType, memorialId }),
+        }).catch(() => {});
+    };
 
     const handleUploadClick = () => {
         if (atLimit) {
             setShowPaywall('photo');
+            trackLead('photo_limit');
             return;
         }
         fileInputRef.current?.click();
@@ -72,12 +79,14 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
 
         if (file.type.startsWith('video/') && !isPremium) {
             setShowPaywall('video');
+            trackLead('video_upload');
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
 
         if (!isPremium && !file.type.startsWith('video/') && photos.length >= FREE_PHOTO_LIMIT) {
             setShowPaywall('photo');
+            trackLead('photo_limit');
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
@@ -369,23 +378,16 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
                                 {showPaywall === 'video' ? tPay('videoUpload') : tPay('photoLimit')}
                             </h3>
                             <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                                {tPay('upgradeHint')}
+                                {tPay('comingSoon')}
                             </p>
 
                             <div className="flex flex-col gap-2 pt-2">
-                                <Link
-                                    href={pricingUrl}
+                                <button
+                                    onClick={() => setShowPaywall(null)}
                                     className="w-full rounded-full py-3 text-xs font-normal uppercase tracking-[0.2em] text-center shadow-sm transition-shadow duration-300 hover:shadow-md"
                                     style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
                                 >
-                                    {tPay('upgradeCta')}
-                                </Link>
-                                <button
-                                    onClick={() => setShowPaywall(null)}
-                                    className="text-xs font-light transition-colors"
-                                    style={{ color: 'hsl(var(--muted-foreground))' }}
-                                >
-                                    {t('deleteCancel')}
+                                    {tPay('notifyMe')}
                                 </button>
                             </div>
                         </motion.div>
