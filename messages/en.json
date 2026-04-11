@@ -26,7 +26,47 @@
     "confirmationSent": "We've sent a confirmation link to {email}. Click the link to activate your account.",
     "backToLogin": "Back to login",
     "errorEnterEmail": "Please enter your email address.",
-    "errorEnterPassword": "Please enter your password."
+    "errorEnterPassword": "Please enter your password.",
+    "forgotPassword": "Forgot password?"
+  },
+  "authErrors": {
+    "invalidCredentials": "Email or password is incorrect.",
+    "emailNotConfirmed": "Please confirm your email address first. Check your inbox.",
+    "userExists": "An account with this email already exists. Please sign in.",
+    "passwordTooShort": "Password must be at least 6 characters.",
+    "passwordWeak": "This password is too weak. Please choose a stronger one.",
+    "passwordSame": "The new password must be different from the old one.",
+    "rateLimit": "Too many attempts. Please wait a moment and try again.",
+    "linkExpired": "This link is invalid or has expired. Please request a new one.",
+    "userNotFound": "No account found with this email address.",
+    "invalidEmail": "Please enter a valid email address.",
+    "signupDisabled": "Sign-ups are currently disabled.",
+    "network": "Network error. Please check your connection and try again."
+  },
+  "forgotPassword": {
+    "heading": "Forgot password",
+    "subtext": "Enter your email address and we'll send you a link to reset it.",
+    "emailPlaceholder": "your@email.com",
+    "sendLink": "Send link",
+    "sending": "Sending...",
+    "checkEmail": "Check your email",
+    "sentTo": "We've sent a reset link to {email}. Click the link to choose a new password.",
+    "backToLogin": "← Back to login",
+    "errorEnterEmail": "Please enter your email address."
+  },
+  "resetPassword": {
+    "heading": "New password",
+    "subtext": "Choose a new password for your account.",
+    "newPasswordPlaceholder": "New password (min. 6 characters)",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "updatePassword": "Update password",
+    "updating": "Updating...",
+    "success": "Password updated",
+    "redirecting": "Redirecting you shortly...",
+    "backToLogin": "← Back to login",
+    "errorTooShort": "Password must be at least 6 characters.",
+    "errorMismatch": "Passwords do not match.",
+    "errorInvalidLink": "This link is invalid or has expired. Please request a new one."
   },
   "visit": {
     "heading": "Visit a Memorial",

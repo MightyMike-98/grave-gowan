@@ -14,6 +14,7 @@
 'use client';
 
 import { signInWithEmail, signInWithGoogle, signUpWithEmail } from '@data/auth';
+import { translateAuthError } from '@/lib/auth-errors';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -24,6 +25,7 @@ import { Suspense, useState } from 'react';
 /** Die eigentliche Login-Form, wrapped in Suspense für useSearchParams. */
 function LoginForm() {
     const t = useTranslations('login');
+    const tErr = useTranslations('authErrors');
     const locale = useLocale();
     const searchParams = useSearchParams();
 
@@ -37,7 +39,7 @@ function LoginForm() {
     const [password, setPassword] = useState('');
     const [mode, setMode] = useState<'login' | 'signup'>('login');
     const [loading, setLoading] = useState<'google' | 'email' | null>(null);
-    const [error, setError] = useState<string | null>(callbackError);
+    const [error, setError] = useState<string | null>(callbackError ? translateAuthError(callbackError, tErr) : null);
     const [signupSuccess, setSignupSuccess] = useState(false);
 
     const handleGoogle = async () => {
@@ -45,7 +47,7 @@ function LoginForm() {
         setError(null);
         const { error } = await signInWithGoogle(next !== '/dashboard' ? next : undefined);
         if (error) {
-            setError(error);
+            setError(translateAuthError(error, tErr));
             setLoading(null);
         }
     };
@@ -67,7 +69,7 @@ function LoginForm() {
             const { error } = await signUpWithEmail(email, password, next !== '/dashboard' ? next : undefined, locale);
             setLoading(null);
             if (error) {
-                setError(error);
+                setError(translateAuthError(error, tErr));
             } else {
                 setSignupSuccess(true);
             }
@@ -75,7 +77,7 @@ function LoginForm() {
             const { error, needsSetup } = await signInWithEmail(email, password);
             setLoading(null);
             if (error) {
-                setError(error);
+                setError(translateAuthError(error, tErr));
             } else {
                 window.location.href = needsSetup
                     ? (next !== '/dashboard' ? `/setup?next=${encodeURIComponent(next)}` : '/setup')
@@ -190,6 +192,17 @@ function LoginForm() {
                                 className="field-input transition-opacity duration-200"
                                 style={{ opacity: loading ? 0.5 : 1 }}
                             />
+                            {mode === 'login' && (
+                                <div className="text-right -mt-1">
+                                    <Link
+                                        href="/forgot-password"
+                                        className="text-xs font-light transition-colors hover:opacity-100"
+                                        style={{ color: 'hsl(var(--muted-foreground))' }}
+                                    >
+                                        {t('forgotPassword')}
+                                    </Link>
+                                </div>
+                            )}
                             <button
                                 onClick={handleEmailSubmit}
                                 disabled={!!loading}

@@ -86,6 +86,40 @@ export async function signUpWithEmail(email: string, password: string, next?: st
 }
 
 /**
+ * Sendet eine E-Mail mit Link zum Zurücksetzen des Passworts.
+ * Nach Klick landet der Nutzer auf `/reset-password`, wo er ein neues Passwort wählen kann.
+ *
+ * @param email - Die E-Mail-Adresse des Nutzers.
+ * @returns Fehler-Objekt oder null bei Erfolg.
+ */
+export async function resetPassword(email: string): Promise<{ error: string | null }> {
+    if (!email || !email.includes('@')) {
+        return { error: 'Please enter a valid email address.' };
+    }
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: `${APP_URL}/auth/callback?next=/reset-password`,
+    });
+    return { error: error?.message ?? null };
+}
+
+/**
+ * Setzt das Passwort des aktuell eingeloggten Nutzers neu.
+ * Wird nach dem Klick auf den Reset-Link aufgerufen.
+ *
+ * @param password - Das neue Passwort (mind. 6 Zeichen).
+ * @returns Fehler-Objekt oder null bei Erfolg.
+ */
+export async function updatePassword(password: string): Promise<{ error: string | null }> {
+    if (!password || password.length < 6) {
+        return { error: 'Password must be at least 6 characters.' };
+    }
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error: error?.message ?? null };
+}
+
+/**
  * Meldet einen bestehenden Nutzer mit E-Mail und Passwort an.
  *
  * @param email - Die E-Mail-Adresse des Nutzers.

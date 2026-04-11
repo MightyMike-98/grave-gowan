@@ -26,7 +26,47 @@
     "confirmationSent": "Wir haben einen Bestätigungslink an {email} gesendet. Klicke auf den Link, um dein Konto zu aktivieren.",
     "backToLogin": "Zurück zur Anmeldung",
     "errorEnterEmail": "Bitte gib deine E-Mail-Adresse ein.",
-    "errorEnterPassword": "Bitte gib dein Passwort ein."
+    "errorEnterPassword": "Bitte gib dein Passwort ein.",
+    "forgotPassword": "Passwort vergessen?"
+  },
+  "authErrors": {
+    "invalidCredentials": "E-Mail oder Passwort ist falsch.",
+    "emailNotConfirmed": "Bitte bestätige zuerst deine E-Mail-Adresse. Schau in dein Postfach.",
+    "userExists": "Mit dieser E-Mail-Adresse existiert bereits ein Konto. Bitte melde dich an.",
+    "passwordTooShort": "Das Passwort muss mindestens 6 Zeichen haben.",
+    "passwordWeak": "Dieses Passwort ist zu schwach. Bitte wähle ein stärkeres.",
+    "passwordSame": "Das neue Passwort muss sich vom alten unterscheiden.",
+    "rateLimit": "Zu viele Versuche. Bitte warte einen Moment und versuche es erneut.",
+    "linkExpired": "Dieser Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an.",
+    "userNotFound": "Kein Konto mit dieser E-Mail-Adresse gefunden.",
+    "invalidEmail": "Bitte gib eine gültige E-Mail-Adresse ein.",
+    "signupDisabled": "Die Registrierung ist derzeit deaktiviert.",
+    "network": "Netzwerkfehler. Bitte prüfe deine Verbindung und versuche es erneut."
+  },
+  "forgotPassword": {
+    "heading": "Passwort vergessen",
+    "subtext": "Gib deine E-Mail-Adresse ein und wir senden dir einen Link zum Zurücksetzen.",
+    "emailPlaceholder": "deine@email.com",
+    "sendLink": "Link senden",
+    "sending": "Wird gesendet...",
+    "checkEmail": "E-Mail prüfen",
+    "sentTo": "Wir haben einen Link zum Zurücksetzen an {email} gesendet. Klicke auf den Link, um ein neues Passwort zu wählen.",
+    "backToLogin": "← Zurück zur Anmeldung",
+    "errorEnterEmail": "Bitte gib deine E-Mail-Adresse ein."
+  },
+  "resetPassword": {
+    "heading": "Neues Passwort",
+    "subtext": "Wähle ein neues Passwort für dein Konto.",
+    "newPasswordPlaceholder": "Neues Passwort (mind. 6 Zeichen)",
+    "confirmPasswordPlaceholder": "Passwort bestätigen",
+    "updatePassword": "Passwort aktualisieren",
+    "updating": "Wird aktualisiert...",
+    "success": "Passwort geändert",
+    "redirecting": "Du wirst gleich weitergeleitet...",
+    "backToLogin": "← Zurück zur Anmeldung",
+    "errorTooShort": "Das Passwort muss mindestens 6 Zeichen haben.",
+    "errorMismatch": "Die Passwörter stimmen nicht überein.",
+    "errorInvalidLink": "Der Link ist ungültig oder abgelaufen. Bitte fordere einen neuen an."
   },
   "visit": {
     "heading": "Memorial besuchen",

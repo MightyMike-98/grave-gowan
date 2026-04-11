@@ -40,6 +40,10 @@ export async function GET(request: NextRequest) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (!error) {
+            // Password-Reset-Flow: direkt zur Reset-Seite, Setup-Check überspringen
+            if (next === '/reset-password') {
+                return NextResponse.redirect(`${origin}/reset-password`);
+            }
             // Setup noch nicht abgeschlossen → Setup-Seite zuerst (gilt für alle Auth-Methoden)
             const setupComplete = data.user?.user_metadata?.setup_complete;
             if (!setupComplete) {
