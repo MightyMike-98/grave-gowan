@@ -1,18 +1,23 @@
 /**
  * @file app/api/members/invite/route.ts
- * @description API Route: Lädt jemanden per E-Mail zu einem Memorial ein.
+ * @description API Route: Lädt jemanden per E-Mail zu einem Memorial ein
+ * und sendet eine Einladungs-Email über Zoho SMTP.
  *
  * POST /api/members/invite
  * Body: { email, role, memorialId, invitedBy, memorialSlug }
  */
 
 import { createSupabaseServerClient } from '@data/server-client';
+import { editorInviteEmail } from '@/lib/email-templates';
+import { sendEmail } from '@/lib/mailer';
 import { NextRequest, NextResponse } from 'next/server';
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://memorialyard.com';
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { email, role, memorialId, invitedBy } = body;
+        const { email, role, memorialId, invitedBy, memorialSlug, locale } = body;
 
         if (!email || !role || !memorialId || !invitedBy) {
             return NextResponse.json(
@@ -71,6 +76,42 @@ export async function POST(request: NextRequest) {
             }
             console.error('[invite] Insert error:', insertError);
             return NextResponse.json({ error: insertError.message }, { status: 500 });
+        }
+
+        // Send invitation email
+        try {
+            // Get memorial name and inviter name
+            const { data: memorial } = await supabase
+                .from('memorials')
+                .select('name')
+                .eq('id', memorialId)
+                .single();
+
+            const inviterName = user.user_metadata?.display_name ?? user.email ?? 'Jemand';
+            const recipientName = cleanEmail.split('@')[0];
+            const memorialName = memorial?.name ?? 'ein Memorial';
+            const slug = memorialSlug ?? memorialId;
+
+            const en = locale === 'en';
+            const html = editorInviteEmail({
+                recipientName,
+                memorialName,
+                inviterName,
+                registerUrl: `${APP_URL}/login`,
+                memorialUrl: `${APP_URL}/memorial/${slug}`,
+                locale,
+            });
+
+            await sendEmail({
+                to: cleanEmail,
+                subject: en
+                    ? `You've been invited as an editor – ${memorialName}`
+                    : `Du wurdest als Editor eingeladen – ${memorialName}`,
+                html,
+            });
+        } catch (emailErr) {
+            // Don't fail the invite if email sending fails
+            console.error('[invite] Email sending failed:', emailErr);
         }
 
         return NextResponse.json(

@@ -18,11 +18,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { Suspense, useState } from 'react';
 
 /** Die eigentliche Login-Form, wrapped in Suspense für useSearchParams. */
 function LoginForm() {
     const t = useTranslations('login');
+    const locale = useLocale();
     const searchParams = useSearchParams();
 
     /** Ziel-URL nach erfolgreichem Login. */
@@ -62,7 +64,7 @@ function LoginForm() {
         setError(null);
 
         if (mode === 'signup') {
-            const { error } = await signUpWithEmail(email, password, next !== '/dashboard' ? next : undefined);
+            const { error } = await signUpWithEmail(email, password, next !== '/dashboard' ? next : undefined, locale);
             setLoading(null);
             if (error) {
                 setError(error);

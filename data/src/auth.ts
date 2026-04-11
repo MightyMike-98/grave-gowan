@@ -54,7 +54,7 @@ export async function signInWithGoogle(next?: string): Promise<{ error: string |
  * @param password - Das gewählte Passwort (min. 6 Zeichen).
  * @returns Fehler-Objekt oder null bei Erfolg.
  */
-export async function signUpWithEmail(email: string, password: string, next?: string): Promise<{ error: string | null }> {
+export async function signUpWithEmail(email: string, password: string, next?: string, locale?: string): Promise<{ error: string | null }> {
     if (!email || !email.includes('@')) {
         return { error: 'Please enter a valid email address.' };
     }
@@ -71,6 +71,7 @@ export async function signUpWithEmail(email: string, password: string, next?: st
         password,
         options: {
             emailRedirectTo: redirectTo,
+            data: { locale: locale ?? 'de' },
         },
     });
     if (error) return { error: error.message };

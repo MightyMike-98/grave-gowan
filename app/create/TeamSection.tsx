@@ -2,7 +2,7 @@
 
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { Trash2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 
 interface InviteDraft {
@@ -27,6 +27,7 @@ interface TeamSectionProps {
 
 export function TeamSection({ isEditing, existingSlug, editId, userId, invites, setInvites }: TeamSectionProps) {
     const t = useTranslations('create');
+    const locale = useLocale();
     const [tempEmail, setTempEmail] = useState('');
     const [existingMembers, setExistingMembers] = useState<ExistingMember[]>([]);
     const [sending, setSending] = useState(false);
@@ -85,7 +86,7 @@ export function TeamSection({ isEditing, existingSlug, editId, userId, invites, 
                 const res = await fetch('/api/members/invite', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, role: 'editor', memorialId: editId, invitedBy: userId, memorialSlug: existingSlug }),
+                    body: JSON.stringify({ email, role: 'editor', memorialId: editId, invitedBy: userId, memorialSlug: existingSlug, locale }),
                 });
                 const data = await res.json();
                 if (!res.ok) {

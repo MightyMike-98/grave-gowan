@@ -17,7 +17,7 @@ import { SupabaseMemorialRepository } from '@data/repositories/SupabaseMemorialR
 import { uploadMemorialImage } from '@data/storage';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, Check, Copy, Link as LinkIcon } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useState } from 'react';
@@ -33,6 +33,7 @@ import { TimelineEditor, type TimelineEventDraft } from './TimelineEditor';
 
 function CreateMemorialForm() {
     const t = useTranslations('create');
+    const locale = useLocale();
     const router = useRouter();
     const params = useSearchParams();
     const editId = params.get('id');
@@ -266,7 +267,7 @@ function CreateMemorialForm() {
                 // Send any new invites
                 if (invites.length > 0) {
                     await Promise.allSettled(invites.map((inv) =>
-                        fetch('/api/members/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: inv.email, role: inv.role, memorialId: editId, invitedBy: userId, memorialSlug: existingSlug }) })
+                        fetch('/api/members/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: inv.email, role: inv.role, memorialId: editId, invitedBy: userId, memorialSlug: existingSlug, locale }) })
                     ));
                     setInvites([]);
                 }
@@ -297,7 +298,7 @@ function CreateMemorialForm() {
                 }
                 if (invites.length > 0) {
                     await Promise.allSettled(invites.map((inv) =>
-                        fetch('/api/members/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: inv.email, role: inv.role, memorialId: memorial.id, invitedBy: userId, memorialSlug: memorial.slug }) })
+                        fetch('/api/members/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: inv.email, role: inv.role, memorialId: memorial.id, invitedBy: userId, memorialSlug: memorial.slug, locale }) })
                     ));
                 }
                 router.push(`/memorial/${memorial.slug}`);
