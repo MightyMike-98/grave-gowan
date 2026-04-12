@@ -145,42 +145,43 @@ export function ImageUploader({
         <div className="space-y-2">
             <label className="block text-sm font-medium text-stone-700">{label}</label>
 
-            {/* Klickbare Upload-Zone */}
-            <button
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                disabled={uploading}
-                className="relative w-full border-2 border-dashed border-stone-300 rounded-xl overflow-hidden bg-stone-50 hover:border-stone-400 hover:bg-stone-100 transition-colors disabled:opacity-60"
-                style={{ minHeight: '140px' }}
-            >
-                {previewUrl ? (
-                    <>
-                        <Image
-                            src={previewUrl}
-                            alt={label}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 100vw, 500px"
-                            unoptimized={previewUrl.startsWith('blob:')}
-                        />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <span className="text-white text-sm font-medium">Change photo</span>
+            {/* Klickbare Upload-Zone (kreisförmig wie das Ergebnis) */}
+            <div className="flex justify-center">
+                <button
+                    type="button"
+                    onClick={() => inputRef.current?.click()}
+                    disabled={uploading}
+                    className="relative w-32 h-32 border-2 border-dashed border-stone-300 rounded-full overflow-hidden bg-stone-50 hover:border-stone-400 hover:bg-stone-100 transition-colors disabled:opacity-60"
+                >
+                    {previewUrl ? (
+                        <>
+                            <Image
+                                src={previewUrl}
+                                alt={label}
+                                fill
+                                className="object-cover"
+                                sizes="128px"
+                                unoptimized={previewUrl.startsWith('blob:')}
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <span className="text-white text-xs font-medium">Change</span>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-stone-300">
+                            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
                         </div>
-                    </>
-                ) : (
-                    <div className="flex items-center justify-center h-full text-stone-300">
-                        <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                    </div>
-                )}
+                    )}
 
-                {uploading && (
-                    <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-                        <span className="w-8 h-8 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" />
-                    </div>
-                )}
-            </button>
+                    {uploading && (
+                        <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                            <span className="w-6 h-6 border-2 border-stone-400 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                    )}
+                </button>
+            </div>
 
             <input
                 ref={inputRef}

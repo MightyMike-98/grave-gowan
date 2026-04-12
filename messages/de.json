@@ -155,7 +155,7 @@
     "team": "Team"
   },
   "tabs": {
-    "highlights": "Highlights",
+    "highlights": "Besondere Erinnerungen",
     "about": "Biografie",
     "timeline": "Lebensweg",
     "gallery": "Galerie",
@@ -236,7 +236,7 @@
     "sent": "Gesendet!",
     "sentSubtext": "Der Ersteller wurde benachrichtigt.",
     "catGallery": "Galerie",
-    "catHighlights": "Highlights",
+    "catHighlights": "Besondere Erinnerungen",
     "catBiography": "Biografie",
     "catStories": "Geschichten",
     "catAllgemein": "Allgemein"
