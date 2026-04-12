@@ -238,7 +238,7 @@ export default function LandingPage() {
                     onMouseEnter={(e) => (e.currentTarget.style.color = 'hsl(var(--muted-foreground) / 0.7)')}
                     onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
                 >
-                    Impressum
+                    {t('legalNotice')}
                 </Link>
                 <span>·</span>
                 <Link
@@ -248,7 +248,7 @@ export default function LandingPage() {
                     onMouseEnter={(e) => (e.currentTarget.style.color = 'hsl(var(--muted-foreground) / 0.7)')}
                     onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
                 >
-                    Datenschutz
+                    {t('privacyPolicy')}
                 </Link>
             </div>
 

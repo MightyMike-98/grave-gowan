@@ -6,7 +6,9 @@
     "login": "Login",
     "viewExample": "Beispiel ansehen (Muhammad Ali)",
     "howItWorks": "So funktioniert's",
-    "gettingStarted": "Erste Schritte"
+    "gettingStarted": "Erste Schritte",
+    "legalNotice": "Impressum",
+    "privacyPolicy": "Datenschutz"
   },
   "login": {
     "heading": "Cloudyard",
@@ -123,6 +125,7 @@
     "emptyTitle": "Neues Memorial erstellen",
     "emptySubtitle": "Beginne jetzt, Erinnerungen an einen besonderen Menschen festzuhalten.",
     "welcome": "Willkommen, {name}",
+    "welcomePrefix": "Willkommen,",
     "signOut": "Abmelden",
     "backToHome": "Zur Startseite",
     "viewExample": "Beispiel ansehen — Muhammad Ali"
@@ -378,6 +381,30 @@
     "notifyMe": "Benachrichtigt mich, wenn es verfügbar ist",
     "notified": "Wir geben dir Bescheid!",
     "upgradeCta": "Premium freischalten"
+  },
+  "impressum": {
+    "title": "Impressum",
+    "company": "MemorialYard",
+    "address1": "Musterstraße 1",
+    "address2": "12345 Musterstadt",
+    "country": "Deutschland",
+    "email": "E-Mail: kontakt@memorialyard.de",
+    "phone": "Telefon: +49 123 456 789",
+    "responsible": "Verantwortlich für den Inhalt",
+    "responsibleName": "Max Mustermann",
+    "back": "← Zurück"
+  },
+  "datenschutz": {
+    "title": "Datenschutzerklärung",
+    "section1Title": "1. Verantwortlicher",
+    "section1Text": "MemorialYard, Musterstraße 1, 12345 Musterstadt. Kontakt: kontakt@memorialyard.de",
+    "section2Title": "2. Erhebung und Speicherung personenbezogener Daten",
+    "section2Text": "Beim Besuch unserer Website werden automatisch Informationen (Server-Logfiles) erfasst, die Ihr Browser übermittelt. Diese Daten sind nicht bestimmten Personen zuordenbar.",
+    "section3Title": "3. Cookies",
+    "section3Text": "Unsere Website verwendet Cookies, um die Nutzererfahrung zu verbessern. Sie können die Verwendung von Cookies in Ihren Browsereinstellungen deaktivieren.",
+    "section4Title": "4. Ihre Rechte",
+    "section4Text": "Sie haben das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung Ihrer personenbezogenen Daten gemäß DSGVO.",
+    "back": "← Zurück"
   },
   "demo": {
     "bio": "Sarah war eine liebevolle Mutter, Großmutter und Biologin, die ihr Leben dem Schutz von Feuchtgebieten widmete. Ihre Sanftheit und Weisheit berührten jeden, dem sie begegnete.",

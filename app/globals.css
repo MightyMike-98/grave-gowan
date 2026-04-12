@@ -64,6 +64,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+button, [role="button"] {
+  cursor: pointer;
+}
+
 h1, h2, h3, h4 {
   font-family: var(--font-serif);
   font-weight: 400;

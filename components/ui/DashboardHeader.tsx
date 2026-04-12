@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { SignOutButton } from '@/components/ui/SignOutButton';
 import type { Suggestion } from '@/types';
 import { createSupabaseBrowserClient } from '@data/browser-client';
@@ -131,6 +131,50 @@ function MessageRow({
     );
 }
 
+function EditableName({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const [editing, setEditing] = useState(false);
+    const [draft, setDraft] = useState(value);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (editing) inputRef.current?.focus();
+    }, [editing]);
+
+    const save = () => {
+        const trimmed = draft.trim();
+        if (trimmed && trimmed !== value) onChange(trimmed);
+        else setDraft(value);
+        setEditing(false);
+    };
+
+    if (editing) {
+        return (
+            <input
+                ref={inputRef}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onBlur={save}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') save();
+                    if (e.key === 'Escape') { setDraft(value); setEditing(false); }
+                }}
+                className="inline-block w-auto border-b bg-transparent text-inherit outline-none focus:border-[hsl(var(--primary))]"
+                style={{ font: 'inherit', width: `${draft.length + 1}ch`, borderColor: 'hsl(var(--border) / 0.6)' }}
+            />
+        );
+    }
+
+    return (
+        <span
+            className="cursor-pointer transition-colors hover:text-[hsl(var(--primary))]"
+            onClick={() => { setDraft(value); setEditing(true); }}
+            title="Click to edit"
+        >
+            {value}
+        </span>
+    );
+}
+
 export function DashboardHeader({ displayName, email, pendingStoryInfos = [], requests = [] }: DashboardHeaderProps) {
     const t = useTranslations('inbox');
     const tDash = useTranslations('dashboard');
@@ -228,7 +272,15 @@ export function DashboardHeader({ displayName, email, pendingStoryInfos = [], re
         <div className="relative z-50">
             <header className="flex items-center justify-between">
                 <h1 className="text-3xl tracking-tight">
-                    {tDash('welcome', { name: displayName.split(' ')[0] })}
+                    {tDash('welcomePrefix')}{' '}
+                    <EditableName
+                        value={displayName}
+                        onChange={async (newName) => {
+                            const supabase = createSupabaseBrowserClient();
+                            await supabase.auth.updateUser({ data: { full_name: newName } });
+                            router.refresh();
+                        }}
+                    />
                 </h1>
                 <div className="flex items-center gap-3">
                     <button

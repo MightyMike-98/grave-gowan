@@ -79,17 +79,20 @@ export default function VisitPage() {
     }, [query]);
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center px-4">
+        <main className="relative flex min-h-screen flex-col items-center justify-center px-4">
+            {/* Back button — top left */}
+            <Link
+                href="/"
+                className="absolute left-6 top-6 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors"
+                style={{
+                    backgroundColor: 'hsl(var(--foreground) / 0.05)',
+                    color: 'hsl(var(--foreground) / 0.6)',
+                }}
+            >
+                {t('back')}
+            </Link>
+
             <div className="w-full max-w-lg space-y-8 text-center animate-fade-up">
-
-                <Link
-                    href="/"
-                    className="text-sm font-light transition-colors hover:opacity-100"
-                    style={{ color: 'hsl(var(--muted-foreground))' }}
-                >
-                    {t('back')}
-                </Link>
-
                 <h1 className="text-5xl tracking-tight">
                     {t('heading')}
                 </h1>

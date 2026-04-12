@@ -47,7 +47,22 @@ export async function createMemorial(
     }
 
     // Slug aus dem Namen generieren falls nicht übergeben
-    const slug = input.slug || generateSlug(input.name, input.dateOfBirth?.slice(0, 4));
+    const baseSlug = input.slug || generateSlug(input.name, input.dateOfBirth?.slice(0, 4));
+
+    // Bei Duplikaten automatisch einen Suffix anhängen (z.B. muhammad-ali-1942-2)
+    let slug = baseSlug;
+    for (let attempt = 0; attempt < 10; attempt++) {
+        try {
+            return await repo.create({ ...input, slug });
+        } catch (err: unknown) {
+            const errObj = err as { message?: string; code?: string };
+            const msg = errObj.message ?? String(err);
+            const code = errObj.code ?? '';
+            const isDuplicate = msg.includes('duplicate') || msg.includes('unique') || code === '23505';
+            if (!isDuplicate || attempt >= 9) throw err;
+            slug = `${baseSlug}-${attempt + 2}`;
+        }
+    }
 
     return repo.create({ ...input, slug });
 }

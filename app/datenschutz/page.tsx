@@ -1,29 +1,32 @@
+import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 
-export default function DatenschutzPage() {
+export default async function DatenschutzPage() {
+    const t = await getTranslations('datenschutz');
+
     return (
         <div className="flex min-h-screen flex-col items-center justify-center px-6 py-16" style={{ color: 'hsl(var(--foreground))' }}>
             <div className="max-w-lg space-y-6 text-sm font-light leading-relaxed" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                <h1 className="text-lg font-normal" style={{ color: 'hsl(var(--foreground))' }}>Datenschutzerklärung</h1>
+                <h1 className="text-lg font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('title')}</h1>
 
                 <section className="space-y-2">
-                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>1. Verantwortlicher</h2>
-                    <p>MemorialYard, Musterstraße 1, 12345 Musterstadt. Kontakt: kontakt@memorialyard.de</p>
+                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('section1Title')}</h2>
+                    <p>{t('section1Text')}</p>
                 </section>
 
                 <section className="space-y-2">
-                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>2. Erhebung und Speicherung personenbezogener Daten</h2>
-                    <p>Beim Besuch unserer Website werden automatisch Informationen (Server-Logfiles) erfasst, die Ihr Browser übermittelt. Diese Daten sind nicht bestimmten Personen zuordenbar.</p>
+                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('section2Title')}</h2>
+                    <p>{t('section2Text')}</p>
                 </section>
 
                 <section className="space-y-2">
-                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>3. Cookies</h2>
-                    <p>Unsere Website verwendet Cookies, um die Nutzererfahrung zu verbessern. Sie können die Verwendung von Cookies in Ihren Browsereinstellungen deaktivieren.</p>
+                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('section3Title')}</h2>
+                    <p>{t('section3Text')}</p>
                 </section>
 
                 <section className="space-y-2">
-                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>4. Ihre Rechte</h2>
-                    <p>Sie haben das Recht auf Auskunft, Berichtigung, Löschung und Einschränkung der Verarbeitung Ihrer personenbezogenen Daten gemäß DSGVO.</p>
+                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('section4Title')}</h2>
+                    <p>{t('section4Text')}</p>
                 </section>
 
                 <Link
@@ -31,7 +34,7 @@ export default function DatenschutzPage() {
                     className="mt-8 inline-block text-xs transition-colors"
                     style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
                 >
-                    ← Zurück
+                    {t('back')}
                 </Link>
             </div>
         </div>

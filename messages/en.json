@@ -6,7 +6,9 @@
     "login": "Login",
     "viewExample": "View Example (Muhammad Ali)",
     "howItWorks": "How it works",
-    "gettingStarted": "Getting started"
+    "gettingStarted": "Getting started",
+    "legalNotice": "Legal Notice",
+    "privacyPolicy": "Privacy Policy"
   },
   "login": {
     "heading": "Cloudyard",
@@ -123,6 +125,7 @@
     "emptyTitle": "Create a new memorial",
     "emptySubtitle": "Start preserving memories of someone special.",
     "welcome": "Welcome, {name}",
+    "welcomePrefix": "Welcome,",
     "signOut": "Sign out",
     "backToHome": "Back to Homepage",
     "viewExample": "View example — Muhammad Ali"
@@ -378,6 +381,30 @@
     "notifyMe": "Notify me when it's available",
     "notified": "We'll let you know!",
     "upgradeCta": "Unlock Premium"
+  },
+  "impressum": {
+    "title": "Legal Notice",
+    "company": "MemorialYard",
+    "address1": "Musterstraße 1",
+    "address2": "12345 Musterstadt",
+    "country": "Germany",
+    "email": "Email: kontakt@memorialyard.de",
+    "phone": "Phone: +49 123 456 789",
+    "responsible": "Responsible for content",
+    "responsibleName": "Max Mustermann",
+    "back": "← Back"
+  },
+  "datenschutz": {
+    "title": "Privacy Policy",
+    "section1Title": "1. Controller",
+    "section1Text": "MemorialYard, Musterstraße 1, 12345 Musterstadt. Contact: kontakt@memorialyard.de",
+    "section2Title": "2. Collection and storage of personal data",
+    "section2Text": "When you visit our website, information (server log files) is automatically collected that your browser transmits. This data cannot be attributed to specific individuals.",
+    "section3Title": "3. Cookies",
+    "section3Text": "Our website uses cookies to improve the user experience. You can disable the use of cookies in your browser settings.",
+    "section4Title": "4. Your rights",
+    "section4Text": "You have the right to access, rectification, deletion and restriction of the processing of your personal data in accordance with the GDPR.",
+    "back": "← Back"
   },
   "demo": {
     "bio": "Sarah was a loving mother, grandmother, and biological researcher who dedicated her life to preserving wetland ecosystems. Her gentleness and wisdom touched everyone she met.",

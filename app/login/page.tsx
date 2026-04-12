@@ -109,10 +109,22 @@ function LoginForm() {
     }
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center px-4">
+        <main className="relative flex min-h-screen flex-col items-center justify-center px-4">
+            {/* Back button — top left */}
+            <Link
+                href="/"
+                className="absolute left-6 top-6 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors"
+                style={{
+                    backgroundColor: 'hsl(var(--foreground) / 0.05)',
+                    color: 'hsl(var(--foreground) / 0.6)',
+                }}
+            >
+                {t('backToHome')}
+            </Link>
+
             <div className="w-full max-w-md space-y-6 text-center animate-fade-up">
                 <h1 className="text-4xl tracking-tight">
-                    Cloudyard
+                    MemorialYard
                 </h1>
                 <AnimatePresence mode="wait">
                     <motion.p
@@ -277,15 +289,6 @@ function LoginForm() {
                         </p>
                     )}
                 </div>
-
-                {/* Zurück-Link */}
-                <Link
-                    href="/"
-                    className="inline-block text-sm font-light transition-colors hover:opacity-100"
-                    style={{ color: 'hsl(var(--muted-foreground))' }}
-                >
-                    {t('backToHome')}
-                </Link>
 
                 {/* Hidden next-param für den Callback */}
                 <input type="hidden" name="next" value={next} />
