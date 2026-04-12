@@ -114,7 +114,7 @@ function MemberRow({
 }) {
     const isCurrentUser = member.userId === currentUserId;
     const isOwner = member.role === 'owner';
-    const isPending = !member.userId;
+    const isPending = member.inviteStatus === 'pending';
 
     const roleBadge: Record<string, string> = {
         owner: 'bg-amber-50 text-amber-700',
@@ -146,6 +146,12 @@ function MemberRow({
             </div>
 
             <div className="flex items-center gap-2 flex-shrink-0">
+                {isPending && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200">
+                        <span className="w-1 h-1 rounded-full bg-amber-500" />
+                        Pending
+                    </span>
+                )}
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${roleBadge[member.role]}`}>
                     {member.role}
                 </span>

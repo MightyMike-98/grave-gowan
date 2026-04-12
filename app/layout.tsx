@@ -20,10 +20,10 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-    title: 'Cloudyard',
+    title: 'MemorialYard — Honor Loved Ones',
     description: 'A quiet, respectful space to honor loved ones.',
     openGraph: {
-        title: 'Cloudyard',
+        title: 'MemorialYard',
         description: 'A quiet, respectful space to honor loved ones.',
         type: 'website',
     },

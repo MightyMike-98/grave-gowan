@@ -92,5 +92,7 @@ export interface Member {
     invitedEmail?: string;
     /** Zugriffsrolle; Owner hat vollen Schreibzugriff. */
     role: 'owner' | 'editor' | 'viewer';
+    /** 'pending' bis die Einladung per E-Mail-Link bestätigt wurde; danach 'accepted'. */
+    inviteStatus: 'pending' | 'accepted';
     joinedAt: string;
 }

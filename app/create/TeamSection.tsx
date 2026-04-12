@@ -14,6 +14,7 @@ interface ExistingMember {
     id: string;
     email: string;
     role: string;
+    status: string;
 }
 
 interface TeamSectionProps {
@@ -39,7 +40,7 @@ export function TeamSection({ isEditing, existingSlug, editId, userId, invites, 
         const supabase = createSupabaseBrowserClient();
         const { data, error } = await supabase
             .from('memorial_members')
-            .select('id, invited_email, role')
+            .select('id, invited_email, role, invite_status')
             .eq('memorial_id', editId)
             .neq('role', 'owner')
             .order('joined_at', { ascending: false });
@@ -50,10 +51,11 @@ export function TeamSection({ isEditing, existingSlug, editId, userId, invites, 
         }
 
         if (data) {
-            setExistingMembers(data.map((m: { id: string; invited_email: string; role: string }) => ({
+            setExistingMembers(data.map((m: { id: string; invited_email: string; role: string; invite_status: string }) => ({
                 id: m.id,
                 email: m.invited_email ?? '',
                 role: m.role,
+                status: m.invite_status ?? 'accepted',
             })));
         }
     }, [editId]);
@@ -136,6 +138,19 @@ export function TeamSection({ isEditing, existingSlug, editId, userId, invites, 
                                         <span className="text-[10px] px-2 py-0.5 rounded-full font-normal capitalize shrink-0" style={{ backgroundColor: 'hsl(var(--secondary))', color: 'hsl(var(--secondary-foreground))' }}>
                                             {member.role}
                                         </span>
+                                        {member.status === 'pending' && (
+                                            <span
+                                                className="text-[10px] px-2 py-0.5 rounded-full font-normal shrink-0 inline-flex items-center gap-1"
+                                                style={{
+                                                    backgroundColor: 'hsl(var(--muted) / 0.6)',
+                                                    color: 'hsl(var(--muted-foreground))',
+                                                    border: '1px solid hsl(var(--border) / 0.4)',
+                                                }}
+                                            >
+                                                <span className="w-1 h-1 rounded-full" style={{ backgroundColor: 'hsl(var(--muted-foreground))' }} />
+                                                {t('memberPending')}
+                                            </span>
+                                        )}
                                     </div>
                                     <button
                                         type="button"

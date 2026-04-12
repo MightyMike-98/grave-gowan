@@ -2,8 +2,11 @@
   "landing": {
     "tagline": "Ein stiller, würdevoller Ort, um geliebte Menschen zu ehren.",
     "visitMemorial": "Memorial besuchen",
-    "login": "Anmelden",
-    "viewExample": "Beispiel ansehen (Sarah Jenkins)"
+    "createMemorial": "Memorial erstellen",
+    "login": "Login",
+    "viewExample": "Beispiel ansehen (Muhammad Ali)",
+    "howItWorks": "So funktioniert's",
+    "gettingStarted": "Erste Schritte"
   },
   "login": {
     "heading": "Cloudyard",
@@ -28,6 +31,21 @@
     "errorEnterEmail": "Bitte gib deine E-Mail-Adresse ein.",
     "errorEnterPassword": "Bitte gib dein Passwort ein.",
     "forgotPassword": "Passwort vergessen?"
+  },
+  "invite": {
+    "accepting": "Einladung wird angenommen...",
+    "acceptedHeading": "Einladung angenommen",
+    "acceptedText": "Du hast jetzt Editor-Zugriff auf dieses Memorial.",
+    "editMemorial": "Memorial bearbeiten",
+    "toDashboard": "Zum Dashboard",
+    "loginRequiredHeading": "Anmeldung erforderlich",
+    "loginRequiredText": "Bitte melde dich an oder erstelle ein Konto, um die Einladung anzunehmen.",
+    "signIn": "Anmelden",
+    "errorHeading": "Etwas ist schiefgelaufen",
+    "errorInvalidLink": "Der Einladungslink ist ungültig.",
+    "errorNotFound": "Einladung nicht gefunden.",
+    "errorWrongEmail": "Diese Einladung wurde an {email} gesendet. Bitte melde dich mit dieser E-Mail-Adresse an.",
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
   },
   "authErrors": {
     "invalidCredentials": "E-Mail oder Passwort ist falsch.",
@@ -72,11 +90,11 @@
     "heading": "Memorial besuchen",
     "description": "Gib den Link oder Namen des Memorials ein.",
     "linkLabel": "Link / Name",
-    "linkPlaceholder": "z. B. sarah-jenkins-1954",
+    "linkPlaceholder": "z. B. muhammad-ali-1942",
     "linkHelper": "Du findest den Link in der Einladung oder direkt vom Ersteller.",
     "openMemorial": "Memorial öffnen",
     "noLink": "Keinen Link?",
-    "viewDemo": "Demo-Memorial ansehen",
+    "viewDemo": "Beispiel ansehen — Muhammad Ali",
     "back": "← Zurück",
     "searchPlaceholder": "Öffentliche Memorials durchsuchen...",
     "privateHint": "Private Memorials sind nur über geteilte Links erreichbar.",
@@ -106,7 +124,8 @@
     "emptySubtitle": "Beginne jetzt, Erinnerungen an einen besonderen Menschen festzuhalten.",
     "welcome": "Willkommen, {name}",
     "signOut": "Abmelden",
-    "backToHome": "Zur Startseite"
+    "backToHome": "Zur Startseite",
+    "viewExample": "Beispiel ansehen — Muhammad Ali"
   },
   "inbox": {
     "title": "Postfach",
@@ -129,6 +148,7 @@
     "candlesMany": "{count} Kerzen leuchten",
     "createdByFamily": "Erstellt von der Familie",
     "poweredBy": "Unterstützt von Cloudyard",
+    "back": "Zurück",
     "backToDashboard": "Zurück zum Dashboard",
     "backToHome": "Zur Startseite",
     "editMemorial": "Memorial bearbeiten",
@@ -241,7 +261,7 @@
     "fieldYear": "Jahr",
     "fieldTitle": "Titel",
     "fieldDescOptional": "Beschreibung (optional)",
-    "placeholderName": "z. B. Sarah Jenkins",
+    "placeholderName": "z. B. Muhammad Ali",
     "placeholderBio": "Eine kurze Erinnerung...",
     "placeholderQuote": "z. B. Am Ende zählen nicht die Jahre in deinem Leben...",
     "placeholderCountry": "z. B. Deutschland",
@@ -311,6 +331,7 @@
     "addStory": "+ Geschichte hinzufügen",
     "manageTeam": "Team & Rollen verwalten",
     "teamDescription": "Lade Personen per E-Mail ein, um diese Memorial zu bearbeiten.",
+    "memberPending": "Ausstehend",
     "dangerZone": "Gefahrenzone",
     "leaveRole": "Rolle verlassen",
     "leaveRoleDesc": "Du verlierst den Editor-Zugang zu dieser Memorial. Dies kann ohne eine neue Einladung nicht rückgängig gemacht werden.",

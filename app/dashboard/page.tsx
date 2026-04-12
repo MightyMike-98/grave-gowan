@@ -228,6 +228,18 @@ export default async function DashboardPage() {
                     </>
                 )}
 
+                {/* Example Memorial */}
+                <div className="mt-8 flex justify-center">
+                    <Link
+                        href="/memorial/muhammad-ali-1942"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-light transition-colors"
+                        style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}
+                    >
+                        <span>✦</span>
+                        <span>{t('viewExample')}</span>
+                    </Link>
+                </div>
+
             </div>
         </main>
     );

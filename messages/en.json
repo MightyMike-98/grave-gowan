@@ -2,8 +2,11 @@
   "landing": {
     "tagline": "A quiet, respectful space to honor loved ones.",
     "visitMemorial": "Visit Memorial",
+    "createMemorial": "Create Memorial",
     "login": "Login",
-    "viewExample": "View Example (Sarah Jenkins)"
+    "viewExample": "View Example (Muhammad Ali)",
+    "howItWorks": "How it works",
+    "gettingStarted": "Getting started"
   },
   "login": {
     "heading": "Cloudyard",
@@ -28,6 +31,21 @@
     "errorEnterEmail": "Please enter your email address.",
     "errorEnterPassword": "Please enter your password.",
     "forgotPassword": "Forgot password?"
+  },
+  "invite": {
+    "accepting": "Accepting invitation...",
+    "acceptedHeading": "Invitation accepted",
+    "acceptedText": "You now have editor access to this memorial.",
+    "editMemorial": "Edit Memorial",
+    "toDashboard": "To Dashboard",
+    "loginRequiredHeading": "Sign in required",
+    "loginRequiredText": "Please sign in or create an account to accept this invitation.",
+    "signIn": "Sign In",
+    "errorHeading": "Something went wrong",
+    "errorInvalidLink": "This invitation link is invalid.",
+    "errorNotFound": "Invitation not found.",
+    "errorWrongEmail": "This invitation was sent to {email}. Please sign in with that email.",
+    "errorGeneric": "Something went wrong. Please try again."
   },
   "authErrors": {
     "invalidCredentials": "Email or password is incorrect.",
@@ -72,11 +90,11 @@
     "heading": "Visit a Memorial",
     "description": "Enter the link or name of the memorial.",
     "linkLabel": "Link / Name",
-    "linkPlaceholder": "e.g., sarah-jenkins-1954",
+    "linkPlaceholder": "e.g., muhammad-ali-1942",
     "linkHelper": "You can find the link in your invitation or from the creator.",
     "openMemorial": "Open Memorial",
     "noLink": "No link?",
-    "viewDemo": "View demo memorial",
+    "viewDemo": "View example — Muhammad Ali",
     "back": "← Back",
     "searchPlaceholder": "Search public memorials...",
     "privateHint": "Private memorials are only accessible via shared links.",
@@ -106,7 +124,8 @@
     "emptySubtitle": "Start preserving memories of someone special.",
     "welcome": "Welcome, {name}",
     "signOut": "Sign out",
-    "backToHome": "Back to Homepage"
+    "backToHome": "Back to Homepage",
+    "viewExample": "View example — Muhammad Ali"
   },
   "inbox": {
     "title": "Inbox",
@@ -129,6 +148,7 @@
     "candlesMany": "{count} candles burning",
     "createdByFamily": "Created by Family",
     "poweredBy": "Powered by Cloudyard",
+    "back": "Back",
     "backToDashboard": "Back to Dashboard",
     "backToHome": "Back to Homepage",
     "editMemorial": "Edit Memorial",
@@ -241,7 +261,7 @@
     "fieldYear": "Year",
     "fieldTitle": "Title",
     "fieldDescOptional": "Description (Optional)",
-    "placeholderName": "e.g., Sarah Jenkins",
+    "placeholderName": "e.g., Muhammad Ali",
     "placeholderBio": "Share a brief memory...",
     "placeholderQuote": "e.g., In the end, it's not the years in your life that count...",
     "placeholderCountry": "e.g., USA",
@@ -311,6 +331,7 @@
     "addStory": "+ Add story",
     "manageTeam": "Manage Team & Roles",
     "teamDescription": "Invite people by email to edit this memorial.",
+    "memberPending": "Pending",
     "dangerZone": "Danger Zone",
     "leaveRole": "Leave Role",
     "leaveRoleDesc": "You will lose editor access to this memorial. This cannot be undone without a new invitation.",

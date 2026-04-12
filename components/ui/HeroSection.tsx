@@ -14,6 +14,7 @@ import type { MemorialView } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Flame } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -96,6 +97,7 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
     fromDashboard?: boolean;
 }) {
     const t = useTranslations('hero');
+    const router = useRouter();
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
     return (
@@ -124,16 +126,16 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
 
             {/* Back button + Save button */}
             <div className="relative px-6 flex items-center justify-between">
-                <Link
-                    href={fromDashboard ? '/dashboard' : '/'}
+                <button
+                    onClick={() => router.back()}
                     className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors"
                     style={{
                         backgroundColor: 'hsl(var(--foreground) / 0.05)',
                         color: 'hsl(var(--foreground) / 0.6)',
                     }}
                 >
-                    ← <span className="hidden sm:inline">{fromDashboard ? t('backToDashboard') : t('backToHome')}</span>
-                </Link>
+                    ← <span className="hidden sm:inline">{t('back')}</span>
+                </button>
                 {!canEdit && memorial.id !== 'demo' && <SaveButton memorialId={memorial.id} memorialSlug={memorialSlug} isAuthenticated={isAuthenticated} initialSaved={initialSaved} />}
             </div>
 

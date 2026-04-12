@@ -212,6 +212,20 @@ export default function VisitPage() {
                 <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
                     {t('privateHint')}
                 </p>
+
+                {/* Example Memorial */}
+                <div className="pt-2">
+                    <Link
+                        href="/memorial/muhammad-ali-1942"
+                        className="inline-flex items-center gap-1.5 text-[11px] font-light transition-colors"
+                        style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = 'hsl(var(--muted-foreground))')}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = 'hsl(var(--muted-foreground) / 0.5)')}
+                    >
+                        <span>✦</span>
+                        <span>{t('viewDemo')}</span>
+                    </Link>
+                </div>
             </div>
         </main>
     );

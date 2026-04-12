@@ -14,6 +14,17 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://memorialyard.com';
 
+/** `gowan.mohammed@x.com` → `Gowan Mohammed`. Nur als Fallback, wenn kein echter Name hinterlegt ist. */
+function prettifyEmailPrefix(email: string): string {
+    const prefix = email.split('@')[0] ?? email;
+    return prefix
+        .replace(/[._-]+/g, ' ')
+        .split(' ')
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+}
+
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
@@ -46,17 +57,20 @@ export async function POST(request: NextRequest) {
 
         const cleanEmail = email.trim().toLowerCase();
 
-        // User-ID per E-Mail nachschlagen
+        // User-Profil per E-Mail nachschlagen (id + full_name).
+        // Gibt es kein Konto, bleiben beide Werte null.
         let targetUserId: string | null = null;
-        const { data: foundUserId } = await supabase.rpc('get_user_id_by_email', {
-            lookup_email: cleanEmail,
-        });
-        if (foundUserId) {
-            targetUserId = foundUserId;
+        let targetFullName: string | null = null;
+        const { data: foundProfile } = await supabase
+            .rpc('get_user_profile_by_email', { lookup_email: cleanEmail });
+        if (Array.isArray(foundProfile) && foundProfile.length > 0) {
+            targetUserId = foundProfile[0].id ?? null;
+            targetFullName = foundProfile[0].full_name ?? null;
         }
 
-        // In memorial_members eintragen (direkt als accepted)
-        const { error: insertError } = await supabase
+        // Eintrag als 'pending' anlegen – wird erst nach Klick auf den
+        // Bestätigungslink in der E-Mail auf 'accepted' gesetzt.
+        const { data: inserted, error: insertError } = await supabase
             .from('memorial_members')
             .insert({
                 memorial_id: memorialId,
@@ -64,8 +78,10 @@ export async function POST(request: NextRequest) {
                 role,
                 invited_by: invitedBy,
                 invited_email: cleanEmail,
-                invite_status: 'accepted',
-            });
+                invite_status: 'pending',
+            })
+            .select('id')
+            .single();
 
         if (insertError) {
             if (insertError.message.includes('unique') || insertError.message.includes('duplicate')) {
@@ -87,18 +103,26 @@ export async function POST(request: NextRequest) {
                 .eq('id', memorialId)
                 .single();
 
-            const inviterName = user.user_metadata?.display_name ?? user.email ?? 'Jemand';
-            const recipientName = cleanEmail.split('@')[0];
+            const inviterName =
+                (user.user_metadata?.full_name as string | undefined)
+                ?? (user.user_metadata?.display_name as string | undefined)
+                ?? user.email
+                ?? 'Jemand';
+
+            // Empfänger-Name: echter Name aus dem Profil (falls Konto existiert),
+            // sonst hübsch formatierter E-Mail-Präfix als Fallback
+            const recipientName = targetFullName ?? prettifyEmailPrefix(cleanEmail);
+
             const memorialName = memorial?.name ?? 'ein Memorial';
             const slug = memorialSlug ?? memorialId;
 
             const en = locale === 'en';
+            const acceptUrl = `${APP_URL}/invite/accept?token=${inserted.id}`;
             const html = editorInviteEmail({
                 recipientName,
                 memorialName,
                 inviterName,
-                registerUrl: `${APP_URL}/login`,
-                memorialUrl: `${APP_URL}/memorial/${slug}`,
+                acceptUrl,
                 locale,
             });
 

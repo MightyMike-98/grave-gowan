@@ -95,11 +95,10 @@ export function editorInviteEmail(params: {
     recipientName: string;
     memorialName: string;
     inviterName: string;
-    registerUrl: string;
-    memorialUrl: string;
+    acceptUrl: string;
     locale?: string;
 }): string {
-    const { recipientName, memorialName, inviterName, registerUrl, memorialUrl, locale } = params;
+    const { recipientName, memorialName, inviterName, acceptUrl, locale } = params;
     const en = locale === 'en';
     return layout(`
 <p style="margin:0 0 20px 0;font-size:14px;line-height:1.7;color:rgba(24,24,27,0.85);">
@@ -116,17 +115,17 @@ export function editorInviteEmail(params: {
         : `Diese Einladung wurde von <strong style="color:rgba(24,24,27,0.8);">${inviterName}</strong> initiiert.`}
 </p>
 
-<!-- Register box -->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-<tr><td style="background-color:#f9f9fa;border:1px solid #e8e8eb;border-radius:8px;padding:20px;text-align:center;">
-<p style="margin:0 0 4px 0;font-size:10px;text-transform:uppercase;letter-spacing:0.15em;color:#a1a1aa;">${en ? 'No account yet?' : 'Noch kein Konto?'}</p>
-<p style="margin:0 0 12px 0;font-size:13px;color:#a1a1aa;">${en ? 'To access the memorial, please sign up for free first:' : 'Um auf das Memorial zugreifen zu können, registriere dich bitte zunächst kostenlos:'}</p>
-${ctaButton(en ? 'Create account \u2192' : 'Konto erstellen \u2192', registerUrl)}
-</td></tr>
-</table>
+<!-- Primary CTA: Accept invitation -->
+${ctaButton(en ? 'Accept invitation \u2192' : 'Einladung annehmen \u2192', acceptUrl)}
+
+<p style="margin:20px 0 24px 0;font-size:12px;line-height:1.6;color:#a1a1aa;text-align:center;">
+    ${en
+        ? 'Until you accept, the invitation stays pending. No account yet? You can sign up on the same page.'
+        : 'Bis du annimmst, bleibt die Einladung offen. Noch kein Konto? Du kannst dich auf derselben Seite registrieren.'}
+</p>
 
 <!-- Editor capabilities -->
-<p style="margin:0 0 12px 0;font-size:14px;font-weight:500;color:#18181b;">${en ? 'As an editor you can:' : 'Als Editor hast du folgende Möglichkeiten:'}</p>
+<p style="margin:24px 0 12px 0;font-size:14px;font-weight:500;color:#18181b;">${en ? 'As an editor you can:' : 'Als Editor hast du folgende Möglichkeiten:'}</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
 <tr><td style="padding:6px 0;font-size:13px;line-height:1.6;color:#a1a1aa;">
     <span style="color:#c4c4c8;">•</span>&nbsp;&nbsp;<strong style="color:rgba(24,24,27,0.8);">${en ? 'Timeline' : 'Lebensweg'}</strong> – ${en ? 'Add milestones from their life.' : 'Meilensteine aus dem Leben hinzufügen.'}
@@ -141,8 +140,6 @@ ${ctaButton(en ? 'Create account \u2192' : 'Konto erstellen \u2192', registerUrl
     <span style="color:#c4c4c8;">•</span>&nbsp;&nbsp;<strong style="color:rgba(24,24,27,0.8);">${en ? 'Guest book' : 'Gästebuch'}</strong> – ${en ? 'Share your own memory.' : 'Eigene Erinnerung eintragen.'}
 </td></tr>
 </table>
-
-${ctaButton(en ? 'View memorial \u2192' : 'Zum Memorial \u2192', memorialUrl, 'secondary')}
 
 <p style="margin:24px 0 0 0;font-size:12px;line-height:1.6;color:#a1a1aa;">
     ${en

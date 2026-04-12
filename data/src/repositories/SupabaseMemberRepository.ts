@@ -55,6 +55,7 @@ function mapRow(row: any): Member {
         role: row.role,
         joinedAt: row.joined_at,
         invitedEmail: row.invited_email,
+        inviteStatus: row.invite_status ?? 'accepted',
     };
 }
 
