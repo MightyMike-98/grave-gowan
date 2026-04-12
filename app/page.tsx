@@ -155,11 +155,11 @@ export default function LandingPage() {
                 >
                     <Link
                         href="/login"
-                        className="flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-light tracking-wide shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md"
+                        className="flex items-center gap-1.5 rounded-full border px-4.5 py-2 text-xs font-normal tracking-wide shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md hover:border-[hsl(var(--foreground)/0.35)] hover:bg-[hsl(var(--foreground)/0.08)] hover:text-[hsl(var(--foreground)/0.9)]"
                         style={{
-                            borderColor: 'hsl(var(--border) / 0.4)',
-                            backgroundColor: 'hsl(var(--card) / 0.6)',
-                            color: 'hsl(var(--muted-foreground) / 0.7)',
+                            borderColor: 'hsl(var(--foreground) / 0.15)',
+                            backgroundColor: 'hsl(var(--foreground) / 0.04)',
+                            color: 'hsl(var(--foreground) / 0.6)',
                         }}
                     >
                         {t('login')}
