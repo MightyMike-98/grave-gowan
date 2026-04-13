@@ -326,7 +326,7 @@ export default function LandingPage() {
                             </div>
 
                             {/* Active role content – fixed height to prevent layout shift */}
-                            <div className="relative h-[230px]">
+                            <div className="relative h-[270px]">
                                 <AnimatePresence mode="wait">
                                     <motion.div
                                         key={`${locale}-${guideStep}`}

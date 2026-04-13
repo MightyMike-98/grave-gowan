@@ -234,7 +234,7 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
             <style>{`@keyframes longpress-fill { from { opacity: 0; } to { opacity: 1; } }`}</style>
 
             {heading && (
-                <div className="flex items-center justify-between mb-5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
                     <h2 className="text-3xl tracking-tight">
                         {heading}
                     </h2>
