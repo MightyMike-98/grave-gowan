@@ -48,6 +48,9 @@ export default function ForgotPasswordPage() {
                     <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
                         {t('sentTo', { email })}
                     </p>
+                    <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.7)' }}>
+                        {t('checkSpam')}
+                    </p>
                     <Link
                         href="/login"
                         className="inline-block text-sm font-light transition-colors hover:opacity-100"

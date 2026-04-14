@@ -29,6 +29,7 @@
     "backToHome": "← Zurück zur Startseite",
     "checkEmail": "E-Mail prüfen",
     "confirmationSent": "Wir haben einen Bestätigungslink an {email} gesendet. Klicke auf den Link, um dein Konto zu aktivieren.",
+    "checkSpam": "Schau auch in deinem Spam-Ordner nach, falls du keine E-Mail findest.",
     "backToLogin": "Zurück zur Anmeldung",
     "errorEnterEmail": "Bitte gib deine E-Mail-Adresse ein.",
     "errorEnterPassword": "Bitte gib dein Passwort ein.",
@@ -71,6 +72,7 @@
     "sending": "Wird gesendet...",
     "checkEmail": "E-Mail prüfen",
     "sentTo": "Wir haben einen Link zum Zurücksetzen an {email} gesendet. Klicke auf den Link, um ein neues Passwort zu wählen.",
+    "checkSpam": "Schau auch in deinem Spam-Ordner nach, falls du keine E-Mail findest.",
     "backToLogin": "← Zurück zur Anmeldung",
     "errorEnterEmail": "Bitte gib deine E-Mail-Adresse ein."
   },

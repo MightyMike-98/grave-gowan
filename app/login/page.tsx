@@ -96,6 +96,9 @@ function LoginForm() {
                     <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
                         {t('confirmationSent', { email })}
                     </p>
+                    <p className="text-sm font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.7)' }}>
+                        {t('checkSpam')}
+                    </p>
                     <button
                         onClick={() => { setSignupSuccess(false); setMode('login'); }}
                         className="text-sm font-light transition-colors hover:opacity-100"
