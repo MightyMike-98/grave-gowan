@@ -7,27 +7,46 @@ export default async function DatenschutzPage() {
     return (
         <div className="flex min-h-screen flex-col items-center justify-center px-6 py-16" style={{ color: 'hsl(var(--foreground))' }}>
             <div className="max-w-lg space-y-6 text-sm font-light leading-relaxed" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                <h1 className="text-lg font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('title')}</h1>
+                <h1 className="text-lg font-normal uppercase tracking-wider" style={{ color: 'hsl(var(--foreground))' }}>{t('title')}</h1>
 
-                <section className="space-y-2">
-                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('section1Title')}</h2>
-                    <p>{t('section1Text')}</p>
-                </section>
+                <div className="space-y-1">
+                    <p className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('controllerLabel')}</p>
+                    <p>{t('controllerAddress')}</p>
+                    <p>
+                        <span className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('emailLabel')}</span>{' '}
+                        <a href={`mailto:${t('email')}`} className="underline underline-offset-2">{t('email')}</a>
+                    </p>
+                </div>
 
-                <section className="space-y-2">
-                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('section2Title')}</h2>
-                    <p>{t('section2Text')}</p>
-                </section>
+                <div className="space-y-1">
+                    <p className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('dataLabel')}</p>
+                    <p>{t('dataText')}</p>
+                </div>
 
-                <section className="space-y-2">
-                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('section3Title')}</h2>
-                    <p>{t('section3Text')}</p>
-                </section>
+                <div className="space-y-1">
+                    <p className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('purposeLabel')}</p>
+                    <p>{t('purposeText')}</p>
+                </div>
 
-                <section className="space-y-2">
-                    <h2 className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('section4Title')}</h2>
-                    <p>{t('section4Text')}</p>
-                </section>
+                <div className="space-y-1">
+                    <p className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('thirdPartyLabel')}</p>
+                    <p>{t('thirdPartyText')}</p>
+                </div>
+
+                <div className="space-y-1">
+                    <p className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('rightsLabel')}</p>
+                    <p>
+                        {t('rightsText')}{' '}
+                        <a href={`mailto:${t('rightsEmail')}`} className="underline underline-offset-2">{t('rightsEmail')}</a>
+                    </p>
+                </div>
+
+                <p>
+                    <span className="font-normal" style={{ color: 'hsl(var(--foreground))' }}>{t('authorityLabel')}</span>{' '}
+                    {t('authorityText')}
+                </p>
+
+                <p className="text-xs" style={{ color: 'hsl(var(--muted-foreground) / 0.7)' }}>{t('lastUpdated')}</p>
 
                 <Link
                     href="/"
