@@ -12,7 +12,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -37,6 +37,8 @@ function formatDates(birth?: string, death?: string): string | null {
 
 export default function VisitPage() {
     const t = useTranslations('visit');
+    const locale = useLocale();
+    const exampleSlug = locale === 'de' ? 'helmut-josef-michael-kohl-1930' : 'muhammad-ali-1942';
     const router = useRouter();
 
     const [query, setQuery] = useState('');
@@ -219,7 +221,7 @@ export default function VisitPage() {
                 {/* Example Memorial */}
                 <div className="pt-2">
                     <Link
-                        href="/memorial/muhammad-ali-1942"
+                        href={`/memorial/${exampleSlug}`}
                         className="inline-flex items-center gap-1.5 text-[11px] font-light transition-colors"
                         style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}
                         onMouseEnter={(e) => (e.currentTarget.style.color = 'hsl(var(--muted-foreground))')}

@@ -13,7 +13,7 @@ import { CopyLinkButton } from './CopyLinkButton';
 import { DashboardHeader } from '@/components/ui/DashboardHeader';
 import type { MembershipWithMemorial } from '@core/repositories/MemberRepository';
 import type { Memorial } from '@core/types/index';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { getMemorialsByOwner } from '@core/use-cases/getMemorialsByOwner';
 import { getSharedMemorials } from '@core/use-cases/getSharedMemorials';
 import { SupabaseMemberRepository } from '@data/repositories/SupabaseMemberRepository';
@@ -153,6 +153,8 @@ export default async function DashboardPage() {
     }
 
     const t = await getTranslations('dashboard');
+    const locale = await getLocale();
+    const exampleSlug = locale === 'de' ? 'helmut-josef-michael-kohl-1930' : 'muhammad-ali-1942';
 
     return (
         <main className="min-h-screen px-4 py-16">
@@ -231,7 +233,7 @@ export default async function DashboardPage() {
                 {/* Example Memorial */}
                 <div className="mt-8 flex justify-center">
                     <Link
-                        href="/memorial/muhammad-ali-1942"
+                        href={`/memorial/${exampleSlug}`}
                         className="inline-flex items-center gap-1.5 text-[11px] font-light transition-colors"
                         style={{ color: 'hsl(var(--muted-foreground) / 0.4)' }}
                     >

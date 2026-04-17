@@ -5,7 +5,7 @@
     "createMemorial": "Memorial erstellen",
     "login": "Login",
     "dashboard": "Dashboard",
-    "viewExample": "Beispiel ansehen (Muhammad Ali)",
+    "viewExample": "Beispiel ansehen (Helmut Kohl)",
     "howItWorks": "So funktioniert's",
     "gettingStarted": "Erste Schritte",
     "legalNotice": "Impressum",
@@ -100,11 +100,11 @@
     "heading": "Memorial besuchen",
     "description": "Gib den Link oder Namen des Memorials ein.",
     "linkLabel": "Link / Name",
-    "linkPlaceholder": "z. B. muhammad-ali-1942",
+    "linkPlaceholder": "z. B. helmut-josef-michael-kohl-1930",
     "linkHelper": "Du findest den Link in der Einladung oder direkt vom Ersteller.",
     "openMemorial": "Memorial öffnen",
     "noLink": "Keinen Link?",
-    "viewDemo": "Beispiel ansehen — Muhammad Ali",
+    "viewDemo": "Beispiel ansehen - Helmut Kohl",
     "back": "← Zurück",
     "searchPlaceholder": "Öffentliche Memorials durchsuchen...",
     "privateHint": "Private Memorials sind nur über geteilte Links erreichbar.",
@@ -136,7 +136,7 @@
     "welcomePrefix": "Willkommen,",
     "signOut": "Abmelden",
     "backToHome": "Zur Startseite",
-    "viewExample": "Beispiel ansehen — Muhammad Ali"
+    "viewExample": "Beispiel ansehen - Helmut Kohl"
   },
   "inbox": {
     "title": "Postfach",
