@@ -154,7 +154,7 @@ export default function LandingPage() {
                     className="absolute right-6 top-6"
                 >
                     <Link
-                        href="/login"
+                        href={isLoggedIn ? '/dashboard' : '/login'}
                         className="flex items-center gap-1.5 rounded-full border px-4.5 py-2 text-xs font-normal tracking-wide shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md hover:border-[hsl(var(--foreground)/0.35)] hover:bg-[hsl(var(--foreground)/0.08)] hover:text-[hsl(var(--foreground)/0.9)]"
                         style={{
                             borderColor: 'hsl(var(--foreground) / 0.15)',
@@ -162,7 +162,7 @@ export default function LandingPage() {
                             color: 'hsl(var(--foreground) / 0.6)',
                         }}
                     >
-                        {t('login')}
+                        {isLoggedIn ? t('dashboard') : t('login')}
                     </Link>
                 </motion.div>
 
