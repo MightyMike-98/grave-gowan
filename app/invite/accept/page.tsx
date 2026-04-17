@@ -10,12 +10,13 @@
 
 'use client';
 
+import { createSupabaseBrowserClient } from '@data/browser-client';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
-type Status = 'loading' | 'success' | 'error' | 'login';
+type Status = 'loading' | 'success' | 'error' | 'login' | 'wrongAccount';
 
 function AcceptInviteForm() {
     const t = useTranslations('invite');
@@ -26,6 +27,9 @@ function AcceptInviteForm() {
     const [status, setStatus] = useState<Status>('loading');
     const [errorMsg, setErrorMsg] = useState('');
     const [memorialId, setMemorialId] = useState('');
+    const [invitedEmail, setInvitedEmail] = useState('');
+    const [currentEmail, setCurrentEmail] = useState('');
+    const [signingOut, setSigningOut] = useState(false);
 
     useEffect(() => {
         if (!token) {
@@ -50,6 +54,12 @@ function AcceptInviteForm() {
                 const data = await res.json();
 
                 if (!res.ok) {
+                    if (data.code === 'wrong_account') {
+                        setInvitedEmail(data.invitedEmail ?? '');
+                        setCurrentEmail(data.currentEmail ?? '');
+                        setStatus('wrongAccount');
+                        return;
+                    }
                     setStatus('error');
                     setErrorMsg(data.error || t('errorGeneric'));
                     return;
@@ -164,6 +174,64 @@ function AcceptInviteForm() {
                                 }}
                             >
                                 {t('signIn')}
+                            </button>
+                        </motion.div>
+                    )}
+
+                    {status === 'wrongAccount' && (
+                        <motion.div
+                            key="wrongAccount"
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                            className="space-y-6"
+                        >
+                            <div
+                                className="mx-auto w-16 h-16 rounded-full flex items-center justify-center"
+                                style={{
+                                    background: 'linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--primary) / 0.05))',
+                                    border: '1px solid hsl(var(--primary) / 0.15)',
+                                }}
+                            >
+                                <svg className="w-7 h-7" style={{ color: 'hsl(var(--primary))' }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 12a4 4 0 10-8 0m12 7a9 9 0 11-16 0 9 9 0 0116 0z" />
+                                </svg>
+                            </div>
+                            <h1 className="text-3xl tracking-tight">{t('wrongAccountHeading')}</h1>
+                            <p className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                {t('wrongAccountText')}
+                            </p>
+                            <div
+                                className="rounded-xl px-5 py-4 text-left space-y-2"
+                                style={{ backgroundColor: 'hsl(var(--muted) / 0.4)', border: '1px solid hsl(var(--border) / 0.5)' }}
+                            >
+                                <div className="flex items-center justify-between gap-3 text-sm">
+                                    <span className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('wrongAccountInvitedLabel')}</span>
+                                    <span className="font-medium truncate">{invitedEmail}</span>
+                                </div>
+                                {currentEmail && (
+                                    <div className="flex items-center justify-between gap-3 text-sm">
+                                        <span className="font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>{t('wrongAccountCurrentLabel')}</span>
+                                        <span className="font-light truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>{currentEmail}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <button
+                                onClick={async () => {
+                                    setSigningOut(true);
+                                    const supabase = createSupabaseBrowserClient();
+                                    await supabase.auth.signOut();
+                                    router.push(`/login?next=${encodeURIComponent(`/invite/accept?token=${token}`)}`);
+                                }}
+                                disabled={signingOut}
+                                className="w-full rounded-full py-4 text-xs font-normal uppercase tracking-[0.25em] shadow-sm transition-all duration-300 hover:shadow-md disabled:opacity-60"
+                                style={{
+                                    backgroundColor: 'hsl(var(--primary))',
+                                    color: 'hsl(var(--primary-foreground))',
+                                }}
+                            >
+                                {t('signOutAndContinue')}
                             </button>
                         </motion.div>
                     )}

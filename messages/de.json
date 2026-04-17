@@ -49,7 +49,12 @@
     "errorInvalidLink": "Der Einladungslink ist ungültig.",
     "errorNotFound": "Einladung nicht gefunden.",
     "errorWrongEmail": "Diese Einladung wurde an {email} gesendet. Bitte melde dich mit dieser E-Mail-Adresse an.",
-    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es erneut."
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "wrongAccountHeading": "Falscher Account",
+    "wrongAccountText": "Diese Einladung wurde an eine andere E-Mail-Adresse gesendet als die, mit der du aktuell angemeldet bist.",
+    "wrongAccountInvitedLabel": "Eingeladen:",
+    "wrongAccountCurrentLabel": "Angemeldet als:",
+    "signOutAndContinue": "Abmelden & fortfahren"
   },
   "authErrors": {
     "invalidCredentials": "E-Mail oder Passwort ist falsch.",

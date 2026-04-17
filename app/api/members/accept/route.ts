@@ -46,7 +46,12 @@ export async function POST(request: NextRequest) {
         const userEmail = user.email?.toLowerCase();
         if (invite.invited_email && userEmail !== invite.invited_email) {
             return NextResponse.json(
-                { error: `This invitation was sent to ${invite.invited_email}. Please sign in with that email.` },
+                {
+                    error: `This invitation was sent to ${invite.invited_email}. Please sign in with that email.`,
+                    code: 'wrong_account',
+                    invitedEmail: invite.invited_email,
+                    currentEmail: userEmail ?? null,
+                },
                 { status: 403 },
             );
         }

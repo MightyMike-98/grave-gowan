@@ -49,7 +49,12 @@
     "errorInvalidLink": "This invitation link is invalid.",
     "errorNotFound": "Invitation not found.",
     "errorWrongEmail": "This invitation was sent to {email}. Please sign in with that email.",
-    "errorGeneric": "Something went wrong. Please try again."
+    "errorGeneric": "Something went wrong. Please try again.",
+    "wrongAccountHeading": "Wrong account",
+    "wrongAccountText": "This invitation was sent to a different email address than the one you're currently signed in with.",
+    "wrongAccountInvitedLabel": "Invited:",
+    "wrongAccountCurrentLabel": "Signed in as:",
+    "signOutAndContinue": "Sign out & continue"
   },
   "authErrors": {
     "invalidCredentials": "Email or password is incorrect.",
