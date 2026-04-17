@@ -21,7 +21,7 @@ interface GalleryEditorProps {
     uploadProgress?: number;
     isPremium?: boolean;
     memorialId?: string;
-    onUpload: (file: File) => void;
+    onUpload: (file: File) => Promise<void> | void;
     onToggleFavorite: (photoId: string) => void;
     onDelete: (photoId: string) => void;
 }
@@ -59,33 +59,45 @@ export function GalleryEditor({ photos, uploading, uploadProgress = 0, isPremium
         fileInputRef.current?.click();
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files ?? []);
+        if (files.length === 0) return;
 
-        if (file.type.startsWith('video/') && !isPremium) {
+        if (!isPremium && files.some(f => f.type.startsWith('video/'))) {
             setShowPaywall('video');
             trackLead('video_upload');
             e.target.value = '';
             return;
         }
 
-        if (!file.type.startsWith('video/') && !isPremium && photos.length >= FREE_PHOTO_LIMIT) {
+        // Filter files sequentially against count + size limits
+        const toUpload: File[] = [];
+        let currentCount = photos.length;
+        let currentBytes = totalBytes;
+        let hitPhotoLimit = false;
+        let hitSizeLimit = false;
+
+        for (const file of files) {
+            if (!isPremium && currentCount >= FREE_PHOTO_LIMIT) { hitPhotoLimit = true; break; }
+            if (!isPremium && (currentBytes + file.size) > FREE_SIZE_LIMIT_BYTES) { hitSizeLimit = true; break; }
+            toUpload.push(file);
+            currentCount++;
+            currentBytes += file.size;
+        }
+
+        e.target.value = '';
+
+        for (const file of toUpload) {
+            await onUpload(file);
+        }
+
+        if (hitPhotoLimit) {
             setShowPaywall('photo');
             trackLead('photo_limit');
-            e.target.value = '';
-            return;
-        }
-
-        if (!file.type.startsWith('video/') && !isPremium && (totalBytes + file.size) > FREE_SIZE_LIMIT_BYTES) {
+        } else if (hitSizeLimit) {
             setShowPaywall('size');
             trackLead('size_limit');
-            e.target.value = '';
-            return;
         }
-
-        onUpload(file);
-        e.target.value = '';
     };
 
     return (
@@ -228,6 +240,7 @@ export function GalleryEditor({ photos, uploading, uploadProgress = 0, isPremium
                     ref={fileInputRef}
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm"
+                    multiple
                     className="hidden"
                     onChange={handleFileChange}
                 />

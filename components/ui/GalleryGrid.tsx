@@ -73,63 +73,79 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
         fileInputRef.current?.click();
     };
 
-    const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file || !memorialId) return;
+    const uploadSingleFile = (file: File): Promise<void> => {
+        return new Promise((resolve) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            if (memorialId) formData.append('memorialId', memorialId);
 
-        if (file.type.startsWith('video/') && !isPremium) {
+            const xhr = new XMLHttpRequest();
+            xhr.upload.addEventListener('progress', (ev) => {
+                if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
+            });
+            xhr.addEventListener('load', () => {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (xhr.status >= 200 && xhr.status < 300 && data.photo) {
+                        onPhotoUploaded?.({
+                            id: data.photo.id,
+                            url: data.photo.url,
+                            caption: data.photo.caption,
+                            isFavorite: data.photo.isFavorite,
+                        });
+                    } else {
+                        console.error('[GalleryGrid] Upload error:', data.error);
+                    }
+                } catch (err) { console.error('[GalleryGrid] Parse error:', err); }
+                finally { resolve(); }
+            });
+            xhr.addEventListener('error', () => {
+                console.error('[GalleryGrid] Upload failed');
+                resolve();
+            });
+            xhr.open('POST', '/api/photos/upload');
+            xhr.send(formData);
+        });
+    };
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files ?? []);
+        if (files.length === 0 || !memorialId) return;
+
+        // Video without premium → block
+        if (!isPremium && files.some(f => f.type.startsWith('video/'))) {
             setShowPaywall('video');
             trackLead('video_upload');
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
 
-        if (!isPremium && !file.type.startsWith('video/') && photos.length >= FREE_PHOTO_LIMIT) {
-            setShowPaywall('photo');
-            trackLead('photo_limit');
+        // Filter files against photo-count limit (non-premium)
+        const toUpload: File[] = [];
+        let currentCount = photos.length;
+        for (const file of files) {
+            if (!isPremium && currentCount >= FREE_PHOTO_LIMIT) {
+                setShowPaywall('photo');
+                trackLead('photo_limit');
+                break;
+            }
+            toUpload.push(file);
+            currentCount++;
+        }
+
+        if (toUpload.length === 0) {
             if (fileInputRef.current) fileInputRef.current.value = '';
             return;
         }
 
         setUploading(true);
         setUploadProgress(0);
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('memorialId', memorialId);
-
-        const xhr = new XMLHttpRequest();
-        xhr.upload.addEventListener('progress', (ev) => {
-            if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
-        });
-        xhr.addEventListener('load', () => {
-            try {
-                const data = JSON.parse(xhr.responseText);
-                if (xhr.status >= 200 && xhr.status < 300 && data.photo) {
-                    onPhotoUploaded?.({
-                        id: data.photo.id,
-                        url: data.photo.url,
-                        caption: data.photo.caption,
-                        isFavorite: data.photo.isFavorite,
-                    });
-                } else {
-                    console.error('[GalleryGrid] Upload error:', data.error);
-                }
-            } catch (err) { console.error('[GalleryGrid] Parse error:', err); }
-            finally {
-                setUploading(false);
-                setUploadProgress(0);
-                if (fileInputRef.current) fileInputRef.current.value = '';
-            }
-        });
-        xhr.addEventListener('error', () => {
-            console.error('[GalleryGrid] Upload failed');
-            setUploading(false);
-            setUploadProgress(0);
-            if (fileInputRef.current) fileInputRef.current.value = '';
-        });
-        xhr.open('POST', '/api/photos/upload');
-        xhr.send(formData);
+        for (const file of toUpload) {
+            await uploadSingleFile(file);
+        }
+        setUploading(false);
+        setUploadProgress(0);
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
     return (
@@ -340,6 +356,7 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
                     ref={fileInputRef}
                     type="file"
                     accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm"
+                    multiple
                     className="hidden"
                     onChange={handleUpload}
                 />

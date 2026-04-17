@@ -150,41 +150,44 @@ function CreateMemorialForm() {
     }, []);
 
     // ── Handlers ──
-    const handleGalleryUpload = (file: File) => {
-        if (!userId) return;
-        setGalleryUploading(true);
-        setUploadProgress(0);
-
-        const formData = new FormData();
-        formData.append('file', file);
-        if (editId) formData.append('memorialId', editId);
-
-        const xhr = new XMLHttpRequest();
-        xhr.upload.addEventListener('progress', (e) => {
-            if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
-        });
-        xhr.addEventListener('load', () => {
-            try {
-                const data = JSON.parse(xhr.responseText);
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    if (editId && data.photo) {
-                        setGalleryPhotos(prev => [...prev, { id: data.photo.id, url: data.photo.url, favorite: data.photo.isFavorite ?? false, size: file.size }]);
-                    } else if (!editId && data.url) {
-                        setGalleryPhotos(prev => [...prev, { id: `temp_${Date.now()}`, url: data.url, favorite: false, size: file.size }]);
-                    }
-                } else {
-                    console.error('[Create/Gallery] Upload error:', data.error);
-                }
-            } catch (err) { console.error('[Create/Gallery] Parse error:', err); }
-            finally { setGalleryUploading(false); setUploadProgress(0); }
-        });
-        xhr.addEventListener('error', () => {
-            console.error('[Create/Gallery] Upload failed');
-            setGalleryUploading(false);
+    const handleGalleryUpload = (file: File): Promise<void> => {
+        return new Promise((resolve) => {
+            if (!userId) { resolve(); return; }
+            setGalleryUploading(true);
             setUploadProgress(0);
+
+            const formData = new FormData();
+            formData.append('file', file);
+            if (editId) formData.append('memorialId', editId);
+
+            const xhr = new XMLHttpRequest();
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+            });
+            xhr.addEventListener('load', () => {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        if (editId && data.photo) {
+                            setGalleryPhotos(prev => [...prev, { id: data.photo.id, url: data.photo.url, favorite: data.photo.isFavorite ?? false, size: file.size }]);
+                        } else if (!editId && data.url) {
+                            setGalleryPhotos(prev => [...prev, { id: `temp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, url: data.url, favorite: false, size: file.size }]);
+                        }
+                    } else {
+                        console.error('[Create/Gallery] Upload error:', data.error);
+                    }
+                } catch (err) { console.error('[Create/Gallery] Parse error:', err); }
+                finally { setGalleryUploading(false); setUploadProgress(0); resolve(); }
+            });
+            xhr.addEventListener('error', () => {
+                console.error('[Create/Gallery] Upload failed');
+                setGalleryUploading(false);
+                setUploadProgress(0);
+                resolve();
+            });
+            xhr.open('POST', '/api/photos/upload');
+            xhr.send(formData);
         });
-        xhr.open('POST', '/api/photos/upload');
-        xhr.send(formData);
     };
 
     const handleToggleGalleryFavorite = async (photoId: string) => {
