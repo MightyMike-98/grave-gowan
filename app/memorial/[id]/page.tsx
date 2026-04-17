@@ -164,19 +164,40 @@ async function loadMemorialWithRole(slug: string): Promise<{
 
 
 /**
- * Generiert dynamisch individuelle SEO-Metadaten für jede Gedenkseite.
+ * Generiert dynamisch individuelle SEO/Social-Metadaten für jede Gedenkseite.
+ * Die OG-Tags sorgen dafür, dass beim Teilen (WhatsApp, iMessage, Slack, …) der
+ * Name, die Lebensdaten und das Porträtbild angezeigt werden.
  */
 export async function generateMetadata({ params }: MemorialPageProps): Promise<Metadata> {
     const { id } = await params;
     const { memorial } = await loadMemorialWithRole(id);
-    if (!memorial) return { title: 'Memorial not found — Cloudyard' };
+    if (!memorial) return { title: 'Memorial not found - MemorialYard' };
+
+    const title = `${memorial.name} - MemorialYard`;
+    const ogTitle = memorial.dates ? `${memorial.name} (${memorial.dates})` : memorial.name;
+    const description =
+        memorial.quote?.trim()
+        || memorial.bio?.slice(0, 160).trim()
+        || `A memorial in honor of ${memorial.name}.`;
+
+    const shareImage = memorial.coverUrl ?? memorial.portraitUrl;
+    const images = shareImage ? [{ url: shareImage }] : [];
+
     return {
-        title: `${memorial.name} — Cloudyard`,
-        description: memorial.bio?.slice(0, 160) ?? 'A memorial on Cloudyard.',
+        title,
+        description,
         openGraph: {
-            title: memorial.name,
-            description: memorial.bio?.slice(0, 160) ?? '',
-            images: memorial.coverUrl ? [{ url: memorial.coverUrl }] : [],
+            title: ogTitle,
+            description,
+            siteName: 'MemorialYard',
+            type: 'profile',
+            images,
+        },
+        twitter: {
+            card: shareImage ? 'summary_large_image' : 'summary',
+            title: ogTitle,
+            description,
+            images,
         },
     };
 }
