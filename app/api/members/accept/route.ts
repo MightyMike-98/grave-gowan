@@ -10,6 +10,7 @@
  */
 
 import { createSupabaseServerClient } from '@data/server-client';
+import { createClient } from '@supabase/supabase-js';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
@@ -27,12 +28,24 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Not authenticated. Please sign in first.' }, { status: 401 });
         }
 
-        // Einladung laden
-        const { data: invite, error: fetchError } = await supabase
+        // Service-Role-Client: umgeht RLS, damit wir die Einladung auch dann
+        // lesen/aktualisieren können, wenn der aktuell eingeloggte User nicht
+        // der eingeladene ist (z. B. um "Falscher Account" zu erkennen).
+        // Der Token ist eine UUID — nur wer den Link hat, kennt ihn.
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (!supabaseUrl || !serviceKey) {
+            console.error('[accept] Server config missing');
+            return NextResponse.json({ error: 'Server configuration missing' }, { status: 500 });
+        }
+        const admin = createClient(supabaseUrl, serviceKey);
+
+        // Einladung laden (bypasst RLS)
+        const { data: invite, error: fetchError } = await admin
             .from('memorial_members')
             .select('id, memorial_id, invited_email, invite_status, user_id')
             .eq('id', token)
-            .single();
+            .maybeSingle();
 
         if (fetchError || !invite) {
             return NextResponse.json({ error: 'Invitation not found.' }, { status: 404 });
@@ -56,8 +69,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Einladung annehmen
-        const { error: updateError } = await supabase
+        // Einladung annehmen (bypasst RLS)
+        const { error: updateError } = await admin
             .from('memorial_members')
             .update({
                 invite_status: 'accepted',
