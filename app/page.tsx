@@ -176,11 +176,11 @@ export default function LandingPage() {
                         className="flex flex-col items-center gap-2"
                     >
                         <Image
-                            src="/logo.jpeg"
+                            src="/logo.png"
                             alt="MemorialYard Logo"
                             width={160}
                             height={160}
-                            className="h-32 w-32 rounded-3xl object-cover opacity-90 md:h-40 md:w-40"
+                            className="h-32 w-32 object-contain md:h-40 md:w-40"
                             priority
                         />
                         <h1
