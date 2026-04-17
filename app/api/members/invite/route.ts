@@ -68,30 +68,60 @@ export async function POST(request: NextRequest) {
             targetFullName = foundProfile[0].full_name ?? null;
         }
 
-        // Eintrag als 'pending' anlegen – wird erst nach Klick auf den
-        // Bestätigungslink in der E-Mail auf 'accepted' gesetzt.
-        const { data: inserted, error: insertError } = await supabase
+        // Check if a membership already exists (e.g. viewer who saved the memorial)
+        const { data: existing } = await supabase
             .from('memorial_members')
-            .insert({
-                memorial_id: memorialId,
-                user_id: targetUserId,
-                role,
-                invited_by: invitedBy,
-                invited_email: cleanEmail,
-                invite_status: 'pending',
-            })
-            .select('id')
-            .single();
+            .select('id, role, invite_status')
+            .eq('memorial_id', memorialId)
+            .or(targetUserId
+                ? `user_id.eq.${targetUserId},invited_email.eq.${cleanEmail}`
+                : `invited_email.eq.${cleanEmail}`)
+            .maybeSingle();
 
-        if (insertError) {
-            if (insertError.message.includes('unique') || insertError.message.includes('duplicate')) {
+        let memberId: string;
+
+        if (existing) {
+            if (existing.role === 'editor' || existing.role === 'owner') {
                 return NextResponse.json(
-                    { error: 'This email is already invited to this memorial.' },
+                    { error: 'This person already has editor or owner access.' },
                     { status: 409 },
                 );
             }
-            console.error('[invite] Insert error:', insertError);
-            return NextResponse.json({ error: insertError.message }, { status: 500 });
+            // Upgrade viewer → editor (pending until accepted)
+            const { error: updateError } = await supabase
+                .from('memorial_members')
+                .update({
+                    role,
+                    invited_by: invitedBy,
+                    invited_email: cleanEmail,
+                    invite_status: 'pending',
+                })
+                .eq('id', existing.id);
+
+            if (updateError) {
+                console.error('[invite] Update error:', updateError);
+                return NextResponse.json({ error: updateError.message }, { status: 500 });
+            }
+            memberId = existing.id;
+        } else {
+            const { data: inserted, error: insertError } = await supabase
+                .from('memorial_members')
+                .insert({
+                    memorial_id: memorialId,
+                    user_id: targetUserId,
+                    role,
+                    invited_by: invitedBy,
+                    invited_email: cleanEmail,
+                    invite_status: 'pending',
+                })
+                .select('id')
+                .single();
+
+            if (insertError) {
+                console.error('[invite] Insert error:', insertError);
+                return NextResponse.json({ error: insertError.message }, { status: 500 });
+            }
+            memberId = inserted.id;
         }
 
         // Send invitation email
@@ -117,7 +147,7 @@ export async function POST(request: NextRequest) {
             const slug = memorialSlug ?? memorialId;
 
             const en = locale === 'en';
-            const acceptUrl = `${APP_URL}/invite/accept?token=${inserted.id}`;
+            const acceptUrl = `${APP_URL}/invite/accept?token=${memberId}`;
             const html = editorInviteEmail({
                 recipientName,
                 memorialName,

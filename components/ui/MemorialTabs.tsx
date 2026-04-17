@@ -184,23 +184,6 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
 
     return (
         <>
-            {/* Settings – nur für Owner */}
-            {isOwner && memorialSlug && (
-                <div className="absolute top-4 right-4 z-10">
-                    <Link
-                        href={`/memorial/${memorialSlug}/settings`}
-                        title="Team & Access Settings"
-                        className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-light backdrop-blur-sm shadow-sm transition-all"
-                        style={{
-                            backgroundColor: 'hsl(var(--foreground) / 0.05)',
-                            color: 'hsl(var(--foreground) / 0.6)',
-                        }}
-                    >
-                        <span>⚙️</span>
-                        <span>{tHero('team')}</span>
-                    </Link>
-                </div>
-            )}
 
             {/* Edit – für Owner und Editoren */}
             {canEdit && (

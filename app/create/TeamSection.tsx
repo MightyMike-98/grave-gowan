@@ -231,20 +231,6 @@ export function TeamSection({ isEditing, existingSlug, editId, userId, invites, 
                 )}
             </div>
 
-            {/* Settings link for advanced management */}
-            {isEditing && existingSlug && (
-                <a
-                    href={`/memorial/${existingSlug}/settings`}
-                    className="flex w-full items-center justify-between rounded-xl p-4 text-left shadow-sm transition-colors"
-                    style={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border) / 0.4)' }}
-                >
-                    <div className="flex items-center gap-2.5">
-                        <span>⚙️</span>
-                        <span className="text-sm font-light">{t('manageTeam')}</span>
-                    </div>
-                    <span style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>→</span>
-                </a>
-            )}
         </section>
     );
 }
