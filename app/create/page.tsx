@@ -75,6 +75,8 @@ function CreateMemorialForm() {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<string[]>([]);
     const [copied, setCopied] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmChecked, setConfirmChecked] = useState(false);
 
     // ── Data Loading ──
     const applyMemorialData = (data: Record<string, unknown>) => {
@@ -255,6 +257,17 @@ function CreateMemorialForm() {
         if (!userId) fieldErrors.push(t('errorLoginRequired'));
         if (fieldErrors.length > 0) { setErrors(fieldErrors); return; }
 
+        // Show confirmation dialog only on first-time creation
+        if (!isEditing) {
+            setShowConfirm(true);
+            return;
+        }
+
+        await performSubmit();
+    };
+
+    const performSubmit = async () => {
+        setShowConfirm(false);
         setErrors([]);
         setLoading(true);
         try {
@@ -546,6 +559,80 @@ function CreateMemorialForm() {
                     </button>
                 </div>
             </div>
+
+            {/* Confirmation popup before creating a memorial */}
+            <AnimatePresence>
+                {showConfirm && (
+                    <motion.div
+                        key="confirm-backdrop"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="fixed inset-0 z-[70] flex items-center justify-center px-4"
+                        style={{ backgroundColor: 'hsl(var(--background) / 0.7)', backdropFilter: 'blur(4px)' }}
+                        onClick={() => { setShowConfirm(false); setConfirmChecked(false); }}
+                    >
+                        <motion.div
+                            key="confirm-card"
+                            initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 12, scale: 0.97 }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                            className="w-full max-w-md rounded-2xl border p-6 shadow-2xl sm:p-8"
+                            style={{
+                                backgroundColor: 'hsl(var(--card))',
+                                borderColor: 'hsl(var(--border) / 0.4)',
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h2 className="mb-4 text-xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
+                                {t('confirmTitle')}
+                            </h2>
+
+                            <div className="space-y-3 text-sm font-light leading-relaxed" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                <p>{t('confirmIntro')}</p>
+                                <p>{t('confirmFamily')}</p>
+                                <p>{t('confirmRespect')}</p>
+                                <p>{t('confirmSensitive')}</p>
+                                <p style={{ color: 'hsl(var(--foreground) / 0.8)' }}>{t('confirmClosing')}</p>
+                            </div>
+
+                            <label className="mt-6 flex items-start gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={confirmChecked}
+                                    onChange={(e) => setConfirmChecked(e.target.checked)}
+                                    className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer"
+                                />
+                                <span className="text-sm font-light" style={{ color: 'hsl(var(--foreground))' }}>
+                                    {t('confirmCheckbox')}
+                                </span>
+                            </label>
+
+                            <div className="mt-6 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => { setShowConfirm(false); setConfirmChecked(false); }}
+                                    className="rounded-full px-5 py-2 text-xs font-light uppercase tracking-[0.2em] transition-colors"
+                                    style={{ color: 'hsl(var(--muted-foreground))' }}
+                                >
+                                    {t('confirmCancel')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={performSubmit}
+                                    disabled={!confirmChecked}
+                                    className="rounded-full px-5 py-2 text-xs font-normal uppercase tracking-[0.2em] shadow-sm transition-all disabled:opacity-40"
+                                    style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
+                                >
+                                    {t('confirmProceed')}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </main>
     );
 }
