@@ -180,7 +180,10 @@ export async function generateMetadata({ params }: MemorialPageProps): Promise<M
         || memorial.bio?.slice(0, 160).trim()
         || `A memorial in honor of ${memorial.name}.`;
 
-    const shareImage = memorial.coverUrl ?? memorial.portraitUrl;
+    // Portrait bevorzugen: ist fast immer gesetzt, quadratisch/personenzentriert,
+    // und wirkt in kleinen Share-Vorschauen (WhatsApp, iMessage) deutlich besser
+    // als ein breiter Cover-Hintergrund, der dort zugeschnitten wird.
+    const shareImage = memorial.portraitUrl ?? memorial.coverUrl;
     const images = shareImage ? [{ url: shareImage }] : [];
 
     return {
