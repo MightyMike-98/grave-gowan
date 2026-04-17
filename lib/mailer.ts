@@ -13,7 +13,7 @@ import nodemailer from 'nodemailer';
 import { randomUUID } from 'crypto';
 
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST ?? 'smtp.zoho.com',
+    host: process.env.SMTP_HOST ?? 'smtppro.zoho.eu',
     port: Number(process.env.SMTP_PORT ?? 465),
     secure: true,
     auth: {
