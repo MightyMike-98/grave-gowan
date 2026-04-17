@@ -326,14 +326,22 @@ function CreateMemorialForm() {
 
     // ── Render ──
     return (
-        <main className="min-h-screen px-4 py-10">
-            {/* Back Navigation */}
-            <div className="max-w-xl mx-auto mb-6">
-                <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm font-light transition-colors hover:opacity-100" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                    <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
-                    <span>{t('back')}</span>
-                </Link>
-            </div>
+        <main className="relative min-h-screen px-4 py-10">
+            {/* Back Navigation — fixed top-left */}
+            <Link
+                href="/dashboard"
+                className="fixed left-6 top-6 z-50 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors"
+                style={{
+                    backgroundColor: 'hsl(var(--foreground) / 0.05)',
+                    color: 'hsl(var(--foreground) / 0.6)',
+                }}
+            >
+                <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+                <span>{t('back')}</span>
+            </Link>
+
+            {/* Spacer for fixed back button */}
+            <div className="h-4" />
 
             {/* Portrait */}
             <div className="max-w-xl mx-auto flex justify-center">
