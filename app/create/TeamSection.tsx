@@ -42,7 +42,7 @@ export function TeamSection({ isEditing, existingSlug, editId, userId, invites, 
             .from('memorial_members')
             .select('id, invited_email, role, invite_status')
             .eq('memorial_id', editId)
-            .neq('role', 'owner')
+            .eq('role', 'editor')
             .order('joined_at', { ascending: false });
 
         if (error) {
