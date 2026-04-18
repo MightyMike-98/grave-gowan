@@ -235,14 +235,19 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out"
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm cursor-zoom-out touch-manipulation"
                         style={{ backgroundColor: 'hsl(var(--foreground) / 0.9)' }}
                         onClick={() => setIsLightboxOpen(false)}
                     >
                         <button
-                            className="absolute top-6 right-6 rounded-full p-2 transition-colors"
-                            style={{ color: 'hsl(var(--primary-foreground) / 0.7)' }}
-                            onClick={() => setIsLightboxOpen(false)}
+                            type="button"
+                            aria-label="Close"
+                            className="absolute top-4 right-4 rounded-full p-3 min-w-[44px] min-h-[44px] flex items-center justify-center transition-colors touch-manipulation"
+                            style={{ color: 'hsl(var(--primary-foreground) / 0.9)', backgroundColor: 'hsl(var(--foreground) / 0.3)' }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsLightboxOpen(false);
+                            }}
                         >
                             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
