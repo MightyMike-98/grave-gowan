@@ -2,10 +2,9 @@
  * @file components/ui/StoriesSection.tsx
  * @description Zeigt alle Erinnerungsgeschichten eines Memorials.
  *
- * - Author initials avatar circle
- * - Relative date display
- * - Favorite toggle + long-press to delete (canEdit)
- * - "Eigene Erinnerung teilen" CTA always after 2nd story
+ * - Minimalistisches Kartendesign (Name + Beziehungs-Badge + Datum, Text darunter)
+ * - Pflichtfeld Beziehung beim Einreichen
+ * - Favorite toggle (canEdit)
  */
 
 'use client';
@@ -31,21 +30,15 @@ interface StoriesSectionProps {
     heading?: string;
 }
 
-function getInitials(name: string): string {
-    return name
-        .split(/[\s()]+/)
-        .filter(Boolean)
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join('')
-        .toUpperCase();
-}
+const RELATION_KEYS = ['family', 'friend', 'colleague', 'fan', 'acquaintance', 'other'] as const;
+type RelationKey = typeof RELATION_KEYS[number];
 
 export function StoriesSection({ stories, canEdit = false, canWrite = true, memorialId, memorialSlug, isAuthenticated = false, userName, onToggleFavorite, onStoryAdded, heading }: StoriesSectionProps) {
     const t = useTranslations('stories');
     const [showForm, setShowForm] = useState(false);
     const [showAuthHint, setShowAuthHint] = useState(false);
     const [storyText, setStoryText] = useState('');
+    const [storyRelation, setStoryRelation] = useState<RelationKey | null>(null);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const authHintRef = useRef<HTMLDivElement>(null);
@@ -62,10 +55,18 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
         return () => document.removeEventListener('mousedown', handler);
     }, [showAuthHint]);
 
+    const relationLabel = (key: string | undefined): string | null => {
+        if (!key) return null;
+        if ((RELATION_KEYS as readonly string[]).includes(key)) {
+            return t(`relation_${key}` as `relation_${RelationKey}`);
+        }
+        return key;
+    };
+
     const handleSubmitStory = async () => {
         const author = userName?.trim();
         const text = storyText.trim();
-        if (!author || !text || !memorialId) return;
+        if (!author || !text || !memorialId || !storyRelation) return;
 
         setSubmitting(true);
         try {
@@ -73,7 +74,7 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                 const supabase = createSupabaseBrowserClient();
                 const { data, error } = await supabase
                     .from('memorial_stories')
-                    .insert({ memorial_id: memorialId, author, text, status: 'approved' })
+                    .insert({ memorial_id: memorialId, author, text, relation: storyRelation, status: 'approved' })
                     .select()
                     .single();
 
@@ -89,10 +90,11 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                         text,
                         date: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
                         isFavorite: false,
+                        relation: storyRelation,
                     });
                 }
             } else {
-                const result = await submitVisitorStory(memorialId, author, text);
+                const result = await submitVisitorStory(memorialId, author, text, storyRelation);
                 if (result.error) {
                     console.error('[StoriesSection] Visitor submit error:', result.error);
                     return;
@@ -101,6 +103,7 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
             }
 
             setStoryText('');
+            setStoryRelation(null);
             setShowForm(false);
         } catch (err) {
             console.error('[StoriesSection] Submit story error:', err);
@@ -109,51 +112,57 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
         }
     };
 
-    const renderStoryCard = (story: Story) => (
-        <div
-            key={story.id}
-            className="relative rounded-xl border p-5 shadow-sm space-y-4 bg-white dark:bg-card overflow-hidden"
-            style={{ borderColor: 'hsl(var(--border) / 0.4)' }}
-        >
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                    <div
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-xs"
-                        style={{
-                            backgroundColor: 'hsl(var(--muted) / 0.6)',
-                            color: 'hsl(var(--muted-foreground))',
-                        }}
-                    >
-                        {getInitials(story.author)}
-                    </div>
-                    <div>
+    const renderStoryCard = (story: Story) => {
+        const relLabel = relationLabel(story.relation);
+        return (
+            <div
+                key={story.id}
+                className="rounded-xl border p-5 shadow-sm bg-white dark:bg-card"
+                style={{ borderColor: 'hsl(var(--border) / 0.4)' }}
+            >
+                <div className="flex items-baseline justify-between gap-3">
+                    <div className="flex flex-wrap items-baseline gap-2">
                         <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>
                             {story.author}
                         </p>
-                        <p className="text-[11px] font-light" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                        {relLabel && (
+                            <span
+                                className="rounded-full border px-2 py-0.5 text-[10px] font-light"
+                                style={{
+                                    borderColor: 'hsl(var(--border) / 0.4)',
+                                    backgroundColor: 'hsl(var(--muted) / 0.4)',
+                                    color: 'hsl(var(--muted-foreground))',
+                                }}
+                            >
+                                {relLabel}
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <p className="text-[11px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.7)' }}>
                             {story.date}
                         </p>
+                        {canEdit && (
+                            <button
+                                type="button"
+                                onClick={() => onToggleFavorite?.(story.id)}
+                                className="rounded-full p-1 transition-colors hover:bg-foreground/10"
+                                title="Mark as highlight"
+                            >
+                                <svg className="h-3.5 w-3.5 transition-colors" fill={story.isFavorite ? "hsl(45 93% 55%)" : "none"} viewBox="0 0 24 24" stroke={story.isFavorite ? "hsl(45 93% 55%)" : "hsl(var(--muted-foreground) / 0.3)"} strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                                </svg>
+                            </button>
+                        )}
                     </div>
                 </div>
-                {canEdit && (
-                    <button
-                        type="button"
-                        onClick={() => onToggleFavorite?.(story.id)}
-                        className="rounded-full p-1.5 transition-colors hover:bg-foreground/10"
-                        title="Mark as highlight"
-                    >
-                        <svg className="h-3.5 w-3.5 transition-colors" fill={story.isFavorite ? "hsl(45 93% 55%)" : "none"} viewBox="0 0 24 24" stroke={story.isFavorite ? "hsl(45 93% 55%)" : "hsl(var(--muted-foreground) / 0.3)"} strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
-                        </svg>
-                    </button>
-                )}
-            </div>
 
-            <p className="text-sm font-light leading-relaxed" style={{ color: 'hsl(var(--foreground) / 0.75)' }}>
-                {story.text}
-            </p>
-        </div>
-    );
+                <p className="mt-4 text-[14px] leading-[1.8] font-light" style={{ color: 'hsl(var(--foreground) / 0.7)' }}>
+                    {story.text}
+                </p>
+            </div>
+        );
+    };
 
     const storiesAbove = stories.slice(0, 2);
     const storiesBelow = stories.slice(2);
@@ -180,7 +189,7 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                     )}
                 </div>
                 <button
-                    onClick={() => { setShowForm(false); setStoryText(''); }}
+                    onClick={() => { setShowForm(false); setStoryText(''); setStoryRelation(null); }}
                     className="transition-colors hover:opacity-70"
                     style={{ color: 'hsl(var(--muted-foreground))' }}
                 >
@@ -188,6 +197,36 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
+            </div>
+
+            <div className="space-y-1.5">
+                <label className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    {t('relationLabel')}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                    {RELATION_KEYS.map((key) => {
+                        const active = storyRelation === key;
+                        return (
+                            <button
+                                key={key}
+                                type="button"
+                                onClick={() => setStoryRelation(key)}
+                                className="rounded-full border px-3 py-1.5 text-xs font-light transition-colors"
+                                style={active ? {
+                                    borderColor: 'hsl(var(--foreground))',
+                                    backgroundColor: 'hsl(var(--foreground))',
+                                    color: 'hsl(var(--background))',
+                                } : {
+                                    borderColor: 'hsl(var(--border) / 0.6)',
+                                    backgroundColor: 'transparent',
+                                    color: 'hsl(var(--muted-foreground))',
+                                }}
+                            >
+                                {t(`relation_${key}`)}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             <div className="space-y-1">
@@ -219,7 +258,7 @@ export function StoriesSection({ stories, canEdit = false, canWrite = true, memo
                 ) : <span />}
                 <button
                     onClick={handleSubmitStory}
-                    disabled={submitting || !storyText.trim()}
+                    disabled={submitting || !storyText.trim() || !storyRelation}
                     className="shrink-0 rounded-full px-4 py-1.5 text-[11px] font-light tracking-wider transition-all disabled:opacity-40"
                     style={{ backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' }}
                 >

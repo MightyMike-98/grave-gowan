@@ -112,16 +112,17 @@ async function loadMemorialWithRole(slug: string): Promise<{
         try {
             const { data: dbStories } = await supabase
                 .from('memorial_stories')
-                .select('id, author, text, is_favorite, created_at')
+                .select('id, author, text, is_favorite, relation, created_at')
                 .eq('memorial_id', domain.id)
                 .eq('status', 'approved')
                 .order('created_at', { ascending: false });
             if (dbStories) {
-                stories = dbStories.map((s: { id: string; author: string; text: string; is_favorite: boolean; created_at: string }) => ({
+                stories = dbStories.map((s: { id: string; author: string; text: string; is_favorite: boolean; relation: string | null; created_at: string }) => ({
                     id: s.id,
                     author: s.author,
                     text: s.text,
                     isFavorite: s.is_favorite,
+                    relation: s.relation ?? undefined,
                     date: new Date(s.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
                 }));
             }

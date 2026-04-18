@@ -210,7 +210,14 @@
     "guestbook": "Guest Book",
     "editHint": "Mark favourites with ⭐ for Highlights. Long-press to delete.",
     "signIn": "Sign in",
-    "signInHint": "to share your story."
+    "signInHint": "to share your story.",
+    "relationLabel": "Relationship to person",
+    "relation_family": "Family",
+    "relation_friend": "Friend",
+    "relation_colleague": "Colleague",
+    "relation_fan": "Fan",
+    "relation_acquaintance": "Acquaintance",
+    "relation_other": "Other"
   },
   "gallery": {
     "heading": "Gallery",

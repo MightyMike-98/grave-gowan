@@ -20,6 +20,8 @@ export interface Story {
     text: string;
     /** Ob diese Story im Highlights-Feed (Lieblings-Stories) angezeigt werden soll. */
     isFavorite?: boolean;
+    /** Beziehung des Autors zur verstorbenen Person (Schlüssel: family/friend/colleague/fan/acquaintance/other). */
+    relation?: string;
 }
 
 /** Ein einzelnes Galeriefoto. */

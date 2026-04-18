@@ -210,7 +210,14 @@
     "guestbook": "Gästebuch",
     "editHint": "Markiere Favoriten mit ⭐ für die Highlights. Gedrückt halten zum Löschen.",
     "signIn": "Anmelden",
-    "signInHint": "um eine Geschichte zu teilen."
+    "signInHint": "um eine Geschichte zu teilen.",
+    "relationLabel": "Beziehung zur Person",
+    "relation_family": "Familie",
+    "relation_friend": "Freund:in",
+    "relation_colleague": "Kolleg:in",
+    "relation_fan": "Fan",
+    "relation_acquaintance": "Bekannte:r",
+    "relation_other": "Andere"
   },
   "gallery": {
     "heading": "Galerie",
