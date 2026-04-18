@@ -17,7 +17,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Flame } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Kerzen-Widget — interaktives Element zum "Kerze anzünden".
@@ -99,6 +99,24 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
     const t = useTranslations('hero');
     const router = useRouter();
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+    const [cameFromExternal, setCameFromExternal] = useState(false);
+    const [referrerChecked, setReferrerChecked] = useState(false);
+
+    useEffect(() => {
+        const referrer = document.referrer;
+        let external = false;
+        if (!referrer) {
+            external = true;
+        } else {
+            try {
+                external = new URL(referrer).origin !== window.location.origin;
+            } catch {
+                external = true;
+            }
+        }
+        setCameFromExternal(external);
+        setReferrerChecked(true);
+    }, []);
 
     return (
         <div className="relative overflow-hidden pb-10 pt-4">
@@ -127,16 +145,29 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
             {/* Back button + Save button */}
             <div className="relative px-6 flex items-center justify-between">
                 <button
-                    onClick={() => router.back()}
-                    className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors"
+                    onClick={() => {
+                        if (!referrerChecked) return;
+                        if (!cameFromExternal) return router.back();
+                        router.push(isAuthenticated ? '/dashboard' : '/');
+                    }}
+                    aria-hidden={!referrerChecked}
+                    tabIndex={referrerChecked ? 0 : -1}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-opacity duration-300 ease-out ${referrerChecked ? 'opacity-100' : 'opacity-0'}`}
                     style={{
                         backgroundColor: 'hsl(var(--foreground) / 0.05)',
                         color: 'hsl(var(--foreground) / 0.6)',
                     }}
                 >
-                    ← <span className="hidden sm:inline">{t('back')}</span>
+                    ← <span className="hidden sm:inline">{cameFromExternal ? (isAuthenticated ? t('backToDashboard') : t('backToHome')) : t('back')}</span>
                 </button>
-                {!canEdit && memorial.id !== 'demo' && <SaveButton memorialId={memorial.id} memorialSlug={memorialSlug} isAuthenticated={isAuthenticated} initialSaved={initialSaved} />}
+                {!canEdit && memorial.id !== 'demo' && (
+                    <div
+                        aria-hidden={!referrerChecked}
+                        className={`transition-opacity duration-300 ease-out ${referrerChecked ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    >
+                        <SaveButton memorialId={memorial.id} memorialSlug={memorialSlug} isAuthenticated={isAuthenticated} initialSaved={initialSaved} />
+                    </div>
+                )}
             </div>
 
             {/* Main content */}
