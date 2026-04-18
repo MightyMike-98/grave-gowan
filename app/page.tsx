@@ -173,14 +173,14 @@ export default function LandingPage() {
                         initial="hidden"
                         animate="visible"
                         variants={fadeUp}
-                        className="flex flex-col items-center gap-2"
+                        className="flex flex-col items-center gap-6"
                     >
                         <Image
                             src="/logo.png"
                             alt="MemorialYard Logo"
                             width={160}
                             height={160}
-                            className="h-32 w-32 object-contain md:h-40 md:w-40"
+                            className="h-24 w-24 object-contain md:h-28 md:w-28"
                             priority
                         />
                         <h1

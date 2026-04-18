@@ -350,7 +350,6 @@ function CreateMemorialForm() {
             <div className="max-w-xl mx-auto flex justify-center">
                 {isOwnerRole ? (
                     <ImageUploader
-                        label={t('sectionPortrait')}
                         currentUrl={portraitUrl}
                         onUpload={async (file: File) => {
                             if (!userId) throw new Error('Not logged in.');
@@ -360,13 +359,8 @@ function CreateMemorialForm() {
                         }}
                     />
                 ) : portraitUrl ? (
-                    <div className="relative">
-                        <p className="text-xs font-light tracking-wider text-center mb-2 flex items-center justify-center gap-1.5" style={{ color: 'hsl(var(--muted-foreground))' }}>
-                            <span style={{ color: 'hsl(var(--muted-foreground) / 0.5)' }}>🔒</span> {t('sectionPortrait')}
-                        </p>
-                        <div className="w-28 h-28 rounded-full overflow-hidden shadow-sm opacity-80" style={{ border: '2px solid hsl(var(--border))' }}>
-                            <img src={portraitUrl} alt="Portrait" className="w-full h-full object-cover" />
-                        </div>
+                    <div className="w-28 h-28 rounded-full overflow-hidden shadow-sm opacity-80" style={{ border: '2px solid hsl(var(--border))' }}>
+                        <img src={portraitUrl} alt="Portrait" className="w-full h-full object-cover" />
                     </div>
                 ) : null}
             </div>

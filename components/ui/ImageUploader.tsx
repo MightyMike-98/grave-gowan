@@ -20,7 +20,7 @@ import type { Area } from 'react-easy-crop';
 /** Props der ImageUploader-Komponente. */
 interface ImageUploaderProps {
     currentUrl?: string;
-    label: string;
+    label?: string;
     onUpload: (file: File) => Promise<void>;
     hint?: string;
     /** Aspect ratio for cropping. Default 1 (square, like profile pics). */
@@ -143,7 +143,7 @@ export function ImageUploader({
 
     return (
         <div className="space-y-2">
-            <label className="block text-sm font-medium text-stone-700">{label}</label>
+            {label && <label className="block text-sm font-medium text-stone-700">{label}</label>}
 
             {/* Klickbare Upload-Zone (kreisförmig wie das Ergebnis) */}
             <div className="flex justify-center">
