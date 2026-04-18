@@ -77,6 +77,7 @@ function CreateMemorialForm() {
     const [copied, setCopied] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [confirmChecked, setConfirmChecked] = useState(false);
+    const [showDiscardWarning, setShowDiscardWarning] = useState(false);
 
     // ── Data Loading ──
     const applyMemorialData = (data: Record<string, unknown>) => {
@@ -331,17 +332,48 @@ function CreateMemorialForm() {
     return (
         <main className="relative min-h-screen px-4 py-10">
             {/* Back Navigation — fixed top-left */}
-            <Link
-                href="/dashboard"
-                className="fixed left-6 top-6 z-50 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors"
-                style={{
+            {(() => {
+                const hasUnsavedChanges =
+                    !isEditing &&
+                    (name.trim() !== '' ||
+                        dateOfBirth !== '' ||
+                        dateOfDeath !== '' ||
+                        bio.trim() !== '' ||
+                        quote.trim() !== '' ||
+                        country.trim() !== '' ||
+                        portraitUrl !== '' ||
+                        supportTitle.trim() !== '' ||
+                        supportUrl.trim() !== '' ||
+                        supportDesc.trim() !== '' ||
+                        timelineEvents.length > 0 ||
+                        galleryPhotos.length > 0 ||
+                        stories.length > 0);
+                const backClasses =
+                    'fixed left-6 top-6 z-50 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors';
+                const backStyle = {
                     backgroundColor: 'hsl(var(--foreground) / 0.05)',
                     color: 'hsl(var(--foreground) / 0.6)',
-                }}
-            >
-                <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
-                <span>{t('back')}</span>
-            </Link>
+                };
+                if (hasUnsavedChanges) {
+                    return (
+                        <button
+                            type="button"
+                            onClick={() => setShowDiscardWarning(true)}
+                            className={backClasses}
+                            style={backStyle}
+                        >
+                            <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+                            <span>{t('back')}</span>
+                        </button>
+                    );
+                }
+                return (
+                    <Link href="/dashboard" className={backClasses} style={backStyle}>
+                        <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+                        <span>{t('back')}</span>
+                    </Link>
+                );
+            })()}
 
             {/* Spacer for fixed back button */}
             <div className="h-4" />
@@ -632,6 +664,61 @@ function CreateMemorialForm() {
                                     style={{ backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }}
                                 >
                                     {t('confirmProceed')}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Discard warning when leaving with unsaved changes */}
+            <AnimatePresence>
+                {showDiscardWarning && (
+                    <motion.div
+                        key="discard-backdrop"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="fixed inset-0 z-[80] flex items-center justify-center px-4"
+                        style={{ backgroundColor: 'hsl(var(--background) / 0.7)', backdropFilter: 'blur(4px)' }}
+                        onClick={() => setShowDiscardWarning(false)}
+                    >
+                        <motion.div
+                            key="discard-card"
+                            initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 12, scale: 0.97 }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                            className="w-full max-w-md rounded-2xl border p-6 shadow-2xl sm:p-8"
+                            style={{
+                                backgroundColor: 'hsl(var(--card))',
+                                borderColor: 'hsl(var(--border) / 0.4)',
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <h2 className="mb-4 text-xl tracking-tight" style={{ color: 'hsl(var(--foreground))' }}>
+                                {t('discardTitle')}
+                            </h2>
+                            <p className="text-sm font-light leading-relaxed" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                {t('discardMessage')}
+                            </p>
+                            <div className="mt-6 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDiscardWarning(false)}
+                                    className="rounded-full px-5 py-2 text-xs font-light uppercase tracking-[0.2em] transition-colors"
+                                    style={{ color: 'hsl(var(--muted-foreground))' }}
+                                >
+                                    {t('discardStay')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => router.push('/dashboard')}
+                                    className="rounded-full px-5 py-2 text-xs font-normal uppercase tracking-[0.2em] shadow-sm transition-all"
+                                    style={{ backgroundColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))' }}
+                                >
+                                    {t('discardLeave')}
                                 </button>
                             </div>
                         </motion.div>
