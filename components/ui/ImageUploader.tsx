@@ -20,7 +20,6 @@ import type { Area } from 'react-easy-crop';
 /** Props der ImageUploader-Komponente. */
 interface ImageUploaderProps {
     currentUrl?: string;
-    label?: string;
     onUpload: (file: File) => Promise<void>;
     hint?: string;
     /** Aspect ratio for cropping. Default 1 (square, like profile pics). */
@@ -72,7 +71,6 @@ async function getCroppedImage(imageSrc: string, cropArea: Area): Promise<File> 
 
 export function ImageUploader({
     currentUrl,
-    label,
     onUpload,
     hint,
     cropAspect = 1,
@@ -143,8 +141,6 @@ export function ImageUploader({
 
     return (
         <div className="space-y-2">
-            {label && <label className="block text-sm font-medium text-stone-700">{label}</label>}
-
             {/* Klickbare Upload-Zone (kreisförmig wie das Ergebnis) */}
             <div className="flex justify-center">
                 <button
@@ -157,7 +153,7 @@ export function ImageUploader({
                         <>
                             <Image
                                 src={previewUrl}
-                                alt={label}
+                                alt=""
                                 fill
                                 className="object-cover"
                                 sizes="128px"
