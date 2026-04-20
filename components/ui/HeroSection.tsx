@@ -104,15 +104,19 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
 
     useEffect(() => {
         const referrer = document.referrer;
-        let external = false;
-        if (!referrer) {
-            external = true;
-        } else {
+        let external: boolean;
+        if (referrer) {
+            // Referrer vorhanden → externer Origin = extern
             try {
                 external = new URL(referrer).origin !== window.location.origin;
             } catch {
                 external = true;
             }
+        } else {
+            // Kein Referrer: Soft-Navigation lässt Referrer leer, obwohl
+            // intern navigiert wurde. history.length > 1 bedeutet, der User
+            // hat in diesem Tab schon vorher etwas aufgerufen → intern.
+            external = window.history.length <= 1;
         }
         setCameFromExternal(external);
         setReferrerChecked(true);
