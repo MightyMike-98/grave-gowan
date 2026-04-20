@@ -8,6 +8,10 @@ import { useRef, useState } from 'react';
 const FREE_PHOTO_LIMIT = 10;
 const FREE_SIZE_LIMIT_BYTES = 30 * 1024 * 1024; // 30 MB
 
+function isVideoUrl(url: string): boolean {
+    return /\.(mp4|mov|webm)(\?|$)/i.test(url);
+}
+
 interface GalleryPhoto {
     id: string;
     url: string;
@@ -120,7 +124,31 @@ export function GalleryEditor({ photos, uploading, uploadProgress = 0, isPremium
                             className="group relative aspect-square rounded-lg overflow-hidden"
                             style={{ backgroundColor: 'hsl(var(--muted) / 0.2)', border: '1px solid hsl(var(--border) / 0.4)' }}
                         >
-                            <img src={photo.url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                            {isVideoUrl(photo.url) ? (
+                                <video
+                                    src={photo.url}
+                                    className="h-full w-full object-cover"
+                                    muted
+                                    loop
+                                    playsInline
+                                    preload="metadata"
+                                    onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
+                                    onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                />
+                            ) : (
+                                <img src={photo.url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                            )}
+                            {isVideoUrl(photo.url) && (
+                                <div className="pointer-events-none absolute bottom-1.5 right-1.5 transition-opacity duration-300 group-hover:opacity-0">
+                                    <svg
+                                        className="h-3.5 w-3.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+                                        fill="white"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path d="M8 5v14l11-7z" />
+                                    </svg>
+                                </div>
+                            )}
 
                             {/* Hover overlay */}
                             <div className="absolute inset-0 transition-colors duration-300 group-hover:bg-foreground/20" />

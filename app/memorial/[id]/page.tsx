@@ -83,14 +83,15 @@ async function loadMemorialWithRole(slug: string): Promise<{
     isAuthenticated: boolean;
     isSaved: boolean;
     userName: string | null;
+    currentUserId: string | null;
 }> {
-    if (slug === 'demo') return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false, userName: null };
+    if (slug === 'demo') return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false, userName: null, currentUserId: null };
 
     try {
         const supabase = await createSupabaseServerClient();
         const repo = new SupabaseMemorialRepository(supabase);
         const domain = await getMemorialBySlug(slug, repo);
-        if (!domain) return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false, userName: null };
+        if (!domain) return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false, userName: null, currentUserId: null };
 
         // Galerie-Fotos laden
         let photos: Photo[] = [];
@@ -156,10 +157,10 @@ async function loadMemorialWithRole(slug: string): Promise<{
             }
         }
 
-        return { memorial: toMemorialView(domain, stories), role, photos, isAuthenticated: !!user, isSaved, userName };
+        return { memorial: toMemorialView(domain, stories), role, photos, isAuthenticated: !!user, isSaved, userName, currentUserId: user?.id ?? null };
     } catch (err) {
         console.error('[MemorialPage] Supabase error:', err);
-        return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false, userName: null };
+        return { memorial: null, role: 'anonymous', photos: [], isAuthenticated: false, isSaved: false, userName: null, currentUserId: null };
     }
 }
 
@@ -214,7 +215,7 @@ export default async function MemorialPage({ params, searchParams }: MemorialPag
     const { id } = await params;
     const { from } = await searchParams;
     const fromDashboard = from === 'dashboard';
-    let { memorial, role, photos, isAuthenticated, isSaved, userName } = await loadMemorialWithRole(id);
+    let { memorial, role, photos, isAuthenticated, isSaved, userName, currentUserId } = await loadMemorialWithRole(id);
 
     if (id === 'demo') {
         const td = await getTranslations('demo');
@@ -263,7 +264,7 @@ export default async function MemorialPage({ params, searchParams }: MemorialPag
 
     return (
         <div className="min-h-screen relative pb-20">
-            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} initialPhotos={photos} isAuthenticated={isAuthenticated} initialSaved={isSaved} userName={userName} fromDashboard={fromDashboard} />
+            <MemorialTabs memorial={memorial} userRole={role} memorialSlug={id} initialPhotos={photos} isAuthenticated={isAuthenticated} initialSaved={isSaved} userName={userName} fromDashboard={fromDashboard} currentUserId={currentUserId} />
 
             {memorial.id !== 'demo' && !canEdit && <RequestWidget memorialId={memorial.id} memorialSlug={id} isAuthenticated={isAuthenticated} userName={userName} />}
         </div>

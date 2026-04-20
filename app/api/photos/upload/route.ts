@@ -14,16 +14,23 @@
  * Sicherheit: RLS Policy stellt sicher, dass nur Owner/Editor Fotos hochladen dürfen.
  */
 
+import { isCofounder } from '@/lib/cofounders';
 import { addGalleryPhoto } from '@core/use-cases/addGalleryPhoto';
 import { SupabasePhotoRepository } from '@data/repositories/SupabasePhotoRepository';
 import { createSupabaseServerClient } from '@data/server-client';
 import { NextRequest, NextResponse } from 'next/server';
 
 /** Erlaubte Bild-Typen (MIME). */
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+/** Erlaubte Video-Typen (MIME) — nur für Premium-Accounts. */
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
 
 /** Maximale Dateigröße pro Bild: 5 MB */
-const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+
+/** Maximale Dateigröße pro Video (Premium): 100 MB */
+const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024;
 
 /** Maximale Gesamtgröße aller Fotos pro Memorial (Free Plan): 30 MB */
 const FREE_TOTAL_SIZE_BYTES = 30 * 1024 * 1024;
@@ -54,22 +61,27 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const premium = isCofounder(user.id);
+        const isVideo = ALLOWED_VIDEO_TYPES.includes(file.type);
+        const isImage = ALLOWED_IMAGE_TYPES.includes(file.type);
+
         // Datei validieren
-        if (!ALLOWED_TYPES.includes(file.type)) {
+        if (!isImage && !(premium && isVideo)) {
             return NextResponse.json(
                 { error: 'Nur JPG, PNG, WebP und GIF erlaubt.' },
                 { status: 400 },
             );
         }
-        if (file.size > MAX_SIZE_BYTES) {
+        const maxSize = isVideo ? MAX_VIDEO_SIZE_BYTES : MAX_IMAGE_SIZE_BYTES;
+        if (file.size > maxSize) {
             return NextResponse.json(
-                { error: 'Datei zu groß. Maximal 5 MB.' },
+                { error: isVideo ? 'Video zu groß. Maximal 100 MB.' : 'Datei zu groß. Maximal 5 MB.' },
                 { status: 400 },
             );
         }
 
-        // Serverseitige Gesamtgröße-Prüfung (Free Plan: 30 MB)
-        if (memorialId) {
+        // Serverseitige Gesamtgröße-Prüfung (Free Plan: 30 MB) — Premium überspringt
+        if (memorialId && !premium) {
             const { data: sizeData } = await supabase
                 .from('gallery_photos')
                 .select('file_size')

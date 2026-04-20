@@ -17,6 +17,7 @@ import { SupportSection } from '@/components/ui/SupportSection';
 import { TabsNavigation } from '@/components/ui/TabsNavigation';
 import { TimelineSection } from '@/components/ui/TimelineSection';
 import type { MemorialView, Photo, Story } from '@/types';
+import { isCofounder } from '@/lib/cofounders';
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
@@ -42,9 +43,10 @@ interface MemorialTabsProps {
     initialSaved?: boolean;
     userName?: string | null;
     fromDashboard?: boolean;
+    currentUserId?: string | null;
 }
 
-export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, initialPhotos = [], isAuthenticated = false, initialSaved = false, userName, fromDashboard = false }: MemorialTabsProps) {
+export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, initialPhotos = [], isAuthenticated = false, initialSaved = false, userName, fromDashboard = false, currentUserId = null }: MemorialTabsProps) {
     const t = useTranslations('tabs');
     const tHero = useTranslations('hero');
 
@@ -152,7 +154,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                         canEdit={canEdit}
                         memorialId={memorial.id}
                         memorialSlug={memorialSlug}
-                        isPremium={false}
+                        isPremium={isCofounder(currentUserId)}
                         favoriteIds={favoriteIds}
                         onToggleFavorite={handleToggleFavorite}
                         onPhotoUploaded={handlePhotoUploaded}

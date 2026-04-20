@@ -16,6 +16,10 @@ const fadeIn = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } },
 };
 
+function isVideoUrl(url: string): boolean {
+    return /\.(mp4|mov|webm)(\?|$)/i.test(url);
+}
+
 interface HighlightsSectionProps {
     memorial: MemorialView;
     canEdit?: boolean;
@@ -54,12 +58,36 @@ export function HighlightsSection({ memorial, canEdit = false, onTabChange }: Hi
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => setLightbox(i)}
                             >
-                                <img
-                                    src={img.url}
-                                    alt={img.caption ?? ''}
-                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                    loading="lazy"
-                                />
+                                {isVideoUrl(img.url) ? (
+                                    <video
+                                        src={img.url}
+                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        muted
+                                        loop
+                                        playsInline
+                                        preload="metadata"
+                                        onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
+                                        onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                    />
+                                ) : (
+                                    <img
+                                        src={img.url}
+                                        alt={img.caption ?? ''}
+                                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        loading="lazy"
+                                    />
+                                )}
+                                {isVideoUrl(img.url) && (
+                                    <div className="pointer-events-none absolute top-2 left-2 transition-opacity duration-300 group-hover:opacity-0">
+                                        <svg
+                                            className="h-3.5 w-3.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+                                            fill="white"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path d="M8 5v14l11-7z" />
+                                        </svg>
+                                    </div>
+                                )}
                                 {img.caption && (
                                     <>
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -177,17 +205,33 @@ export function HighlightsSection({ memorial, canEdit = false, onTabChange }: Hi
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
-                        <motion.img
-                            key={lightbox}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.3 }}
-                            src={favoriteGallery[lightbox].url}
-                            alt={favoriteGallery[lightbox].caption ?? ''}
-                            className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                        {isVideoUrl(favoriteGallery[lightbox].url) ? (
+                            <motion.video
+                                key={lightbox}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.3 }}
+                                src={favoriteGallery[lightbox].url}
+                                className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+                                controls
+                                autoPlay
+                                playsInline
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        ) : (
+                            <motion.img
+                                key={lightbox}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.3 }}
+                                src={favoriteGallery[lightbox].url}
+                                alt={favoriteGallery[lightbox].caption ?? ''}
+                                className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

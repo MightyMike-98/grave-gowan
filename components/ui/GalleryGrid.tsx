@@ -21,6 +21,10 @@ import { useRef, useState } from 'react';
 
 const FREE_PHOTO_LIMIT = 10;
 
+function isVideoUrl(url: string): boolean {
+    return /\.(mp4|mov|webm)(\?|$)/i.test(url);
+}
+
 const fadeIn = {
     hidden: { opacity: 0, y: 12 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } },
@@ -195,14 +199,38 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
                                         className="group relative cursor-pointer overflow-hidden rounded-lg break-inside-avoid"
                                         onClick={() => !editMode && deleteConfirmId === null && setLightboxIndex(index)}
                                     >
-                                        <Image
-                                            src={photo.url}
-                                            alt={photo.caption || 'Memorial photo'}
-                                            width={600}
-                                            height={600}
-                                            className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
-                                            sizes="(max-width: 768px) 50vw, 33vw"
-                                        />
+                                        {isVideoUrl(photo.url) ? (
+                                            <video
+                                                src={photo.url}
+                                                className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                                                muted
+                                                loop
+                                                playsInline
+                                                preload="metadata"
+                                                onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
+                                                onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                            />
+                                        ) : (
+                                            <Image
+                                                src={photo.url}
+                                                alt={photo.caption || 'Memorial photo'}
+                                                width={600}
+                                                height={600}
+                                                className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                                                sizes="(max-width: 768px) 50vw, 33vw"
+                                            />
+                                        )}
+                                        {isVideoUrl(photo.url) && (
+                                            <div className="pointer-events-none absolute top-2 left-2 transition-opacity duration-300 group-hover:opacity-0">
+                                                <svg
+                                                    className="h-3.5 w-3.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]"
+                                                    fill="white"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path d="M8 5v14l11-7z" />
+                                                </svg>
+                                            </div>
+                                        )}
                                         <div
                                             className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                                             style={{ background: 'linear-gradient(to top, hsl(var(--foreground) / 0.4), transparent, transparent)' }}
@@ -442,15 +470,25 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
                             className="relative h-[75vh] w-[75vw] max-w-3xl"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <Image
-                                src={photos[lightboxIndex].url}
-                                alt={photos[lightboxIndex].caption || 'Gallery photo'}
-                                fill
-                                className="object-contain"
-                                sizes="70vw"
-                                quality={100}
-                                unoptimized
-                            />
+                            {isVideoUrl(photos[lightboxIndex].url) ? (
+                                <video
+                                    src={photos[lightboxIndex].url}
+                                    className="absolute inset-0 h-full w-full object-contain"
+                                    controls
+                                    autoPlay
+                                    playsInline
+                                />
+                            ) : (
+                                <Image
+                                    src={photos[lightboxIndex].url}
+                                    alt={photos[lightboxIndex].caption || 'Gallery photo'}
+                                    fill
+                                    className="object-contain"
+                                    sizes="70vw"
+                                    quality={100}
+                                    unoptimized
+                                />
+                            )}
                         </motion.div>
 
                         {photos[lightboxIndex].caption && (

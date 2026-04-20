@@ -11,6 +11,7 @@
 'use client';
 
 import { ImageUploader } from '@/components/ui/ImageUploader';
+import { isCofounder } from '@/lib/cofounders';
 import { createMemorial } from '@core/use-cases/createMemorial';
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { SupabaseMemorialRepository } from '@data/repositories/SupabaseMemorialRepository';
@@ -224,17 +225,43 @@ function CreateMemorialForm() {
         const story = pendingStories.find(s => s.id === storyId);
         if (!story) return;
         const supabase = createSupabaseBrowserClient();
-        const { error } = await supabase.from('memorial_stories').update({ status: 'approved' }).eq('id', storyId);
-        if (!error) {
-            setPendingStories(prev => prev.filter(s => s.id !== storyId));
-            setStories(prev => [{ ...story, favorite: false }, ...prev]);
+        const { data, error } = await supabase
+            .from('memorial_stories')
+            .update({ status: 'approved' })
+            .eq('id', storyId)
+            .select('id');
+        if (error) {
+            console.error('[approveStory]', error);
+            setErrors([error.message]);
+            return;
         }
+        if (!data || data.length === 0) {
+            console.warn('[approveStory] RLS blocked update for story', storyId);
+            setErrors([t('errorSaveFailed')]);
+            return;
+        }
+        setPendingStories(prev => prev.filter(s => s.id !== storyId));
+        setStories(prev => [{ ...story, favorite: false }, ...prev]);
     };
 
     const handleRejectStory = async (storyId: string) => {
         const supabase = createSupabaseBrowserClient();
-        const { error } = await supabase.from('memorial_stories').delete().eq('id', storyId);
-        if (!error) setPendingStories(prev => prev.filter(s => s.id !== storyId));
+        const { data, error } = await supabase
+            .from('memorial_stories')
+            .delete()
+            .eq('id', storyId)
+            .select('id');
+        if (error) {
+            console.error('[rejectStory]', error);
+            setErrors([error.message]);
+            return;
+        }
+        if (!data || data.length === 0) {
+            console.warn('[rejectStory] RLS blocked delete for story', storyId);
+            setErrors([t('errorSaveFailed')]);
+            return;
+        }
+        setPendingStories(prev => prev.filter(s => s.id !== storyId));
     };
 
     const handleToggleStoryFavorite = async (storyId: string) => {
@@ -288,7 +315,8 @@ function CreateMemorialForm() {
                     ));
                     setInvites([]);
                 }
-                router.push(`/memorial/${existingSlug}`);
+                router.replace('/dashboard');
+                router.refresh();
             } else {
                 const memorial = await createMemorial({
                     name: name.trim(), bio: bio.trim(), quote: quote.trim() || undefined,
@@ -318,7 +346,8 @@ function CreateMemorialForm() {
                         fetch('/api/members/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: inv.email, role: inv.role, memorialId: memorial.id, invitedBy: userId, memorialSlug: memorial.slug, locale }) })
                     ));
                 }
-                router.push(`/memorial/${memorial.slug}`);
+                router.replace(`/memorial/${memorial.slug}`);
+                router.refresh();
             }
         } catch (err) {
             const msg = err instanceof Error ? err.message : '';
@@ -552,6 +581,7 @@ function CreateMemorialForm() {
                 <GalleryEditor
                     photos={galleryPhotos} uploading={galleryUploading} uploadProgress={uploadProgress}
                     memorialId={editId ?? undefined}
+                    isPremium={isCofounder(userId)}
                     onUpload={handleGalleryUpload} onToggleFavorite={handleToggleGalleryFavorite} onDelete={handleDeletePhoto}
                 />
 
