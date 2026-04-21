@@ -5,7 +5,7 @@
     "createMemorial": "Memorial erstellen",
     "login": "Login",
     "dashboard": "Dashboard",
-    "viewExample": "Beispiel ansehen (Helmut Kohl)",
+    "viewExample": "Beispiel ansehen (Franz Beckenbauer)",
     "howItWorks": "So funktioniert's",
     "gettingStarted": "Erste Schritte",
     "legalNotice": "Impressum",
@@ -104,7 +104,7 @@
     "linkHelper": "Du findest den Link in der Einladung oder direkt vom Ersteller.",
     "openMemorial": "Memorial öffnen",
     "noLink": "Keinen Link?",
-    "viewDemo": "Beispiel ansehen - Helmut Kohl",
+    "viewDemo": "Beispiel ansehen - Franz Beckenbauer",
     "back": "← Zurück",
     "searchPlaceholder": "Öffentliche Memorials durchsuchen...",
     "privateHint": "Private Memorials sind nur über geteilte Links erreichbar.",
@@ -136,7 +136,7 @@
     "welcomePrefix": "Willkommen,",
     "signOut": "Abmelden",
     "backToHome": "Zur Startseite",
-    "viewExample": "Beispiel ansehen - Helmut Kohl"
+    "viewExample": "Beispiel ansehen - Franz Beckenbauer"
   },
   "inbox": {
     "title": "Postfach",

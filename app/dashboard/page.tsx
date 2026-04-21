@@ -154,7 +154,7 @@ export default async function DashboardPage() {
 
     const t = await getTranslations('dashboard');
     const locale = await getLocale();
-    const exampleSlug = locale === 'de' ? 'helmut-josef-michael-kohl-1930' : 'muhammad-ali-1942';
+    const exampleSlug = locale === 'de' ? 'franz-anton-beckenbauer-1945' : 'kobe-bean-bryant-1978';
 
     return (
         <main className="min-h-screen px-4 py-16">

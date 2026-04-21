@@ -38,7 +38,7 @@ function formatDates(birth?: string, death?: string): string | null {
 export default function VisitPage() {
     const t = useTranslations('visit');
     const locale = useLocale();
-    const exampleSlug = locale === 'de' ? 'helmut-josef-michael-kohl-1930' : 'muhammad-ali-1942';
+    const exampleSlug = locale === 'de' ? 'franz-anton-beckenbauer-1945' : 'kobe-bean-bryant-1978';
     const router = useRouter();
 
     const [query, setQuery] = useState('');

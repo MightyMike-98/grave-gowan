@@ -5,7 +5,7 @@
     "createMemorial": "Create Memorial",
     "login": "Login",
     "dashboard": "Dashboard",
-    "viewExample": "View Example (Muhammad Ali)",
+    "viewExample": "View Example (Kobe Bryant)",
     "howItWorks": "How it works",
     "gettingStarted": "Getting started",
     "legalNotice": "Legal Notice",
@@ -104,7 +104,7 @@
     "linkHelper": "You can find the link in your invitation or from the creator.",
     "openMemorial": "Open Memorial",
     "noLink": "No link?",
-    "viewDemo": "View example - Muhammad Ali",
+    "viewDemo": "View example - Kobe Bryant",
     "back": "← Back",
     "searchPlaceholder": "Search public memorials...",
     "privateHint": "Private memorials are only accessible via shared links.",
@@ -136,7 +136,7 @@
     "welcomePrefix": "Welcome,",
     "signOut": "Sign out",
     "backToHome": "Back to Homepage",
-    "viewExample": "View example - Muhammad Ali"
+    "viewExample": "View example - Kobe Bryant"
   },
   "inbox": {
     "title": "Inbox",
