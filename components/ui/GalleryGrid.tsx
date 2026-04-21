@@ -13,6 +13,8 @@
  */
 
 import type { Photo } from '@/types';
+import { createSupabaseBrowserClient } from '@data/browser-client';
+import { uploadGalleryFile } from '@data/gallery-upload';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Star, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -40,6 +42,7 @@ interface GalleryGridProps {
     memorialId?: string;
     memorialSlug?: string;
     isPremium?: boolean;
+    currentUserId?: string | null;
     favoriteIds?: string[];
     onToggleFavorite?: (photoId: string) => void;
     onPhotoUploaded?: (photo: Photo) => void;
@@ -47,7 +50,7 @@ interface GalleryGridProps {
     heading?: string;
 }
 
-export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = false, favoriteIds = [], onToggleFavorite, onPhotoUploaded, onDeletePhoto, heading }: GalleryGridProps) {
+export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = false, currentUserId = null, favoriteIds = [], onToggleFavorite, onPhotoUploaded, onDeletePhoto, heading }: GalleryGridProps) {
     const t = useTranslations('gallery');
     const tPay = useTranslations('paywall');
     const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -77,38 +80,38 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
         fileInputRef.current?.click();
     };
 
-    const uploadSingleFile = (file: File): Promise<void> => {
-        return new Promise((resolve) => {
-            const formData = new FormData();
-            formData.append('file', file);
-            if (memorialId) formData.append('memorialId', memorialId);
+    const uploadSingleFile = async (file: File): Promise<void> => {
+        if (!memorialId || !currentUserId) {
+            console.error('[GalleryGrid] Missing memorialId or userId');
+            return;
+        }
 
-            const xhr = new XMLHttpRequest();
-            xhr.upload.addEventListener('progress', (ev) => {
-                if (ev.lengthComputable) setUploadProgress(Math.round((ev.loaded / ev.total) * 100));
-            });
-            xhr.addEventListener('load', () => {
-                try {
-                    const data = JSON.parse(xhr.responseText);
-                    if (xhr.status >= 200 && xhr.status < 300 && data.photo) {
-                        onPhotoUploaded?.({
-                            id: data.photo.id,
-                            url: data.photo.url,
-                            caption: data.photo.caption,
-                            isFavorite: data.photo.isFavorite,
-                        });
-                    } else {
-                        console.error('[GalleryGrid] Upload error:', data.error);
-                    }
-                } catch (err) { console.error('[GalleryGrid] Parse error:', err); }
-                finally { resolve(); }
-            });
-            xhr.addEventListener('error', () => {
-                console.error('[GalleryGrid] Upload failed');
-                resolve();
-            });
-            xhr.open('POST', '/api/photos/upload');
-            xhr.send(formData);
+        const { url, error: uploadError } = await uploadGalleryFile(file, {
+            userId: currentUserId,
+            onProgress: (pct) => setUploadProgress(pct),
+        });
+        if (!url || uploadError) {
+            console.error('[GalleryGrid] Upload error:', uploadError);
+            return;
+        }
+
+        const supabase = createSupabaseBrowserClient();
+        const { data, error: insertError } = await supabase
+            .from('gallery_photos')
+            .insert({ memorial_id: memorialId, uploaded_by: currentUserId, url, file_size: file.size, is_favorite: false })
+            .select('id, url, caption, is_favorite')
+            .single();
+
+        if (insertError || !data) {
+            console.error('[GalleryGrid] DB insert error:', insertError);
+            return;
+        }
+
+        onPhotoUploaded?.({
+            id: data.id,
+            url: data.url,
+            caption: data.caption ?? undefined,
+            isFavorite: data.is_favorite ?? false,
         });
     };
 

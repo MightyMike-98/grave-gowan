@@ -3,6 +3,9 @@
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
+const RELATION_KEYS = ['family', 'friend', 'colleague', 'fan', 'acquaintance', 'other'] as const;
+type RelationKey = typeof RELATION_KEYS[number];
+
 interface StoryDraft {
     id: string;
     author: string;
@@ -21,26 +24,27 @@ interface PendingStory {
 interface StoriesEditorProps {
     stories: StoryDraft[];
     pendingStories: PendingStory[];
-    onAddStory: (author: string, text: string) => void;
+    userName?: string | null;
+    onAddStory: (text: string, relation: string) => void;
     onApprove: (storyId: string) => void;
     onReject: (storyId: string) => void;
     onToggleFavorite: (storyId: string) => void;
     onDelete: (storyId: string) => void;
 }
 
-export function StoriesEditor({ stories, pendingStories, onAddStory, onApprove, onReject, onToggleFavorite, onDelete }: StoriesEditorProps) {
+export function StoriesEditor({ stories, pendingStories, userName, onAddStory, onApprove, onReject, onToggleFavorite, onDelete }: StoriesEditorProps) {
     const t = useTranslations('create');
-    const [storyAuthor, setStoryAuthor] = useState('');
+    const tStories = useTranslations('stories');
     const [storyText, setStoryText] = useState('');
+    const [storyRelation, setStoryRelation] = useState<RelationKey | null>(null);
     const [confirmId, setConfirmId] = useState<string | null>(null);
 
     const handleAdd = () => {
-        const author = storyAuthor.trim();
         const text = storyText.trim();
-        if (!author || !text) return;
-        onAddStory(author, text);
-        setStoryAuthor('');
+        if (!text || !storyRelation || !userName?.trim()) return;
+        onAddStory(text, storyRelation);
         setStoryText('');
+        setStoryRelation(null);
     };
 
     return (
@@ -103,12 +107,48 @@ export function StoriesEditor({ stories, pendingStories, onAddStory, onApprove, 
 
             {/* Add story form */}
             <div className="rounded-xl p-5 space-y-3" style={{ backgroundColor: 'hsl(var(--muted) / 0.15)', border: '1px dashed hsl(var(--border) / 0.5)' }}>
-                <input type="text" value={storyAuthor} onChange={(e) => setStoryAuthor(e.target.value)} placeholder={t('placeholderAuthor')} className="field-input" />
+                {userName && (
+                    <div className="flex items-center gap-2.5">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs" style={{ backgroundColor: 'hsl(var(--muted) / 0.6)', color: 'hsl(var(--muted-foreground))' }}>
+                            {userName.substring(0, 2).toUpperCase()}
+                        </div>
+                        <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>{userName}</p>
+                    </div>
+                )}
+                <div className="space-y-1.5">
+                    <label className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                        {tStories('relationLabel')}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                        {RELATION_KEYS.map((key) => {
+                            const active = storyRelation === key;
+                            return (
+                                <button
+                                    key={key}
+                                    type="button"
+                                    onClick={() => setStoryRelation(key)}
+                                    className="rounded-full border px-3 py-1.5 text-xs font-light transition-colors"
+                                    style={active ? {
+                                        borderColor: 'hsl(var(--foreground))',
+                                        backgroundColor: 'hsl(var(--foreground))',
+                                        color: 'hsl(var(--background))',
+                                    } : {
+                                        borderColor: 'hsl(var(--border) / 0.6)',
+                                        backgroundColor: 'transparent',
+                                        color: 'hsl(var(--muted-foreground))',
+                                    }}
+                                >
+                                    {tStories(`relation_${key}`)}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
                 <textarea value={storyText} onChange={(e) => setStoryText(e.target.value)} placeholder={t('placeholderStory')} rows={3} className="field-input resize-none" />
                 <button
                     type="button"
                     onClick={handleAdd}
-                    disabled={!storyAuthor.trim() || !storyText.trim()}
+                    disabled={!storyText.trim() || !storyRelation || !userName?.trim()}
                     className="rounded-full px-5 py-2 text-xs font-light uppercase tracking-[0.15em] transition-colors disabled:opacity-40"
                     style={{ backgroundColor: 'hsl(var(--foreground) / 0.08)', color: 'hsl(var(--foreground) / 0.7)', border: '1px solid hsl(var(--border) / 0.4)' }}
                 >

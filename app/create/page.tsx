@@ -15,6 +15,7 @@ import { isCofounder } from '@/lib/cofounders';
 import { createMemorial } from '@core/use-cases/createMemorial';
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { SupabaseMemorialRepository } from '@data/repositories/SupabaseMemorialRepository';
+import { uploadGalleryFile } from '@data/gallery-upload';
 import { uploadMemorialImage } from '@data/storage';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, Check, Copy, Link as LinkIcon } from 'lucide-react';
@@ -49,6 +50,7 @@ function CreateMemorialForm() {
     const [country, setCountry] = useState('');
     const [portraitUrl, setPortraitUrl] = useState('');
     const [userId, setUserId] = useState<string | null>(null);
+    const [userName, setUserName] = useState<string | null>(null);
     const [existingSlug, setExistingSlug] = useState('');
     const [isPublic, setIsPublic] = useState(true);
     const [visibilityPopup, setVisibilityPopup] = useState<'private' | 'public' | null>(null);
@@ -64,7 +66,7 @@ function CreateMemorialForm() {
     const [galleryUploading, setGalleryUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
 
-    const [stories, setStories] = useState<{ id: string; author: string; text: string; date: string; favorite: boolean }[]>([]);
+    const [stories, setStories] = useState<{ id: string; author: string; text: string; date: string; favorite: boolean; relation?: string }[]>([]);
     const [pendingStories, setPendingStories] = useState<{ id: string; author: string; text: string; date: string }[]>([]);
 
     interface InviteDraft { email: string; role: 'editor' }
@@ -104,7 +106,10 @@ function CreateMemorialForm() {
 
     useEffect(() => {
         const supabase = createSupabaseBrowserClient();
-        supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+        supabase.auth.getUser().then(({ data }) => {
+            setUserId(data.user?.id ?? null);
+            setUserName((data.user?.user_metadata?.full_name as string) ?? null);
+        });
 
         if (editId) {
             supabase.from('memorials').select('*').eq('id', editId).single()
@@ -152,44 +157,40 @@ function CreateMemorialForm() {
     }, []);
 
     // ── Handlers ──
-    const handleGalleryUpload = (file: File): Promise<void> => {
-        return new Promise((resolve) => {
-            if (!userId) { resolve(); return; }
-            setGalleryUploading(true);
+    const handleGalleryUpload = async (file: File): Promise<void> => {
+        if (!userId) return;
+        setGalleryUploading(true);
+        setUploadProgress(0);
+
+        try {
+            const { url, error: uploadError } = await uploadGalleryFile(file, {
+                userId,
+                onProgress: (pct) => setUploadProgress(pct),
+            });
+            if (!url || uploadError) {
+                console.error('[Create/Gallery] Upload error:', uploadError);
+                return;
+            }
+
+            if (editId) {
+                const supabase = createSupabaseBrowserClient();
+                const { data, error: insertError } = await supabase
+                    .from('gallery_photos')
+                    .insert({ memorial_id: editId, uploaded_by: userId, url, file_size: file.size, is_favorite: false })
+                    .select('id, url, is_favorite')
+                    .single();
+                if (insertError || !data) {
+                    console.error('[Create/Gallery] DB insert error:', insertError);
+                    return;
+                }
+                setGalleryPhotos(prev => [...prev, { id: data.id, url: data.url, favorite: data.is_favorite ?? false, size: file.size }]);
+            } else {
+                setGalleryPhotos(prev => [...prev, { id: `temp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, url, favorite: false, size: file.size }]);
+            }
+        } finally {
+            setGalleryUploading(false);
             setUploadProgress(0);
-
-            const formData = new FormData();
-            formData.append('file', file);
-            if (editId) formData.append('memorialId', editId);
-
-            const xhr = new XMLHttpRequest();
-            xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
-            });
-            xhr.addEventListener('load', () => {
-                try {
-                    const data = JSON.parse(xhr.responseText);
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        if (editId && data.photo) {
-                            setGalleryPhotos(prev => [...prev, { id: data.photo.id, url: data.photo.url, favorite: data.photo.isFavorite ?? false, size: file.size }]);
-                        } else if (!editId && data.url) {
-                            setGalleryPhotos(prev => [...prev, { id: `temp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`, url: data.url, favorite: false, size: file.size }]);
-                        }
-                    } else {
-                        console.error('[Create/Gallery] Upload error:', data.error);
-                    }
-                } catch (err) { console.error('[Create/Gallery] Parse error:', err); }
-                finally { setGalleryUploading(false); setUploadProgress(0); resolve(); }
-            });
-            xhr.addEventListener('error', () => {
-                console.error('[Create/Gallery] Upload failed');
-                setGalleryUploading(false);
-                setUploadProgress(0);
-                resolve();
-            });
-            xhr.open('POST', '/api/photos/upload');
-            xhr.send(formData);
-        });
+        }
     };
 
     const handleToggleGalleryFavorite = async (photoId: string) => {
@@ -206,15 +207,17 @@ function CreateMemorialForm() {
         setGalleryPhotos(prev => prev.filter(p => p.id !== photoId));
     }, []);
 
-    const handleAddStory = async (author: string, text: string) => {
+    const handleAddStory = async (text: string, relation: string) => {
+        const author = userName ?? '';
+        if (!author.trim()) return;
         const newStory = {
-            id: `temp_${Date.now()}`, author, text,
+            id: `temp_${Date.now()}`, author, text, relation,
             date: new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
             favorite: false,
         };
         if (editId) {
             const supabase = createSupabaseBrowserClient();
-            const { data, error } = await supabase.from('memorial_stories').insert({ memorial_id: editId, author, text, status: 'approved' }).select().single();
+            const { data, error } = await supabase.from('memorial_stories').insert({ memorial_id: editId, author, text, relation, status: 'approved' }).select().single();
             if (!error && data) setStories(prev => [{ ...newStory, id: data.id }, ...prev]);
         } else {
             setStories(prev => [newStory, ...prev]);
@@ -338,7 +341,7 @@ function CreateMemorialForm() {
                 }
                 if (stories.length > 0) {
                     await Promise.allSettled(stories.map((story) =>
-                        supabase.from('memorial_stories').insert({ memorial_id: memorial.id, author: story.author, text: story.text, is_favorite: story.favorite, status: 'approved' })
+                        supabase.from('memorial_stories').insert({ memorial_id: memorial.id, author: story.author, text: story.text, relation: story.relation, is_favorite: story.favorite, status: 'approved' })
                     ));
                 }
                 if (invites.length > 0) {
@@ -586,7 +589,7 @@ function CreateMemorialForm() {
                 />
 
                 <StoriesEditor
-                    stories={stories} pendingStories={pendingStories}
+                    stories={stories} pendingStories={pendingStories} userName={userName}
                     onAddStory={handleAddStory} onApprove={handleApproveStory} onReject={handleRejectStory}
                     onToggleFavorite={handleToggleStoryFavorite} onDelete={handleDeleteStory}
                 />

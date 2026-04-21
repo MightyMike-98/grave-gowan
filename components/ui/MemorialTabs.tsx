@@ -155,6 +155,7 @@ export function MemorialTabs({ memorial, userRole = 'anonymous', memorialSlug, i
                         memorialId={memorial.id}
                         memorialSlug={memorialSlug}
                         isPremium={isCofounder(currentUserId)}
+                        currentUserId={currentUserId}
                         favoriteIds={favoriteIds}
                         onToggleFavorite={handleToggleFavorite}
                         onPhotoUploaded={handlePhotoUploaded}
