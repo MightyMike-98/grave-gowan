@@ -126,14 +126,15 @@ export function GalleryEditor({ photos, uploading, uploadProgress = 0, isPremium
                         >
                             {isVideoUrl(photo.url) ? (
                                 <video
-                                    src={photo.url}
+                                    src={`${photo.url}#t=0.1`}
                                     className="h-full w-full object-cover"
                                     muted
                                     loop
                                     playsInline
                                     preload="metadata"
+                                    onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.1; }}
                                     onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
-                                    onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                    onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0.1; }}
                                 />
                             ) : (
                                 <img src={photo.url} alt="" className="h-full w-full object-cover" loading="lazy" />

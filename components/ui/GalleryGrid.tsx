@@ -204,14 +204,15 @@ export function GalleryGrid({ photos, canEdit = false, memorialId, isPremium = f
                                     >
                                         {isVideoUrl(photo.url) ? (
                                             <video
-                                                src={photo.url}
+                                                src={`${photo.url}#t=0.1`}
                                                 className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                                                 muted
                                                 loop
                                                 playsInline
                                                 preload="metadata"
+                                                onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.1; }}
                                                 onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
-                                                onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                                onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0.1; }}
                                             />
                                         ) : (
                                             <Image

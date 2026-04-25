@@ -60,14 +60,15 @@ export function HighlightsSection({ memorial, canEdit = false, onTabChange }: Hi
                             >
                                 {isVideoUrl(img.url) ? (
                                     <video
-                                        src={img.url}
+                                        src={`${img.url}#t=0.1`}
                                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         muted
                                         loop
                                         playsInline
                                         preload="metadata"
+                                        onLoadedMetadata={(e) => { e.currentTarget.currentTime = 0.1; }}
                                         onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
-                                        onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                        onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0.1; }}
                                     />
                                 ) : (
                                     <img
