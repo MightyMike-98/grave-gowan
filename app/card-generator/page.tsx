@@ -403,9 +403,9 @@ function CardGeneratorInner() {
                                 fontFamily: "'Cormorant Garamond', serif",
                             }}
                         >
-                            <div className="flex h-full flex-col items-center px-7 py-7 text-center">
+                            <div className="flex h-full flex-col items-center px-7 py-5 text-center">
                                 <p
-                                    className="text-[10px] uppercase tracking-[0.4em] text-slate-600/80"
+                                    className="text-[12px] uppercase tracking-[0.4em] text-slate-600/80"
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '0.4em' }}
                                 >
                                     MemorialYard
@@ -413,10 +413,10 @@ function CardGeneratorInner() {
 
                                 {/* Photo */}
                                 <div
-                                    className="mt-4 shrink-0 overflow-hidden rounded-full border-4 border-white/80"
+                                    className="mt-3 shrink-0 overflow-hidden rounded-full border-4 border-white/80"
                                     style={{
-                                        width: isStory ? 128 : 140,
-                                        height: isStory ? 128 : 140,
+                                        width: isStory ? 160 : 140,
+                                        height: isStory ? 160 : 140,
                                     }}
                                 >
                                     {photo ? (
@@ -438,7 +438,7 @@ function CardGeneratorInner() {
 
                                 {/* Name */}
                                 <h2
-                                    className="mt-4 text-4xl text-slate-900"
+                                    className="mt-4 text-[40px] leading-tight text-slate-900"
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '-0.01em' }}
                                 >
                                     {name}
@@ -446,22 +446,22 @@ function CardGeneratorInner() {
 
                                 {/* Dates */}
                                 <p
-                                    className="mt-1.5 text-base tracking-wide text-slate-700"
+                                    className="mt-1.5 text-lg tracking-wide text-slate-700"
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}
                                 >
                                     {birth} – {death}
                                 </p>
                                 <p
-                                    className="mt-0.5 text-xs text-slate-600"
+                                    className="mt-0.5 text-sm text-slate-600"
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}
                                 >
                                     ✦ {place}
                                 </p>
 
-                                <div className="my-3 h-px w-12 bg-slate-400/40" />
+                                <div className="my-2 h-px w-12 bg-slate-400/40" />
 
                                 <p
-                                    className="text-[10px] uppercase tracking-[0.3em] text-slate-600/80"
+                                    className="text-[12px] uppercase tracking-[0.3em] text-slate-600/80"
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500 }}
                                 >
                                     {t('inLovingMemory')}
@@ -469,7 +469,7 @@ function CardGeneratorInner() {
 
                                 {/* Quote */}
                                 <p
-                                    className="mt-3 px-2 text-base italic leading-snug text-slate-800"
+                                    className="mt-3 px-2 text-lg italic leading-snug text-slate-800"
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}
                                 >
                                     „{quote}"
@@ -477,8 +477,8 @@ function CardGeneratorInner() {
 
                                 {/* Candle – glowing, like Memorial page (html-to-image-safe rendering) */}
                                 <div
-                                    className="flex flex-col items-center gap-1.5"
-                                    style={{ marginTop: isStory ? 36 : 24 }}
+                                    className="flex flex-col items-center gap-0.5"
+                                    style={{ marginTop: isStory ? 8 : 0 }}
                                 >
                                     <div className="relative flex items-center justify-center" style={{ width: 80, height: 80 }}>
                                         {/* Glow als radial-gradient — html-to-image-sicher */}
@@ -494,8 +494,8 @@ function CardGeneratorInner() {
                                             style={{ width: 48, height: 48, backgroundColor: 'rgba(254, 243, 199, 0.95)' }}
                                         >
                                             <svg
-                                                width="22"
-                                                height="22"
+                                                width="24"
+                                                height="24"
                                                 viewBox="0 0 24 24"
                                                 fill="rgb(245, 158, 11)"
                                                 stroke="rgb(245, 158, 11)"
@@ -516,9 +516,9 @@ function CardGeneratorInner() {
                                 </div>
 
                                 {/* Footer */}
-                                <div className="mt-auto flex flex-col items-center pt-3">
+                                <div className="mt-auto flex flex-col items-center pt-2">
                                     <p
-                                        className="text-sm text-slate-600"
+                                        className="text-base text-slate-600"
                                         style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '0.05em' }}
                                     >
                                         memorialyard.com
