@@ -141,33 +141,46 @@ function CardGeneratorInner() {
         setPhoto(dataUrl);
     };
 
-    const waitForReady = async () => {
+    /**
+     * Ersetzt jedes <img> im Card-Container durch eine inline data-URL,
+     * damit html-to-image nichts mehr per fetch holen muss.
+     */
+    const inlineImages = async () => {
         if (!cardRef.current) return;
-        if (document.fonts && document.fonts.ready) await document.fonts.ready;
         const imgs = Array.from(cardRef.current.querySelectorAll('img'));
-        await Promise.all(
-            imgs.map(async (img) => {
+        await Promise.all(imgs.map(async (img) => {
+            const src = img.src;
+            if (!src || src.startsWith('data:')) {
                 if (img.complete && img.naturalWidth > 0) {
                     try { await img.decode(); } catch { /* ignore */ }
-                    return;
                 }
-                await new Promise<void>((resolve) => {
-                    img.onload = () => resolve();
-                    img.onerror = () => resolve();
+                return;
+            }
+            try {
+                const response = await fetch(src, { mode: 'cors', cache: 'force-cache' });
+                if (!response.ok) return;
+                const blob = await response.blob();
+                const dataUrl = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
                 });
-                try { await img.decode(); } catch { /* ignore */ }
-            }),
-        );
+                img.src = dataUrl;
+                if (img.decode) {
+                    try { await img.decode(); } catch { /* ignore */ }
+                }
+            } catch (e) {
+                console.warn('[CardGenerator] Could not inline image:', e);
+            }
+        }));
     };
 
     const renderToPng = async () => {
         if (!cardRef.current) throw new Error('No card ref');
-        await waitForReady();
-        // Warm-up render — works around html-to-image dropping external
-        // images on the very first call (mostly seen on iOS Safari).
-        await toPng(cardRef.current, { cacheBust: true, pixelRatio: 1, backgroundColor: '#e3e2e0' });
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+        await inlineImages();
         return await toPng(cardRef.current, {
-            cacheBust: true,
             pixelRatio: 3,
             backgroundColor: '#e3e2e0',
         });

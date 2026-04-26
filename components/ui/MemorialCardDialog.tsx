@@ -37,38 +37,52 @@ export function MemorialCardDialog({ open, onOpenChange, name, birth, death, pla
     const cardRef = useRef<HTMLDivElement>(null);
     const isStory = format === '9:16';
 
-    const waitForReady = async () => {
+    /**
+     * Ersetzt jedes <img> im Card-Container durch eine inline data-URL,
+     * damit html-to-image nichts mehr per fetch holen muss. Das eliminiert
+     * die Race-Conditions, durch die Bilder beim Capture manchmal leer waren.
+     */
+    const inlineImages = async () => {
         if (!cardRef.current) return;
-        // 1. Fonts must be loaded — otherwise Cormorant falls back to Times
-        if (document.fonts && document.fonts.ready) {
-            await document.fonts.ready;
-        }
-        // 2. All <img> tags inside the card must be fully decoded —
-        //    otherwise html-to-image captures them as transparent.
         const imgs = Array.from(cardRef.current.querySelectorAll('img'));
-        await Promise.all(
-            imgs.map(async (img) => {
+        await Promise.all(imgs.map(async (img) => {
+            const src = img.src;
+            if (!src || src.startsWith('data:')) {
                 if (img.complete && img.naturalWidth > 0) {
-                    try { await img.decode(); } catch { /* decode unsupported, ignore */ }
-                    return;
+                    try { await img.decode(); } catch { /* ignore */ }
                 }
-                await new Promise<void>((resolve) => {
-                    img.onload = () => resolve();
-                    img.onerror = () => resolve();
+                return;
+            }
+            try {
+                const response = await fetch(src, { mode: 'cors', cache: 'force-cache' });
+                if (!response.ok) return;
+                const blob = await response.blob();
+                const dataUrl = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
                 });
-                try { await img.decode(); } catch { /* ignore */ }
-            }),
-        );
+                img.src = dataUrl;
+                if (img.decode) {
+                    try { await img.decode(); } catch { /* ignore */ }
+                }
+            } catch (e) {
+                console.warn('[MemorialCardDialog] Could not inline image:', e);
+            }
+        }));
     };
 
     const generate = async () => {
         if (!cardRef.current) return null;
-        await waitForReady();
-        // First render: warm up the canvas (works around a known html-to-image
-        // bug where the first call sometimes drops external images on iOS).
-        await toPng(cardRef.current, { cacheBust: true, pixelRatio: 1, backgroundColor: '#e3e2e0' });
+        // 1. Fonts laden (Cormorant Garamond)
+        if (document.fonts && document.fonts.ready) {
+            await document.fonts.ready;
+        }
+        // 2. Alle Bilder zu data-URLs konvertieren — kein fetch mehr in toPng
+        await inlineImages();
+        // 3. Capture
         return await toPng(cardRef.current, {
-            cacheBust: true,
             pixelRatio: 3,
             backgroundColor: '#e3e2e0',
         });
