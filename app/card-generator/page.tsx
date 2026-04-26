@@ -141,15 +141,43 @@ function CardGeneratorInner() {
         setPhoto(dataUrl);
     };
 
+    const waitForReady = async () => {
+        if (!cardRef.current) return;
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+        const imgs = Array.from(cardRef.current.querySelectorAll('img'));
+        await Promise.all(
+            imgs.map(async (img) => {
+                if (img.complete && img.naturalWidth > 0) {
+                    try { await img.decode(); } catch { /* ignore */ }
+                    return;
+                }
+                await new Promise<void>((resolve) => {
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve();
+                });
+                try { await img.decode(); } catch { /* ignore */ }
+            }),
+        );
+    };
+
+    const renderToPng = async () => {
+        if (!cardRef.current) throw new Error('No card ref');
+        await waitForReady();
+        // Warm-up render — works around html-to-image dropping external
+        // images on the very first call (mostly seen on iOS Safari).
+        await toPng(cardRef.current, { cacheBust: true, pixelRatio: 1, backgroundColor: '#e3e2e0' });
+        return await toPng(cardRef.current, {
+            cacheBust: true,
+            pixelRatio: 3,
+            backgroundColor: '#e3e2e0',
+        });
+    };
+
     const handleDownload = async () => {
         if (!cardRef.current) return;
         setDownloading(true);
         try {
-            const dataUrl = await toPng(cardRef.current, {
-                cacheBust: true,
-                pixelRatio: 3,
-                backgroundColor: '#e3e2e0',
-            });
+            const dataUrl = await renderToPng();
             const link = document.createElement('a');
             link.download = `memorial-${name.toLowerCase().replace(/\s+/g, '-')}-${format.replace(':', 'x')}.png`;
             link.href = dataUrl;
@@ -167,11 +195,7 @@ function CardGeneratorInner() {
         if (!cardRef.current) return;
         setDownloading(true);
         try {
-            const dataUrl = await toPng(cardRef.current, {
-                cacheBust: true,
-                pixelRatio: 3,
-                backgroundColor: '#e3e2e0',
-            });
+            const dataUrl = await renderToPng();
             const blob = await (await fetch(dataUrl)).blob();
             const file = new File(
                 [blob],

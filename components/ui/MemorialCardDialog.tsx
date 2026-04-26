@@ -37,8 +37,36 @@ export function MemorialCardDialog({ open, onOpenChange, name, birth, death, pla
     const cardRef = useRef<HTMLDivElement>(null);
     const isStory = format === '9:16';
 
+    const waitForReady = async () => {
+        if (!cardRef.current) return;
+        // 1. Fonts must be loaded — otherwise Cormorant falls back to Times
+        if (document.fonts && document.fonts.ready) {
+            await document.fonts.ready;
+        }
+        // 2. All <img> tags inside the card must be fully decoded —
+        //    otherwise html-to-image captures them as transparent.
+        const imgs = Array.from(cardRef.current.querySelectorAll('img'));
+        await Promise.all(
+            imgs.map(async (img) => {
+                if (img.complete && img.naturalWidth > 0) {
+                    try { await img.decode(); } catch { /* decode unsupported, ignore */ }
+                    return;
+                }
+                await new Promise<void>((resolve) => {
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve();
+                });
+                try { await img.decode(); } catch { /* ignore */ }
+            }),
+        );
+    };
+
     const generate = async () => {
         if (!cardRef.current) return null;
+        await waitForReady();
+        // First render: warm up the canvas (works around a known html-to-image
+        // bug where the first call sometimes drops external images on iOS).
+        await toPng(cardRef.current, { cacheBust: true, pixelRatio: 1, backgroundColor: '#e3e2e0' });
         return await toPng(cardRef.current, {
             cacheBust: true,
             pixelRatio: 3,
