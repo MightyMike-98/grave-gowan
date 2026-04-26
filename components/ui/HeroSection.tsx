@@ -9,13 +9,13 @@
  * Kerzen-Widget nutzt motion für Puls-Animation.
  */
 
+import { MemorialCardDialog } from '@/components/ui/MemorialCardDialog';
 import { SaveButton } from '@/components/ui/SaveButton';
 import type { MemorialView } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Flame } from 'lucide-react';
+import { Flame, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
@@ -97,10 +97,14 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
     fromDashboard?: boolean;
 }) {
     const t = useTranslations('hero');
+    const tCard = useTranslations('cardGenerator');
     const router = useRouter();
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+    const [cardOpen, setCardOpen] = useState(false);
     const [cameFromExternal, setCameFromExternal] = useState(false);
     const [referrerChecked, setReferrerChecked] = useState(false);
+
+    const [cardBirth, cardDeath] = (memorial.dates ?? '').split('–').map((s) => s.trim());
 
     useEffect(() => {
         const referrer = document.referrer;
@@ -164,15 +168,41 @@ export function HeroSection({ memorial, flowers = [], isAuthenticated = false, c
                 >
                     ← <span className="hidden sm:inline">{cameFromExternal ? (isAuthenticated ? t('backToDashboard') : t('backToHome')) : t('back')}</span>
                 </button>
-                {!canEdit && memorial.id !== 'demo' && (
-                    <div
-                        aria-hidden={!referrerChecked}
-                        className={`transition-opacity duration-300 ease-out ${referrerChecked ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                <div
+                    aria-hidden={!referrerChecked}
+                    className={`flex items-center gap-2 transition-opacity duration-300 ease-out ${referrerChecked ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                >
+                    <motion.button
+                        type="button"
+                        onClick={() => setCardOpen(true)}
+                        whileTap={{ scale: 0.92 }}
+                        className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-light backdrop-blur-sm transition-colors"
+                        style={{
+                            backgroundColor: 'hsl(var(--foreground) / 0.05)',
+                            color: 'hsl(var(--foreground) / 0.6)',
+                        }}
                     >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">{tCard('getCard')}</span>
+                    </motion.button>
+
+                    {!canEdit && memorial.id !== 'demo' && (
                         <SaveButton memorialId={memorial.id} memorialSlug={memorialSlug} isAuthenticated={isAuthenticated} initialSaved={initialSaved} />
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
+
+            <MemorialCardDialog
+                open={cardOpen}
+                onOpenChange={setCardOpen}
+                name={memorial.name}
+                birth={cardBirth ?? ''}
+                death={cardDeath ?? ''}
+                place={memorial.country ?? ''}
+                quote={memorial.quote ?? ''}
+                photo={memorial.portraitUrl ?? ''}
+                candleCount={candleCount}
+            />
 
             {/* Main content */}
             <motion.div

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { createSupabaseBrowserClient } from '@data/browser-client';
 import { useTranslations, useLocale } from 'next-intl';
-import { X, Eye, PenLine, Plus, HelpCircle } from 'lucide-react';
+import { X, Eye, PenLine, Plus, HelpCircle, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -222,6 +222,30 @@ export default function LandingPage() {
                         >
                             {t('createMemorial')}
                         </Link>
+
+                        {/* Memorial Card Generator – subtle but discoverable */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.6, duration: 0.6 }}
+                            className="mt-6 flex flex-col items-center gap-1.5"
+                        >
+                            <Link
+                                href="/card-generator"
+                                className="group inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-normal tracking-wide shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md"
+                                style={{
+                                    border: '1px solid hsl(var(--border) / 0.6)',
+                                    backgroundColor: 'hsl(var(--card) / 0.6)',
+                                    color: 'hsl(var(--foreground))',
+                                }}
+                            >
+                                <Sparkles className="h-3.5 w-3.5 transition-transform group-hover:scale-110" style={{ color: 'hsl(var(--primary) / 0.7)' }} />
+                                {t('cardBtn')}
+                            </Link>
+                            <p className="text-[10px] font-light" style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}>
+                                {t('cardHint')}
+                            </p>
+                        </motion.div>
                     </motion.div>
                 </div>
             </div>

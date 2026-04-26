@@ -157,7 +157,7 @@ export function ImageUploader({
                                 fill
                                 className="object-cover"
                                 sizes="128px"
-                                unoptimized={previewUrl.startsWith('blob:')}
+                                unoptimized={previewUrl.startsWith('blob:') || previewUrl.startsWith('data:')}
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center transition-opacity">
                                 <span className="text-white text-xs font-medium">Change</span>
