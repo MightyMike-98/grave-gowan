@@ -147,7 +147,7 @@ function CardGeneratorInner() {
         try {
             const dataUrl = await toPng(cardRef.current, {
                 cacheBust: true,
-                pixelRatio: 2,
+                pixelRatio: 3,
                 backgroundColor: '#e3e2e0',
             });
             const link = document.createElement('a');
@@ -169,7 +169,7 @@ function CardGeneratorInner() {
         try {
             const dataUrl = await toPng(cardRef.current, {
                 cacheBust: true,
-                pixelRatio: 2,
+                pixelRatio: 3,
                 backgroundColor: '#e3e2e0',
             });
             const blob = await (await fetch(dataUrl)).blob();

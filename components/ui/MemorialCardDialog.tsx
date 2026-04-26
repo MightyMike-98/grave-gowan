@@ -41,7 +41,7 @@ export function MemorialCardDialog({ open, onOpenChange, name, birth, death, pla
         if (!cardRef.current) return null;
         return await toPng(cardRef.current, {
             cacheBust: true,
-            pixelRatio: 2,
+            pixelRatio: 3,
             backgroundColor: '#e3e2e0',
         });
     };
