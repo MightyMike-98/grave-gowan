@@ -389,7 +389,7 @@ function CardGeneratorInner() {
 
                                 {/* Photo */}
                                 <div
-                                    className="mt-4 shrink-0 overflow-hidden rounded-full border-4 border-white/80 shadow-md"
+                                    className="mt-4 shrink-0 overflow-hidden rounded-full border-4 border-white/80"
                                     style={{
                                         width: isStory ? 128 : 140,
                                         height: isStory ? 128 : 140,
