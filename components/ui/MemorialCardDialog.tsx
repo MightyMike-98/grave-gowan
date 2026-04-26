@@ -11,7 +11,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { toPng } from 'html-to-image';
-import { Download, Flame, Share2, X } from 'lucide-react';
+import { Download, Share2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { toast, Toaster } from 'sonner';
@@ -225,11 +225,32 @@ export function MemorialCardDialog({ open, onOpenChange, name, birth, death, pla
                                             )}
 
                                             <div className="flex flex-col items-center gap-1.5" style={{ marginTop: isStory ? 36 : 24 }}>
-                                                <div
-                                                    className="relative flex h-12 w-12 items-center justify-center rounded-full"
-                                                    style={{ backgroundColor: 'rgba(254, 243, 199, 0.8)', boxShadow: '0 0 30px 8px rgba(251, 191, 36, 0.35)' }}
-                                                >
-                                                    <Flame className="h-5 w-5" strokeWidth={1.5} fill="rgb(245, 158, 11)" style={{ color: 'rgb(245, 158, 11)', filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.7))' }} />
+                                                <div className="relative flex items-center justify-center" style={{ width: 80, height: 80 }}>
+                                                    {/* Glow als radial-gradient — html-to-image-sicher */}
+                                                    <div
+                                                        style={{
+                                                            position: 'absolute',
+                                                            inset: 0,
+                                                            background: 'radial-gradient(circle, rgba(251, 191, 36, 0.45) 0%, rgba(251, 191, 36, 0.15) 35%, rgba(251, 191, 36, 0) 70%)',
+                                                        }}
+                                                    />
+                                                    <div
+                                                        className="relative flex items-center justify-center rounded-full"
+                                                        style={{ width: 48, height: 48, backgroundColor: 'rgba(254, 243, 199, 0.95)' }}
+                                                    >
+                                                        <svg
+                                                            width="22"
+                                                            height="22"
+                                                            viewBox="0 0 24 24"
+                                                            fill="rgb(245, 158, 11)"
+                                                            stroke="rgb(245, 158, 11)"
+                                                            strokeWidth="1.5"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                        >
+                                                            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                                                        </svg>
+                                                    </div>
                                                 </div>
                                                 <p className="text-[11px] text-slate-700" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500 }}>
                                                     {candleCount} {candleCount === 1 ? t('candleOne') : t('candleMany')}
