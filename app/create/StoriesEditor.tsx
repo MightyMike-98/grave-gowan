@@ -25,7 +25,7 @@ interface StoriesEditorProps {
     stories: StoryDraft[];
     pendingStories: PendingStory[];
     userName?: string | null;
-    onAddStory: (text: string, relation: string) => void;
+    onAddStory: (author: string, text: string, relation: string) => void;
     onApprove: (storyId: string) => void;
     onReject: (storyId: string) => void;
     onToggleFavorite: (storyId: string) => void;
@@ -35,14 +35,17 @@ interface StoriesEditorProps {
 export function StoriesEditor({ stories, pendingStories, userName, onAddStory, onApprove, onReject, onToggleFavorite, onDelete }: StoriesEditorProps) {
     const t = useTranslations('create');
     const tStories = useTranslations('stories');
+    const [storyAuthor, setStoryAuthor] = useState(userName ?? '');
     const [storyText, setStoryText] = useState('');
     const [storyRelation, setStoryRelation] = useState<RelationKey | null>(null);
     const [confirmId, setConfirmId] = useState<string | null>(null);
 
     const handleAdd = () => {
+        const author = storyAuthor.trim();
         const text = storyText.trim();
-        if (!text || !storyRelation || !userName?.trim()) return;
-        onAddStory(text, storyRelation);
+        if (!author || !text || !storyRelation) return;
+        onAddStory(author, text, storyRelation);
+        setStoryAuthor(userName ?? '');
         setStoryText('');
         setStoryRelation(null);
     };
@@ -107,14 +110,18 @@ export function StoriesEditor({ stories, pendingStories, userName, onAddStory, o
 
             {/* Add story form */}
             <div className="rounded-xl p-5 space-y-3" style={{ backgroundColor: 'hsl(var(--muted) / 0.15)', border: '1px dashed hsl(var(--border) / 0.5)' }}>
-                {userName && (
-                    <div className="flex items-center gap-2.5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs" style={{ backgroundColor: 'hsl(var(--muted) / 0.6)', color: 'hsl(var(--muted-foreground))' }}>
-                            {userName.substring(0, 2).toUpperCase()}
-                        </div>
-                        <p className="text-sm font-medium" style={{ color: 'hsl(var(--foreground))' }}>{userName}</p>
-                    </div>
-                )}
+                <div className="space-y-1.5">
+                    <label className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                        {tStories('namePlaceholder')}
+                    </label>
+                    <input
+                        type="text"
+                        value={storyAuthor}
+                        onChange={(e) => setStoryAuthor(e.target.value)}
+                        placeholder={tStories('namePlaceholder')}
+                        className="field-input"
+                    />
+                </div>
                 <div className="space-y-1.5">
                     <label className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
                         {tStories('relationLabel')}
@@ -148,7 +155,7 @@ export function StoriesEditor({ stories, pendingStories, userName, onAddStory, o
                 <button
                     type="button"
                     onClick={handleAdd}
-                    disabled={!storyText.trim() || !storyRelation || !userName?.trim()}
+                    disabled={!storyAuthor.trim() || !storyText.trim() || !storyRelation}
                     className="rounded-full px-5 py-2 text-xs font-light uppercase tracking-[0.15em] transition-colors disabled:opacity-40"
                     style={{ backgroundColor: 'hsl(var(--foreground) / 0.08)', color: 'hsl(var(--foreground) / 0.7)', border: '1px solid hsl(var(--border) / 0.4)' }}
                 >

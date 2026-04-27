@@ -207,8 +207,7 @@ function CreateMemorialForm() {
         setGalleryPhotos(prev => prev.filter(p => p.id !== photoId));
     }, []);
 
-    const handleAddStory = async (text: string, relation: string) => {
-        const author = userName ?? '';
+    const handleAddStory = async (author: string, text: string, relation: string) => {
         if (!author.trim()) return;
         const newStory = {
             id: `temp_${Date.now()}`, author, text, relation,
