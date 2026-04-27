@@ -1,16 +1,60 @@
 'use client';
 
-import { useState, useRef, Suspense } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toPng } from 'html-to-image';
-import { ArrowLeft, Download, Square, Smartphone, Share2, Sparkles, ExternalLink, X } from 'lucide-react';
+import { ArrowLeft, Download, Square, RectangleVertical, Smartphone, Share2, Sparkles, ExternalLink, X } from 'lucide-react';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { toast, Toaster } from 'sonner';
 import { useTranslations } from 'next-intl';
 
-type Format = '1:1' | '9:16';
+type Format = '1:1' | '4:5' | '9:16';
+
+interface Dims {
+    w: number;
+    h: number;
+    photo: number;
+    candleMt: number;
+    brandSize: string;
+    nameSize: string;
+    dateSize: string;
+    placeSize: string;
+    labelSize: string;
+    quoteSize: string;
+    footerSize: string;
+    candleWrap: number;
+    candleCircle: number;
+    candleSvg: number;
+    photoMt: string;
+    nameMt: string;
+    dividerMy: string;
+}
+
+const FORMAT_DIMS: Record<Format, Dims> = {
+    '1:1':  {
+        w: 560, h: 560, photo: 140, candleMt: 0,
+        brandSize: 'text-[12px]', nameSize: 'text-[40px]', dateSize: 'text-lg', placeSize: 'text-sm',
+        labelSize: 'text-[12px]', quoteSize: 'text-lg', footerSize: 'text-base',
+        candleWrap: 80, candleCircle: 48, candleSvg: 24,
+        photoMt: 'mt-3', nameMt: 'mt-4', dividerMy: 'my-2',
+    },
+    '4:5':  {
+        w: 560, h: 700, photo: 200, candleMt: 8,
+        brandSize: 'text-[14px]', nameSize: 'text-[52px]', dateSize: 'text-xl', placeSize: 'text-base',
+        labelSize: 'text-[14px]', quoteSize: 'text-xl', footerSize: 'text-lg',
+        candleWrap: 100, candleCircle: 60, candleSvg: 32,
+        photoMt: 'mt-5', nameMt: 'mt-5', dividerMy: 'my-4',
+    },
+    '9:16': {
+        w: 360, h: 640, photo: 160, candleMt: 8,
+        brandSize: 'text-[12px]', nameSize: 'text-[40px]', dateSize: 'text-lg', placeSize: 'text-sm',
+        labelSize: 'text-[12px]', quoteSize: 'text-lg', footerSize: 'text-base',
+        candleWrap: 80, candleCircle: 48, candleSvg: 24,
+        photoMt: 'mt-3', nameMt: 'mt-4', dividerMy: 'my-2',
+    },
+};
 
 type Template = {
     id: string;
@@ -106,6 +150,8 @@ function CardGeneratorInner() {
     const [upsellOpen, setUpsellOpen] = useState(false);
 
     const cardRef = useRef<HTMLDivElement>(null);
+    const cardWrapRef = useRef<HTMLDivElement>(null);
+    const [cardScale, setCardScale] = useState(1);
 
     const applyTemplate = (tpl: Template) => {
         setActiveTplId(tpl.id);
@@ -251,7 +297,23 @@ function CardGeneratorInner() {
         }
     };
 
-    const isStory = format === '9:16';
+    const dims = FORMAT_DIMS[format];
+
+    // Auto-scale the card to fit the available wrapper width on mobile.
+    // Card stays at its base render dimensions (so PNG quality is unchanged);
+    // we only apply a CSS transform to fit the viewport.
+    useEffect(() => {
+        const el = cardWrapRef.current;
+        if (!el) return;
+        const update = () => {
+            const w = el.clientWidth;
+            setCardScale(Math.min(1, w / dims.w));
+        };
+        update();
+        const ro = new ResizeObserver(update);
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [dims.w]);
 
     return (
         <div className="min-h-screen" style={{ backgroundColor: 'hsl(var(--background))' }}>
@@ -259,23 +321,23 @@ function CardGeneratorInner() {
 
             {/* Header */}
             <div className="border-b backdrop-blur-sm" style={{ borderColor: 'hsl(var(--border) / 0.4)', backgroundColor: 'hsl(var(--card) / 0.4)' }}>
-                <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+                <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4 sm:px-6">
                     <Link
                         href="/"
                         className="flex items-center gap-2 text-sm font-light transition-colors"
                         style={{ color: 'hsl(var(--muted-foreground))' }}
                     >
                         <ArrowLeft className="h-4 w-4" />
-                        {t('back')}
+                        <span className="hidden sm:inline">{t('back')}</span>
                     </Link>
                     <p className="text-[11px] font-light uppercase tracking-[0.3em]" style={{ color: 'hsl(var(--muted-foreground) / 0.6)' }}>
                         {t('headerLabel')}
                     </p>
-                    <div className="w-16" />
+                    <div className="w-4 sm:w-16" />
                 </div>
             </div>
 
-            <div className="mx-auto grid max-w-6xl gap-10 px-6 py-10 lg:grid-cols-[400px_1fr]">
+            <div className="mx-auto grid max-w-6xl gap-10 px-5 py-8 sm:px-6 sm:py-10 lg:grid-cols-[400px_1fr]">
                 {/* Form */}
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}
@@ -377,7 +439,7 @@ function CardGeneratorInner() {
                         <button
                             type="button"
                             onClick={() => setFormat('1:1')}
-                            className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-light transition-all"
+                            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-light transition-all"
                             style={format === '1:1' ? {
                                 backgroundColor: 'hsl(var(--foreground))',
                                 color: 'hsl(var(--background))',
@@ -390,8 +452,22 @@ function CardGeneratorInner() {
                         </button>
                         <button
                             type="button"
+                            onClick={() => setFormat('4:5')}
+                            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-light transition-all"
+                            style={format === '4:5' ? {
+                                backgroundColor: 'hsl(var(--foreground))',
+                                color: 'hsl(var(--background))',
+                            } : {
+                                color: 'hsl(var(--muted-foreground))',
+                                backgroundColor: 'transparent',
+                            }}
+                        >
+                            <RectangleVertical className="h-3 w-3" /> {t('format45')}
+                        </button>
+                        <button
+                            type="button"
                             onClick={() => setFormat('9:16')}
-                            className="flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-light transition-all"
+                            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-light transition-all"
                             style={format === '9:16' ? {
                                 backgroundColor: 'hsl(var(--foreground))',
                                 color: 'hsl(var(--background))',
@@ -405,20 +481,29 @@ function CardGeneratorInner() {
                     </div>
 
                     {/* Card */}
-                    <div className="flex justify-center">
+                    <div className="flex w-full justify-center">
+                        <div
+                            ref={cardWrapRef}
+                            className="relative w-full"
+                            style={{
+                                maxWidth: dims.w,
+                                height: dims.h * cardScale,
+                            }}
+                        >
                         <div
                             ref={cardRef}
-                            className="relative overflow-hidden rounded-[28px] shadow-2xl"
+                            className="absolute left-0 top-0 origin-top-left overflow-hidden rounded-[28px] shadow-2xl"
                             style={{
-                                width: isStory ? 360 : 560,
-                                height: isStory ? 640 : 560,
+                                width: dims.w,
+                                height: dims.h,
+                                transform: `scale(${cardScale})`,
                                 background: `linear-gradient(180deg, hsl(230 35% 88% / 0.85) 0%, hsl(225 20% 90% / 0.95) 40%, hsl(35 15% 89%) 100%)`,
                                 fontFamily: "'Cormorant Garamond', serif",
                             }}
                         >
                             <div className="flex h-full flex-col items-center px-7 py-5 text-center">
                                 <p
-                                    className="text-[12px] uppercase tracking-[0.4em] text-slate-600/80"
+                                    className={`${dims.brandSize} uppercase tracking-[0.4em] text-slate-600/80`}
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '0.4em' }}
                                 >
                                     MemorialYard
@@ -426,10 +511,10 @@ function CardGeneratorInner() {
 
                                 {/* Photo */}
                                 <div
-                                    className="mt-3 shrink-0 overflow-hidden rounded-full border-4 border-white/80"
+                                    className={`${dims.photoMt} shrink-0 overflow-hidden rounded-full border-4 border-white/80`}
                                     style={{
-                                        width: isStory ? 160 : 140,
-                                        height: isStory ? 160 : 140,
+                                        width: dims.photo,
+                                        height: dims.photo,
                                     }}
                                 >
                                     {photo ? (
@@ -437,12 +522,7 @@ function CardGeneratorInner() {
                                         <img
                                             src={photo}
                                             alt=""
-                                            crossOrigin="anonymous"
                                             className="h-full w-full object-cover"
-                                            onError={(e) => {
-                                                const img = e.target as HTMLImageElement;
-                                                img.style.display = 'none';
-                                            }}
                                         />
                                     ) : (
                                         <div className="h-full w-full bg-slate-300" />
@@ -451,7 +531,7 @@ function CardGeneratorInner() {
 
                                 {/* Name */}
                                 <h2
-                                    className="mt-4 text-[40px] leading-tight text-slate-900"
+                                    className={`${dims.nameMt} ${dims.nameSize} leading-tight text-slate-900`}
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '-0.01em' }}
                                 >
                                     {name}
@@ -459,22 +539,22 @@ function CardGeneratorInner() {
 
                                 {/* Dates */}
                                 <p
-                                    className="mt-1.5 text-lg tracking-wide text-slate-700"
+                                    className={`mt-1.5 ${dims.dateSize} tracking-wide text-slate-700`}
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}
                                 >
                                     {birth} – {death}
                                 </p>
                                 <p
-                                    className="mt-0.5 text-sm text-slate-600"
+                                    className={`mt-0.5 ${dims.placeSize} text-slate-600`}
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}
                                 >
                                     ✦ {place}
                                 </p>
 
-                                <div className="my-2 h-px w-12 bg-slate-400/40" />
+                                <div className={`${dims.dividerMy} h-px w-12 bg-slate-400/40`} />
 
                                 <p
-                                    className="text-[12px] uppercase tracking-[0.3em] text-slate-600/80"
+                                    className={`${dims.labelSize} uppercase tracking-[0.3em] text-slate-600/80`}
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500 }}
                                 >
                                     {t('inLovingMemory')}
@@ -482,7 +562,7 @@ function CardGeneratorInner() {
 
                                 {/* Quote */}
                                 <p
-                                    className="mt-3 px-2 text-lg italic leading-snug text-slate-800"
+                                    className={`mt-3 px-2 ${dims.quoteSize} italic leading-snug text-slate-800`}
                                     style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}
                                 >
                                     „{quote}"
@@ -491,9 +571,9 @@ function CardGeneratorInner() {
                                 {/* Candle – glowing, like Memorial page (html-to-image-safe rendering) */}
                                 <div
                                     className="flex flex-col items-center gap-0.5"
-                                    style={{ marginTop: isStory ? 8 : 0 }}
+                                    style={{ marginTop: dims.candleMt }}
                                 >
-                                    <div className="relative flex items-center justify-center" style={{ width: 80, height: 80 }}>
+                                    <div className="relative flex items-center justify-center" style={{ width: dims.candleWrap, height: dims.candleWrap }}>
                                         {/* Glow als radial-gradient — html-to-image-sicher */}
                                         <div
                                             style={{
@@ -504,11 +584,11 @@ function CardGeneratorInner() {
                                         />
                                         <div
                                             className="relative flex items-center justify-center rounded-full"
-                                            style={{ width: 48, height: 48, backgroundColor: 'rgba(254, 243, 199, 0.95)' }}
+                                            style={{ width: dims.candleCircle, height: dims.candleCircle, backgroundColor: 'rgba(254, 243, 199, 0.95)' }}
                                         >
                                             <svg
-                                                width="24"
-                                                height="24"
+                                                width={dims.candleSvg}
+                                                height={dims.candleSvg}
                                                 viewBox="0 0 24 24"
                                                 fill="rgb(245, 158, 11)"
                                                 stroke="rgb(245, 158, 11)"
@@ -531,7 +611,7 @@ function CardGeneratorInner() {
                                 {/* Footer */}
                                 <div className="mt-auto flex flex-col items-center pt-2">
                                     <p
-                                        className="text-base text-slate-600"
+                                        className={`${dims.footerSize} text-slate-600`}
                                         style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '0.05em' }}
                                     >
                                         memorialyard.com
@@ -539,9 +619,10 @@ function CardGeneratorInner() {
                                 </div>
                             </div>
                         </div>
+                        </div>
                     </div>
 
-                    <div className="mx-auto flex w-full max-w-md flex-col gap-2 sm:flex-row">
+                    <div className="mx-auto flex w-full max-w-md flex-row gap-2">
                         <button
                             type="button"
                             onClick={handleShare}

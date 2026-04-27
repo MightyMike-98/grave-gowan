@@ -11,7 +11,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { toPng } from 'html-to-image';
-import { Download, Share2, X } from 'lucide-react';
+import { Download, RectangleVertical, Share2, Smartphone, Square, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { toast, Toaster } from 'sonner';
@@ -28,14 +28,65 @@ interface MemorialCardDialogProps {
     candleCount: number;
 }
 
-type Format = '1:1' | '9:16';
+type Format = '1:1' | '4:5' | '9:16';
+
+interface Dims {
+    w: number;
+    h: number;
+    photo: number;
+    candleMt: number;
+    previewScale: number;
+    // Größen-Klassen / -Werte
+    brandSize: string;       // header brand
+    nameSize: string;        // person name
+    dateSize: string;        // birth – death
+    placeSize: string;       // place
+    labelSize: string;       // "In Loving Memory"
+    quoteSize: string;       // italic quote
+    footerSize: string;      // memorialyard.com
+    candleWrap: number;      // outer wrapper
+    candleCircle: number;    // inner colored circle
+    candleSvg: number;       // svg flame size
+    photoMt: string;         // photo margin-top class
+    nameMt: string;          // name margin-top class
+    dividerMy: string;       // divider margin-y class
+}
+
+const FORMAT_DIMS: Record<Format, Dims> = {
+    '1:1':  {
+        w: 560, h: 560, photo: 140, candleMt: 0, previewScale: 0.7,
+        brandSize: 'text-[12px]', nameSize: 'text-[40px]', dateSize: 'text-lg', placeSize: 'text-sm',
+        labelSize: 'text-[12px]', quoteSize: 'text-lg', footerSize: 'text-base',
+        candleWrap: 80, candleCircle: 48, candleSvg: 24,
+        photoMt: 'mt-3', nameMt: 'mt-4', dividerMy: 'my-2',
+    },
+    '4:5':  {
+        // Memorial-Modal hat zusätzlich die "X Kerzen leuchten"-Zeile unter
+        // der Kerze (im Generator nur "Im Gedenken"). Lange Namen (zB "Taha
+        // Muhammad Hussein") brechen außerdem auf 2 Zeilen um. Deshalb hier
+        // Kerze + Margins etwas kompakter als im Generator, damit
+        // memorialyard.com nicht abgeschnitten wird.
+        w: 560, h: 700, photo: 190, candleMt: 0, previewScale: 0.55,
+        brandSize: 'text-[14px]', nameSize: 'text-[52px]', dateSize: 'text-xl', placeSize: 'text-base',
+        labelSize: 'text-[14px]', quoteSize: 'text-xl', footerSize: 'text-base',
+        candleWrap: 88, candleCircle: 52, candleSvg: 28,
+        photoMt: 'mt-4', nameMt: 'mt-4', dividerMy: 'my-3',
+    },
+    '9:16': {
+        w: 360, h: 640, photo: 160, candleMt: 8, previewScale: 0.65,
+        brandSize: 'text-[12px]', nameSize: 'text-[40px]', dateSize: 'text-lg', placeSize: 'text-sm',
+        labelSize: 'text-[12px]', quoteSize: 'text-lg', footerSize: 'text-base',
+        candleWrap: 80, candleCircle: 48, candleSvg: 24,
+        photoMt: 'mt-3', nameMt: 'mt-4', dividerMy: 'my-2',
+    },
+};
 
 export function MemorialCardDialog({ open, onOpenChange, name, birth, death, place, quote, photo, candleCount }: MemorialCardDialogProps) {
     const t = useTranslations('cardGenerator');
     const [format, setFormat] = useState<Format>('1:1');
     const [busy, setBusy] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
-    const isStory = format === '9:16';
+    const dims = FORMAT_DIMS[format];
 
     /**
      * Ersetzt jedes <img> im Card-Container durch eine inline data-URL,
@@ -183,18 +234,26 @@ export function MemorialCardDialog({ open, onOpenChange, name, birth, death, pla
                                 <button
                                     type="button"
                                     onClick={() => setFormat('1:1')}
-                                    className="rounded-full px-4 py-1.5 text-xs font-light transition-all"
+                                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-light transition-all"
                                     style={format === '1:1' ? { backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' } : { color: 'hsl(var(--muted-foreground))', backgroundColor: 'transparent' }}
                                 >
-                                    {t('format11')}
+                                    <Square className="h-3 w-3" /> {t('format11')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormat('4:5')}
+                                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-light transition-all"
+                                    style={format === '4:5' ? { backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' } : { color: 'hsl(var(--muted-foreground))', backgroundColor: 'transparent' }}
+                                >
+                                    <RectangleVertical className="h-3 w-3" /> {t('format45')}
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setFormat('9:16')}
-                                    className="rounded-full px-4 py-1.5 text-xs font-light transition-all"
+                                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-light transition-all"
                                     style={format === '9:16' ? { backgroundColor: 'hsl(var(--foreground))', color: 'hsl(var(--background))' } : { color: 'hsl(var(--muted-foreground))', backgroundColor: 'transparent' }}
                                 >
-                                    {t('format916')}
+                                    <Smartphone className="h-3 w-3" /> {t('format916')}
                                 </button>
                             </div>
 
@@ -202,72 +261,70 @@ export function MemorialCardDialog({ open, onOpenChange, name, birth, death, pla
                             <div className="mt-4 flex justify-center">
                                 <div
                                     style={{
-                                        transform: isStory ? 'scale(0.65)' : 'scale(0.7)',
+                                        transform: `scale(${dims.previewScale})`,
                                         transformOrigin: 'top left',
-                                        height: isStory ? 640 * 0.65 : 560 * 0.7,
-                                        width: isStory ? 360 * 0.65 : 560 * 0.7,
+                                        height: dims.h * dims.previewScale,
+                                        width: dims.w * dims.previewScale,
                                     }}
                                 >
                                     <div
                                         ref={cardRef}
                                         className="relative overflow-hidden rounded-[28px] shadow-2xl"
                                         style={{
-                                            width: isStory ? 360 : 560,
-                                            height: isStory ? 640 : 560,
+                                            width: dims.w,
+                                            height: dims.h,
                                             background: `linear-gradient(180deg, hsl(230 35% 88% / 0.85) 0%, hsl(225 20% 90% / 0.95) 40%, hsl(35 15% 89%) 100%)`,
                                             fontFamily: "'Cormorant Garamond', serif",
                                         }}
                                     >
                                         <div className="flex h-full flex-col items-center px-7 py-5 text-center">
-                                            <p className="text-[12px] uppercase tracking-[0.4em] text-slate-600/80" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '0.4em' }}>
+                                            <p className={`${dims.brandSize} uppercase tracking-[0.4em] text-slate-600/80`} style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '0.4em' }}>
                                                 MemorialYard
                                             </p>
 
                                             <div
-                                                className="mt-3 shrink-0 overflow-hidden rounded-full border-4 border-white/80"
-                                                style={{ width: isStory ? 160 : 140, height: isStory ? 160 : 140 }}
+                                                className={`${dims.photoMt} shrink-0 overflow-hidden rounded-full border-4 border-white/80`}
+                                                style={{ width: dims.photo, height: dims.photo }}
                                             >
                                                 {photo ? (
                                                     // eslint-disable-next-line @next/next/no-img-element
                                                     <img
                                                         src={photo}
                                                         alt=""
-                                                        crossOrigin="anonymous"
                                                         className="h-full w-full object-cover"
-                                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                                                     />
                                                 ) : (
                                                     <div className="h-full w-full bg-slate-300" />
                                                 )}
                                             </div>
 
-                                            <h2 className="mt-4 text-[40px] leading-tight text-slate-900" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '-0.01em' }}>
+                                            <h2 className={`${dims.nameMt} ${dims.nameSize} leading-tight text-slate-900`} style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '-0.01em' }}>
                                                 {name}
                                             </h2>
 
-                                            <p className="mt-1.5 text-lg tracking-wide text-slate-700" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}>
+                                            <p className={`mt-1.5 ${dims.dateSize} tracking-wide text-slate-700`} style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}>
                                                 {birth} – {death}
                                             </p>
                                             {place && (
-                                                <p className="mt-0.5 text-sm text-slate-600" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}>
+                                                <p className={`mt-0.5 ${dims.placeSize} text-slate-600`} style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}>
                                                     ✦ {place}
                                                 </p>
                                             )}
 
-                                            <div className="my-2 h-px w-12 bg-slate-400/40" />
+                                            <div className={`${dims.dividerMy} h-px w-12 bg-slate-400/40`} />
 
-                                            <p className="text-[12px] uppercase tracking-[0.3em] text-slate-600/80" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500 }}>
+                                            <p className={`${dims.labelSize} uppercase tracking-[0.3em] text-slate-600/80`} style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500 }}>
                                                 {t('inLovingMemory')}
                                             </p>
 
                                             {quote && (
-                                                <p className="mt-3 px-2 text-lg italic leading-snug text-slate-800" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}>
+                                                <p className={`mt-3 px-2 ${dims.quoteSize} italic leading-snug text-slate-800`} style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 400 }}>
                                                     „{quote}"
                                                 </p>
                                             )}
 
-                                            <div className="flex flex-col items-center gap-0.5" style={{ marginTop: isStory ? 8 : 0 }}>
-                                                <div className="relative flex items-center justify-center" style={{ width: 80, height: 80 }}>
+                                            <div className="flex flex-col items-center gap-0.5" style={{ marginTop: dims.candleMt }}>
+                                                <div className="relative flex items-center justify-center" style={{ width: dims.candleWrap, height: dims.candleWrap }}>
                                                     {/* Glow als radial-gradient — html-to-image-sicher */}
                                                     <div
                                                         style={{
@@ -278,11 +335,11 @@ export function MemorialCardDialog({ open, onOpenChange, name, birth, death, pla
                                                     />
                                                     <div
                                                         className="relative flex items-center justify-center rounded-full"
-                                                        style={{ width: 48, height: 48, backgroundColor: 'rgba(254, 243, 199, 0.95)' }}
+                                                        style={{ width: dims.candleCircle, height: dims.candleCircle, backgroundColor: 'rgba(254, 243, 199, 0.95)' }}
                                                     >
                                                         <svg
-                                                            width="24"
-                                                            height="24"
+                                                            width={dims.candleSvg}
+                                                            height={dims.candleSvg}
                                                             viewBox="0 0 24 24"
                                                             fill="rgb(245, 158, 11)"
                                                             stroke="rgb(245, 158, 11)"
@@ -300,7 +357,7 @@ export function MemorialCardDialog({ open, onOpenChange, name, birth, death, pla
                                             </div>
 
                                             <div className="mt-auto flex flex-col items-center pt-2">
-                                                <p className="text-base text-slate-600" style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '0.05em' }}>
+                                                <p className={`${dims.footerSize} text-slate-600`} style={{ fontFamily: "'Cormorant Garamond', serif", fontWeight: 500, letterSpacing: '0.05em' }}>
                                                     memorialyard.com
                                                 </p>
                                             </div>
